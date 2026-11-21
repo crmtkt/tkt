@@ -328,6 +328,26 @@ table.simple td:first-child{min-width:210px!important}
 .gvn{font-size:17px}
 .gvini{display:grid;place-items:center;font-size:40px;font-weight:800;color:#1a1400;background:linear-gradient(135deg,#ffe29a,#f5b83d)}
 .gv .kv{grid-template-columns:96px minmax(0,1fr)}
+.calhead{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:6px}.calhead h3{margin:0;font-size:22px}
+.calsum{margin:4px 0 10px;text-align:center}
+.cal{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px}
+.cdh{text-align:center;font-size:13px;font-weight:700;color:var(--mut);padding:6px 0}.cdh.we{color:#fda4af}
+.cd{min-height:104px;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:6px;display:flex;flex-direction:column;gap:4px;overflow:hidden}
+.cd.empty{background:transparent;border:0}
+.cd.we{background:#141a44}
+.cd.has{border-color:#3a4c8f}
+.cdn{font-size:13px;font-weight:700;color:var(--mut)}
+.cev{display:block;font-size:12px;line-height:1.3;padding:4px 6px;border-radius:6px;background:color-mix(in srgb,var(--pc) 22%,#0d1840);border-left:3px solid var(--pc);color:#fff;overflow:hidden;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical}
+.camps{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px;margin:10px 0 4px}
+.camp{all:unset;cursor:pointer;position:relative;overflow:hidden;display:flex;flex-direction:column;gap:4px;padding:14px 14px 18px;border-radius:14px;background:var(--card);border:1px solid var(--line);border-top:4px solid var(--c)}
+.camp:hover,.camp.on{border-color:var(--c);box-shadow:0 0 0 1px var(--c)}
+.camp:focus-visible{outline:3px solid var(--gold)}
+.camp>b{font-size:16px}
+.campn{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:13.5px;color:var(--mut)}.campn b{color:var(--ink)}
+.camp>i{position:absolute;left:0;bottom:0;height:5px;background:#34d399}
+.campd{margin-top:16px;padding:16px;border-radius:18px;background:#0f1a45;border:2px solid var(--c)}
+.campd header{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;flex-wrap:wrap;margin-bottom:12px}
+.campd .kpis{grid-template-columns:repeat(4,minmax(0,1fr))}
 .bnav,.mscrim{display:none}
 .menubtn{display:grid;place-items:center;width:42px;height:42px;flex:none;border-radius:12px;border:1px solid var(--line);background:#111d48;color:var(--ink)}
 .menubtn svg{width:22px;height:22px}.menubtn:hover{border-color:var(--gold);color:var(--gold)}
@@ -365,6 +385,7 @@ body.solo .bnav,body.solo .menubtn{display:none}
 .toast{bottom:calc(76px + env(safe-area-inset-bottom))}
 }
 @media(max-width:600px){
+.cal{gap:3px}.cd{min-height:58px;padding:3px}.cev{font-size:0;padding:0;height:7px;border-radius:4px;border:0;background:var(--pc)}.cdh{font-size:11px}.calhead h3{font-size:17px}.calhead .btn{padding:5px 8px}.campd{padding:10px}.campd .kpis{grid-template-columns:repeat(2,minmax(0,1fr))}
 .prog{grid-template-columns:44px minmax(0,1fr)}.pnum{grid-column:2;flex-direction:row;gap:10px;align-items:center;flex-wrap:wrap}.gv{grid-template-columns:72px minmax(0,1fr)}.gvimg{width:72px;height:72px}.gv .kv{grid-template-columns:1fr}
 .vbars{gap:3px;height:180px}.vb b{display:none}.hb{grid-template-columns:minmax(80px,40%) minmax(0,1fr) auto}
 .kpis{grid-template-columns:repeat(2,minmax(0,1fr))}
@@ -488,7 +509,7 @@ const MONTHS=['2026-12','2027-01','2027-02','2027-03','2027-04','2027-05'];
 const mName=m=>`Tháng ${+m.slice(5)}/${m.slice(0,4)}`;
 const DEFAULT_STAFF=['Kim Anh','Mỹ Linh','Oanh'];
 
-const S={real:[],demo:(()=>{try{return localStorage.getItem('crm_demo')==='1'}catch(_){return false}})(),cf:{q:'',khoa:'all',st:'all',pt:'all'},view:(()=>{try{return localStorage.getItem('crm_view')||'card'}catch(_){return 'card'}})(),list:[],forms:[],staff:DEFAULT_STAFF.slice(),loaded:false,canWrite:true,tok:'',site:'',user:'',
+const S={calM:'2026-12',camp:null,bf:{q:'',sp:'all',tt:'all',pt:'all',sort:'sp'},real:[],demo:(()=>{try{return localStorage.getItem('crm_demo')==='1'}catch(_){return false}})(),cf:{q:'',khoa:'all',st:'all',pt:'all'},view:(()=>{try{return localStorage.getItem('crm_view')||'card'}catch(_){return 'card'}})(),list:[],forms:[],staff:DEFAULT_STAFF.slice(),loaded:false,canWrite:true,tok:'',site:'',user:'',
  f:{fam:'F5',khoa:'Diamond',nam:'2026',nhom:'all',q:'',st:'all',pt:'all',form:'all'},open:null,phone:''};
 
 /* ---------- UI helpers ---------- */
@@ -708,7 +729,7 @@ function subsHTML(m){return `<div class="subs">${(m.subs||[]).map(([a,b])=>`<div
 
 /* ---------- Các ô đang xây: bản xem thử với dữ liệu mẫu ---------- */
 const VND=n=>new Intl.NumberFormat('vi-VN').format(Math.round(n))+' đ';
-const TR=n=>(n/1e6).toLocaleString('vi-VN',{maximumFractionDigits:1})+' tr';
+const TR=n=>Math.abs(n)>=1e9?(n/1e9).toLocaleString('vi-VN',{maximumFractionDigits:2})+' tỷ':(n/1e6).toLocaleString('vi-VN',{maximumFractionDigits:1})+' tr';
 const sampleNote=`<div class="samplenote">Số liệu mẫu để hình dung cách ô này vận hành. Khi có dữ liệu thật, em sẽ nối vào CRM.</div>`;
 const hbars=(rows,color,fmt)=>{const mx=Math.max(...rows.map(r=>r[1]),1);return `<div class="hbars">${rows.map(([k,v,c])=>`<div class="hb"><span class="hbk">${esc(k)}</span><span class="hbt"><i style="width:${(v/mx*100).toFixed(1)}%;background:${c||color}"></i></span><b class="hbv">${fmt?fmt(v):v}</b></div>`).join('')}</div>`};
 const vbars=(rows,color,fmt)=>{const mx=Math.max(...rows.map(r=>r[1]),1);return `<div class="vbars">${rows.map(([k,v,hl])=>`<div class="vb"><b>${fmt?fmt(v):v}</b><span class="vbt"><i style="height:${(v/mx*100).toFixed(1)}%;background:${hl?'var(--gold)':color}"></i></span><small>${esc(k)}</small></div>`).join('')}</div>`};
@@ -717,6 +738,83 @@ const pill=(t,c)=>`<span class="st" style="--sc:${c}">${esc(t)}</span>`;
 const tbl=(head,rows)=>`<div class="widewrap"><table class="wide simple"><thead><tr>${head.map(h=>`<th>${h}</th>`).join('')}</tr></thead><tbody>${rows.map(r=>`<tr>${r.map(c=>`<td>${c}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`;
 const steps=(list)=>`<ol class="steps">${list.map(([t,who,done])=>`<li class="${done?'done':''}"><b>${esc(t)}</b><small>${esc(who)}</small></li>`).join('')}</ol>`;
 
+
+const PLAN_DEMO=[
+ {d:'2026-12-05',t:'pheu',n:'Zoom miễn phí: AI cho người 40+',g:'Thầy Tư',m:'Oanh',p:500,r:0,c:5e6},
+ {d:'2026-12-12',t:'pheu',n:'Zoom miễn phí: Đóng gói kinh nghiệm thành khóa học',g:'Thầy Tư',m:'Mỹ Linh',p:500,r:0,c:5e6},
+ {d:'2026-12-13',t:'chuyen',n:'Offline Hà Nội: CMA F1 Công nghệ (2 ngày)',g:'Thầy Tư, GV Hoàng Nam',m:'MC Thu Hà',p:180,r:2.7e9,c:420e6},
+ {d:'2026-12-19',t:'pheu',n:'Workshop mini: Làm video bằng AI',g:'GV Thảo Vy',m:'Oanh',p:120,r:60e6,c:15e6},
+ {d:'2026-12-20',t:'chuyen',n:'CMA Diamond: buổi 3 nhóm viết sách',g:'Thầy Tư, GV Ngọc Lan',m:'Kim Anh',p:25,r:0,c:8e6},
+ {d:'2026-12-26',t:'pheu',n:'Zoom miễn phí: Bán hàng không cần lộ mặt',g:'GV Thảo Vy',m:'Oanh',p:400,r:0,c:5e6},
+ {d:'2026-12-27',t:'chuyen',n:'CMA F2 Sale Marketing (online 4 buổi)',g:'GV Quốc Huy',m:'Kim Anh',p:60,r:1.5e9,c:60e6},
+ {d:'2027-01-09',t:'pheu',n:'Zoom Tết: Kế hoạch năm mới với AI',g:'Thầy Tư',m:'Oanh',p:600,r:0,c:5e6},
+ {d:'2027-01-16',t:'chuyen',n:'Khai giảng Diamond Coaching',g:'Thầy Tư, Coach Minh Đức',m:'Mỹ Linh',p:15,r:3.75e9,c:120e6},
+ {d:'2027-01-23',t:'pheu',n:'Workshop mini: Viết sách cùng AI',g:'GV Ngọc Lan',m:'Oanh',p:100,r:50e6,c:12e6},
+ {d:'2027-02-13',t:'pheu',n:'Zoom miễn phí: Agent AI cho chủ doanh nghiệp',g:'Thầy Tư',m:'Oanh',p:500,r:0,c:5e6},
+ {d:'2027-02-20',t:'chuyen',n:'CMA Trainer khóa 2: khai giảng',g:'Thầy Tư',m:'Mỹ Linh',p:20,r:1.6e9,c:90e6},
+ {d:'2027-02-27',t:'chuyen',n:'CMA F3 Tài chính',g:'GV Hoàng Nam',m:'Kim Anh',p:60,r:1.2e9,c:70e6},
+ {d:'2027-03-06',t:'pheu',n:'Zoom miễn phí: Đóng gói di sản',g:'Thầy Tư',m:'Oanh',p:600,r:0,c:5e6},
+ {d:'2027-03-14',t:'chuyen',n:'Offline Sài Gòn: Đóng gói di sản (2 ngày)',g:'Thầy Tư, khách mời',m:'MC Quang',p:300,r:5.2e9,c:650e6},
+ {d:'2027-03-21',t:'pheu',n:'Workshop mini: Xây kênh TikTok',g:'GV Thảo Vy',m:'Oanh',p:120,r:60e6,c:15e6},
+ {d:'2027-03-28',t:'chuyen',n:'CMA Diamond 2027: tuyển sinh sớm',g:'Thầy Tư',m:'Mỹ Linh',p:20,r:3e9,c:80e6}];
+let CAMP_CACHE=null;
+function rng(seed){let x=seed;return ()=>{x=(x*1103515245+12345)%2147483648;return x/2147483648}}
+function campDemo(){
+ if(CAMP_CACHE)return CAMP_CACHE;
+ const HO=['Nguyễn','Trần','Lê','Phạm','Hoàng','Võ','Đặng','Bùi','Đỗ','Hồ','Ngô','Dương','Lý','Phan'],DEM=['Thị','Văn','Ngọc','Minh','Thu','Hoàng','Thanh','Quốc','Hồng','Đức','Kim','Bảo'],TEN=['Anh','Hà','Lan','Hùng','Dũng','Mai','Nhung','Tâm','Long','Hương','Phúc','Trang','Hải','Quân','Yến','Thảo','Sơn','Linh','Tuấn','Vy','Khang','Hạnh','Nam','Ngân'];
+ const CITY=['TP. Hồ Chí Minh','Hà Nội','Đà Nẵng','Cần Thơ','Hải Phòng','Bình Dương','Nha Trang','Huế','Đồng Nai','Vũng Tàu'];
+ const JOB=['Chủ chuỗi spa','Kinh doanh bất động sản','Giám đốc công ty','Giáo viên','Chủ nhà hàng','Chuyên gia tài chính','Bác sĩ','Coach','Kinh doanh online','Chủ xưởng may'];
+ const NOTE=['Đã gọi làm quen, gửi link nhóm Zalo','Hẹn đóng nốt học phí cuối tháng','Cần hỗ trợ cài ChatGPT','Rất tích cực, muốn lên Diamond Coaching','Chưa nghe máy, nhắn Zalo lại','Đã gửi tài liệu buổi 1','Hỏi về trả góp 2 lần'];
+ const STAFF=['Kim Anh','Mỹ Linh','Oanh'];
+ const C=[
+  {id:'c1',name:'Sự kiện offline Sài Gòn 10/2026',type:'Chuyên sâu · offline',time:'12–13/10/2026',color:'#ea580c',prog:'Offline Sài Gòn: Đóng gói di sản 2026',prods:[['CMA Diamond 2026',150e6,14,.55],['CMA Trainer',80e6,12,.6],['Vé CMA F1 VIP',15e6,60,.9]]},
+  {id:'c2',name:'Zoom miễn phí hằng tuần (T9–T11/2026)',type:'Phễu → chuyên sâu',time:'09–11/2026',color:'#3b82f6',prog:'Chuỗi Zoom "AI cho người 40+"',prods:[['CMA F2 Sale Marketing (online)',25e6,40,.75],['CMA Diamond 2026',150e6,8,.5]]},
+  {id:'c3',name:'Ưu đãi học viên cũ lên Diamond',type:'Chăm sóc · nâng cấp',time:'10–11/2026',color:'#f5c451',prog:'Chương trình tri ân học viên cũ',prods:[['Diamond Coaching',250e6,6,.5],['Nhóm viết sách',180e6,5,.4]]},
+  {id:'c4',name:'Giới thiệu từ học viên',type:'Giới thiệu',time:'Cả năm 2026',color:'#16a34a',prog:'Học viên giới thiệu học viên',prods:[['CMA Diamond 2026',150e6,5,.6],['CMA Trainer',80e6,4,.75]]}];
+ let k=0;const r=rng(20261122);
+ C.forEach((c,ci)=>{c.buyers_list=[];c.prods.forEach(([pn,price,n,fr])=>{for(let i=0;i<n;i++){k++;
+  const full=r()<fr,paid=full?price:Math.round(price*(.3+r()*.3)/1e6)*1e6,name=`${HO[Math.floor(r()*HO.length)]} ${DEM[Math.floor(r()*DEM.length)]} ${TEN[Math.floor(r()*TEN.length)]}`;
+  const notes=[{ngay:`2026-11-${String(1+Math.floor(r()*20)).padStart(2,'0')}`,nguoi:STAFF[k%3],noiDung:NOTE[Math.floor(r()*NOTE.length)]}];
+  if(r()<.5)notes.push({ngay:`2026-11-${String(10+Math.floor(r()*11)).padStart(2,'0')}`,nguoi:STAFF[(k+1)%3],noiDung:NOTE[Math.floor(r()*NOTE.length)]});
+  c.buyers_list.push({id:'b'+k,face:k%10,hoTen:name,sdt:'09'+String(10000000+Math.floor(r()*89999999)).slice(0,8),email:'hv'+k+'@example.com',thanhPho:CITY[Math.floor(r()*CITY.length)],congViec:JOB[Math.floor(r()*JOB.length)],namSinh:String(1968+Math.floor(r()*22)),sp:pn,gia:price,daThu:paid,no:price-paid,tt:full?'full':'coc',hanTT:full?'':`2026-12-${String(5+Math.floor(r()*20)).padStart(2,'0')}`,phuTrach:[STAFF[k%3]],nhatKy:notes,camp:c.id})}})});
+ CAMP_CACHE=C;return C;
+}
+function campTotals(c){const B=c.buyers_list;return {rev:B.reduce((a,b)=>a+b.gia,0),paid:B.reduce((a,b)=>a+b.daThu,0),debt:B.reduce((a,b)=>a+b.no,0),buyers:B.length,full:B.filter(b=>b.tt==='full').length,coc:B.filter(b=>b.tt==='coc').length}}
+const FACES=new Map();const face=i=>{if(!FACES.has(i))FACES.set(i,demoFace(i));return FACES.get(i)};
+function campDetail(c){
+ const B=c.buyers_list,bf=S.bf,q=bf.q.trim().toLowerCase(),qd=q.replace(/\D/g,'');
+ const prodRows=c.prods.map(([pn,price])=>{const xs=B.filter(b=>b.sp===pn);return [`<b>${esc(pn)}</b>`,TR(price),xs.length,xs.filter(b=>b.tt==='full').length,xs.filter(b=>b.tt==='coc').length,TR(xs.reduce((a,b)=>a+b.gia,0)),TR(xs.reduce((a,b)=>a+b.daThu,0)),`<span class="warnTxt">${TR(xs.reduce((a,b)=>a+b.no,0))}</span>`]});
+ const list=B.filter(b=>(bf.sp==='all'||b.sp===bf.sp)&&(bf.tt==='all'||b.tt===bf.tt)&&(bf.pt==='all'||b.phuTrach.includes(bf.pt))&&(!q||b.hoTen.toLowerCase().includes(q)||(qd.length>=3&&b.sdt.includes(qd))||b.email.includes(q)))
+  .sort((a,b)=>bf.sort==='no'?b.no-a.no:a.sp.localeCompare(b.sp));
+ return `<section class="campd" style="--c:${c.color}">
+ <header><div><span class="mut sm">${esc(c.type)} · ${esc(c.time)}</span><h3 style="margin:2px 0">${esc(c.name)}</h3><div class="sm">Chương trình: <b>${esc(c.prog)}</b></div></div><button class="btn ghost sm" data-camp="${c.id}">Đóng chi tiết</button></header>
+ ${kpi([[c.prods.length+' sản phẩm','Bán trong chương trình'],[c.buyers,'Học viên mua'],[TR(c.rev),'Tổng doanh thu','#34d399'],[TR(c.paid),'Đã thu'],[TR(c.debt),'Công nợ còn lại','#fb923c'],[c.full,'Người đóng đủ'],[c.coc,'Người đặt cọc','#fb923c'],[Math.round(c.paid/c.rev*100)+'%','Tỷ lệ đã thu']])}
+ <h3>Sản phẩm bán ra</h3>${tbl(['Sản phẩm','Giá','Học viên mua','Đóng đủ','Đặt cọc','Doanh thu','Đã thu','Còn nợ'],prodRows.concat([['<b>Tổng</b>','',`<b>${c.buyers}</b>`,`<b>${c.full}</b>`,`<b>${c.coc}</b>`,`<b>${TR(c.rev)}</b>`,`<b>${TR(c.paid)}</b>`,`<b class="warnTxt">${TR(c.debt)}</b>`]]))}
+ <h3 style="margin-top:18px">Danh sách học viên theo sản phẩm</h3>
+ <div class="bar">
+  <input class="inp" id="bq" placeholder="Tìm tên, số điện thoại, email" value="${esc(bf.q)}" style="flex:1 1 220px">
+  <select class="inp" id="bsp" aria-label="Sản phẩm"><option value="all">Mọi sản phẩm</option>${c.prods.map(([pn])=>`<option ${bf.sp===pn?'selected':''}>${esc(pn)}</option>`).join('')}</select>
+  <select class="inp" id="btt" aria-label="Thanh toán"><option value="all">Mọi tình trạng thanh toán</option><option value="full" ${bf.tt==='full'?'selected':''}>Đã đóng đủ</option><option value="coc" ${bf.tt==='coc'?'selected':''}>Đặt cọc, còn nợ</option></select>
+  <select class="inp" id="bpt" aria-label="Người phụ trách"><option value="all">Mọi người phụ trách</option>${['Kim Anh','Mỹ Linh','Oanh'].map(x=>`<option ${bf.pt===x?'selected':''}>${x}</option>`).join('')}</select>
+  <select class="inp" id="bsort" aria-label="Sắp xếp"><option value="sp">Xếp theo sản phẩm</option><option value="no" ${bf.sort==='no'?'selected':''}>Còn nợ nhiều nhất</option></select>
+ </div>
+ <p class="mut sm" style="margin:0 0 8px">${list.length} học viên · đã thu ${TR(list.reduce((a,b)=>a+b.daThu,0))} · còn nợ ${TR(list.reduce((a,b)=>a+b.no,0))}</p>
+ <div class="widewrap"><table class="wide"><thead><tr><th>Học viên</th><th>Điện thoại</th><th>Email</th><th>Sản phẩm</th><th>Giá</th><th>Thanh toán</th><th>Đã thu</th><th>Còn nợ</th><th>Hạn đóng</th><th>Phụ trách</th><th>Ghi chú chăm sóc gần nhất</th><th>Hồ sơ</th></tr></thead><tbody>
+ ${list.map(b=>{const lc=b.nhatKy[b.nhatKy.length-1];return `<tr><td class="stick"><button class="who linkbtn" data-buyer="${b.id}"><img class="ava tbimg" src="${face(b.face)}" alt=""><span><b>${esc(b.hoTen)}</b><br><small class="mut">${esc(b.congViec)}</small></span></button></td>
+  <td class="nw"><a class="mini" href="tel:${b.sdt}">${b.sdt}</a></td><td>${esc(b.email)}</td><td>${esc(b.sp)}</td><td class="nw">${TR(b.gia)}</td>
+  <td>${b.tt==='full'?pill('Đã đóng đủ','#34d399'):pill('Đặt cọc','#fb923c')}</td><td class="nw">${TR(b.daThu)}</td><td class="nw">${b.no?`<b class="warnTxt">${TR(b.no)}</b>`:'<span class="mut">0</span>'}</td><td class="nw">${b.hanTT?fmtD(b.hanTT):''}</td>
+  <td>${b.phuTrach.map(p=>`<span class="tag">${esc(p)}</span>`).join('')}</td><td class="tx">${fmtD(lc.ngay)} · ${esc(lc.nguoi)}<br>${esc(lc.noiDung)}</td><td><button class="btn sm" data-buyer="${b.id}">Xem</button></td></tr>`}).join('')||'<tr><td colspan="12" class="mut">Không có học viên khớp bộ lọc.</td></tr>'}
+ </tbody></table></div></section>`;
+}
+function openBuyer(id){
+ const b=campDemo().flatMap(c=>c.buyers_list).find(x=>x.id===id);if(!b)return;const c=campDemo().find(x=>x.id===b.camp);
+ $('#drawer').innerHTML=`<div class="dh"><img src="${face(b.face)}" alt=""><div style="flex:1"><h3>${esc(b.hoTen)} <span class="tag mau">Mẫu</span></h3><div class="mut">${b.sdt} · ${esc(b.email)}</div><div style="margin-top:6px">${b.tt==='full'?pill('Đã đóng đủ','#34d399'):pill('Đặt cọc · còn nợ '+TR(b.no),'#fb923c')}</div></div><button class="btn ghost sm" id="closeD">Đóng</button></div>
+ <div class="dbody"><div class="panel"><h3>Thông tin mua</h3><dl class="kv"><dt>Chiến dịch</dt><dd>${esc(c.name)}</dd><dt>Chương trình</dt><dd>${esc(c.prog)}</dd><dt>Sản phẩm</dt><dd>${esc(b.sp)}</dd><dt>Giá</dt><dd>${VND(b.gia)}</dd><dt>Đã thu</dt><dd>${VND(b.daThu)}</dd><dt>Còn nợ</dt><dd>${b.no?`<b class="warnTxt">${VND(b.no)}</b>`:'0 đ'}</dd>${b.hanTT?`<dt>Hạn đóng nốt</dt><dd>${fmtD(b.hanTT)}</dd>`:''}<dt>Người phụ trách</dt><dd>${esc(b.phuTrach.join(', '))}</dd></dl></div>
+ <div class="panel"><h3>Thông tin học viên</h3><dl class="kv"><dt>Năm sinh</dt><dd>${b.namSinh} (${new Date().getFullYear()-b.namSinh} tuổi)</dd><dt>Tỉnh / thành</dt><dd>${esc(b.thanhPho)}</dd><dt>Công việc</dt><dd>${esc(b.congViec)}</dd></dl></div>
+ <div class="panel"><h3>Nhật ký chăm sóc</h3><ul class="tl">${b.nhatKy.slice().reverse().map(n=>`<li style="--tc:#34d399"><b>${esc(n.noiDung)}</b><small>${fmtD(n.ngay)} · ${esc(n.nguoi)}</small></li>`).join('')}</ul></div>
+ <p class="mut sm">Đây là học viên mẫu để xem thử. Khi nối dữ liệu bán hàng thật, mỗi học viên sẽ mở đúng hồ sơ trong CRM.</p></div>`;
+ $('#drawer').classList.add('on');$('#scrim').classList.add('on');$('#closeD').focus();
+}
 const MOD_DEMO={
 'marketing':()=>{
  const camps=[['Zoom miễn phí "AI cho người 40+"','Facebook, Zalo','Thu hút',12e6,420,68,'Đang chạy','#34d399'],['Sự kiện offline Hà Nội 12/2026','Facebook, Zalo, giới thiệu','Chuyển đổi',35e6,180,26,'Chuẩn bị','#60a5fa'],['Chuỗi video "Đóng gói di sản"','TikTok, YouTube','Nhận diện',8e6,1250,40,'Đang chạy','#34d399'],['Ưu đãi học viên cũ lên Diamond','Zalo, gọi điện','Chuyển đổi',2e6,95,18,'Đang chạy','#34d399'],['Ra mắt sách nhóm viết sách','Facebook, sự kiện','Nhận diện',15e6,0,0,'Lên kế hoạch','#a78bfa']];
@@ -734,27 +832,39 @@ const MOD_DEMO={
  return `<p class="mut">Mỗi quy trình là các bước nối tiếp, ghi rõ ai làm. Bước có dấu ✓ là đã xong trong đợt hiện tại.</p><div class="grid2">${P.map(([t,c,st])=>`<div class="panel" style="border-top:4px solid ${c}"><h3>${esc(t)}</h3><div class="mut sm" style="margin-bottom:8px">${st.filter(x=>x[2]).length}/${st.length} bước đã xong</div>${steps(st)}</div>`).join('')}</div>`;
 },
 'doanh-thu':()=>{
- const months=[['T12',180e6],['T1',95e6],['T2',120e6],['T3',260e6,1],['T4',140e6],['T5',150e6],['T6',310e6,1],['T7',130e6],['T8',160e6],['T9',210e6],['T10',175e6],['T11',290e6,1]];
- const total=months.reduce((a,b)=>a+b[1],0);
- return `${kpi([[TR(total),'Doanh thu 12 tháng'],[TR(290e6),'Tháng này','#34d399'],[TR(300e6),'Mục tiêu tháng'],['97%','Đạt mục tiêu']])}
+ const months=[['T12',1.85e9],['T1',0.95e9],['T2',1.6e9],['T3',3.4e9,1],['T4',1.7e9],['T5',2.1e9],['T6',3.9e9,1],['T7',1.5e9],['T8',1.8e9],['T9',2.4e9],['T10',4.6e9,1],['T11',2.3e9]];
+ const total=months.reduce((a,b)=>a+b[1],0),C=campDemo();
+ const cs=C.map(c=>{const t=campTotals(c);return {...c,...t}});
+ const sel=cs.find(c=>c.id===S.camp);
+ return `${kpi([[TR(total),'Doanh thu 12 tháng'],[TR(2.3e9),'Tháng này','#34d399'],[TR(2.5e9),'Mục tiêu tháng'],['92%','Đạt mục tiêu']])}
  <div class="panel" style="margin-bottom:16px"><h3>Doanh thu theo tháng</h3><p class="mut sm" style="margin:0 0 6px">Cột vàng là tháng có sự kiện offline.</p>${vbars(months,'#6366f1',TR)}</div>
- <div class="grid2"><div class="panel"><h3>Theo khóa học</h3>${hbars([['CMA Diamond',1.18e9,'#c026d3'],['CMA Trainer',420e6,'#e0a526'],['CMA F1 · Công nghệ',260e6,'#2f8bff'],['CMA F2 · Sale Marketing',180e6,'#8b5cf6'],['Sự kiện offline (vé)',160e6,'#ea580c']],'#6366f1',TR)}</div>
- <div class="panel"><h3>Theo chiến dịch</h3>${hbars([['Sự kiện offline Sài Gòn 10/2026',540e6,'#ea580c'],['Zoom miễn phí hằng tuần',480e6,'#3b82f6'],['Ưu đãi học viên cũ',310e6,'#f5c451'],['Giới thiệu từ học viên',220e6,'#16a34a']],'#6366f1',TR)}</div></div>`;
+ <h3>Theo chiến dịch <span class="mut sm" style="font-weight:400">· bấm vào chiến dịch để xem chi tiết</span></h3>
+ <div class="camps">${cs.map(c=>`<button class="camp ${S.camp===c.id?'on':''}" data-camp="${c.id}" style="--c:${c.color}"><span class="mut sm">${esc(c.type)} · ${esc(c.time)}</span><b>${esc(c.name)}</b><div class="campn"><span><b>${TR(c.rev)}</b> doanh thu</span><span><b>${c.buyers}</b> học viên</span><span class="warnTxt">Nợ ${TR(c.debt)}</span></div><i style="width:${(c.paid/c.rev*100).toFixed(0)}%"></i></button>`).join('')}</div>
+ ${sel?campDetail(sel):`<div class="panel empty" style="margin-top:12px">Bấm vào một chiến dịch ở trên để xem sản phẩm bán ra, công nợ và danh sách học viên.</div>`}
+ <div class="grid2" style="margin-top:18px"><div class="panel"><h3>Theo khóa học (12 tháng)</h3>${hbars([['CMA Diamond',9.8e9,'#c026d3'],['Diamond Coaching',4.5e9,'#a855f7'],['CMA Trainer',4.1e9,'#e0a526'],['Nhóm viết sách',2.9e9,'#f472b6'],['CMA F1 · Công nghệ',2.2e9,'#2f8bff'],['CMA F2 · Sale Marketing',1.9e9,'#8b5cf6']],'#6366f1',TR)}</div>
+ <div class="panel"><h3>Đã thu và công nợ (các chiến dịch)</h3>${hbars([['Đã thu',cs.reduce((a,c)=>a+c.paid,0),'#34d399'],['Còn nợ',cs.reduce((a,c)=>a+c.debt,0),'#fb923c']],'#6366f1',TR)}<p class="mut sm" style="margin:10px 0 0">${cs.reduce((a,c)=>a+c.full,0)} người đóng đủ · ${cs.reduce((a,c)=>a+c.coc,0)} người đặt cọc</p></div></div>`;
 },
 'ke-hoach':()=>{
- const P=[ // [tháng, ngày, loại, tên, giảng viên, MC/điều phối, mục tiêu học viên, mục tiêu doanh thu, chi phí]
- ['12/2026','05/12','pheu','Zoom miễn phí: AI cho người 40+','Thầy Tư','Oanh',300,0,3e6],['12/2026','12/12','pheu','Zoom miễn phí: Đóng gói kinh nghiệm thành khóa học','Thầy Tư','Mỹ Linh',300,0,3e6],['12/2026','14/12','chuyen','Offline Hà Nội: CMA F1 Công nghệ','Thầy Tư, GV Hoàng Nam','MC Thu Hà',120,240e6,85e6],['12/2026','20/12','chuyen','CMA Diamond: buổi 3 nhóm viết sách','Thầy Tư','Kim Anh',25,0,2e6],['12/2026','27/12','pheu','Workshop mini: Làm video bằng AI','GV Thảo Vy','Oanh',80,8e6,4e6],
- ['01/2027','09/01','pheu','Zoom Tết: Kế hoạch năm mới với AI','Thầy Tư','Oanh',400,0,3e6],['01/2027','16/01','chuyen','Khai giảng Diamond Coaching','Thầy Tư, Coach Minh Đức','Mỹ Linh',30,300e6,20e6],['01/2027','23/01','pheu','Zoom miễn phí: Bán hàng không cần lộ mặt','GV Thảo Vy','Oanh',250,0,3e6],
- ['02/2027','13/02','pheu','Zoom miễn phí: Agent AI cho chủ doanh nghiệp','Thầy Tư','Oanh',300,0,3e6],['02/2027','20/02','chuyen','CMA F2 Sale Marketing (online 4 buổi)','GV Quốc Huy','Kim Anh',60,180e6,15e6],['02/2027','27/02','chuyen','CMA Trainer khóa 2: khai giảng','Thầy Tư','Mỹ Linh',20,200e6,10e6],
- ['03/2027','06/03','pheu','Zoom miễn phí: Đóng gói di sản','Thầy Tư','Oanh',350,0,3e6],['03/2027','15/03','chuyen','Offline Sài Gòn: Đóng gói di sản (2 ngày)','Thầy Tư, khách mời','MC Quang',200,420e6,120e6],['03/2027','22/03','pheu','Workshop mini: Viết sách cùng AI','GV Ngọc Lan','Oanh',80,8e6,4e6],['03/2027','29/03','chuyen','CMA F3 Tài chính','GV Hoàng Nam','Kim Anh',50,150e6,12e6]];
- const months=[...new Set(P.map(x=>x[0]))],f=S.kh||'all',T={pheu:['Phễu','#38bdf8'],chuyen:['Chuyên sâu','#f5c451']};
- const L=P.filter(x=>f==='all'||x[2]===f);
- const sum=k=>L.reduce((a,x)=>a+x[k],0);
- return `<p class="mut">Mỗi tháng có nhiều chương trình. <b style="color:#38bdf8">Phễu</b> là chương trình miễn phí hoặc giá thấp để thu hút khách; <b style="color:#f5c451">Chuyên sâu</b> là khóa học, lớp offline có doanh thu.</p>
- <div class="tabs">${[['all','Tất cả'],['pheu','Chương trình phễu'],['chuyen','Chương trình chuyên sâu']].map(([k,t])=>`<button class="tab ${f===k?'on':''}" data-kh="${k}">${t}<span class="c">${k==='all'?P.length:P.filter(x=>x[2]===k).length}</span></button>`).join('')}</div>
- ${kpi([[L.length,'Chương trình'],[L.reduce((a,x)=>a+x[6],0).toLocaleString('vi-VN'),'Mục tiêu người tham gia'],[TR(sum(7)),'Mục tiêu doanh thu','#34d399'],[TR(sum(8)),'Chi phí dự kiến']])}
- <div class="plan">${months.map(m=>{const xs=L.filter(x=>x[0]===m);if(!xs.length)return '';const ph=xs.filter(x=>x[2]==='pheu').length,cs=xs.length-ph;return `<section class="pm"><header><h3>Tháng ${m}</h3><span class="mut sm">${ph} phễu · ${cs} chuyên sâu · mục tiêu ${TR(xs.reduce((a,x)=>a+x[7],0))}</span></header>
-  ${xs.map(x=>`<article class="prog" style="--pc:${T[x[2]][1]}"><div class="pdate"><b>${x[1].slice(0,2)}</b><small>Th${x[1].slice(3)}</small></div><div class="pinfo"><span class="ptype">${T[x[2]][0]}</span><b>${esc(x[3])}</b><span class="sm mut">Giảng viên: ${esc(x[4])} · Điều phối: ${esc(x[5])}</span></div><div class="pnum"><span>${x[6]} người</span><span>${x[7]?TR(x[7]):'Miễn phí'}</span><span class="mut">chi ${TR(x[8])}</span></div></article>`).join('')}</section>`}).join('')}</div>`;
+ const P=PLAN_DEMO,f=S.kh||'all',T={pheu:['Phễu','#38bdf8'],chuyen:['Chuyên sâu','#f5c451']};
+ const L=P.filter(x=>f==='all'||x.t===f);
+ const ym=S.calM||'2026-12',[Y,Mo]=ym.split('-').map(Number);
+ const first=new Date(Y,Mo-1,1),days=new Date(Y,Mo,0).getDate(),lead=(first.getDay()+6)%7;
+ const inM=L.filter(x=>x.d.startsWith(ym));
+ const cells=[];for(let i=0;i<lead;i++)cells.push('<div class="cd empty"></div>');
+ const DOW=['Chủ nhật','Thứ 2','Thứ 3','Thứ 4','Thứ 5','Thứ 6','Thứ 7'];
+ for(let d=1;d<=days;d++){const ds=`${ym}-${String(d).padStart(2,'0')}`,ev=inM.filter(x=>x.d===ds),dw=new Date(Y,Mo-1,d).getDay();
+  cells.push(`<div class="cd ${dw===0||dw===6?'we':''} ${ev.length?'has':''}"><span class="cdn">${d}</span>${ev.map(x=>`<span class="cev" style="--pc:${T[x.t][1]}" title="${esc(x.n)}">${esc(x.n)}</span>`).join('')}</div>`)}
+ const sum=(xs,k)=>xs.reduce((a,x)=>a+x[k],0);
+ const mName=`Tháng ${Mo}/${Y}`;
+ const dd=x=>{const dt=new Date(x.d);return `${DOW[dt.getDay()]}, ${dt.getDate()}/${dt.getMonth()+1}/${dt.getFullYear()}`};
+ return `<p class="mut">Mỗi tháng có nhiều chương trình. <b style="color:#38bdf8">Phễu</b>: miễn phí hoặc giá thấp để thu hút khách. <b style="color:#f5c451">Chuyên sâu</b>: khóa học, lớp offline có doanh thu.</p>
+ <div class="tabs">${[['all','Tất cả'],['pheu','Chương trình phễu'],['chuyen','Chương trình chuyên sâu']].map(([k,t])=>`<button class="tab ${f===k?'on':''}" data-kh="${k}">${t}<span class="c">${k==='all'?P.length:P.filter(x=>x.t===k).length}</span></button>`).join('')}</div>
+ ${kpi([[L.length,'Chương trình cả năm'],[sum(L,'p').toLocaleString('vi-VN'),'Mục tiêu người tham gia'],[TR(sum(L,'r')),'Mục tiêu doanh thu năm','#34d399'],[TR(sum(L,'c')),'Chi phí dự kiến']])}
+ <div class="calhead"><button class="btn ghost sm" data-cal="-1">‹ Tháng trước</button><h3>${mName}</h3><button class="btn ghost sm" data-cal="1">Tháng sau ›</button></div>
+ <div class="calsum mut sm">${inM.filter(x=>x.t==='pheu').length} phễu · ${inM.filter(x=>x.t==='chuyen').length} chuyên sâu · mục tiêu ${TR(sum(inM,'r'))} · chi phí ${TR(sum(inM,'c'))}</div>
+ <div class="cal"><div class="cdh">Thứ 2</div><div class="cdh">Thứ 3</div><div class="cdh">Thứ 4</div><div class="cdh">Thứ 5</div><div class="cdh">Thứ 6</div><div class="cdh we">Thứ 7</div><div class="cdh we">Chủ nhật</div>${cells.join('')}</div>
+ <h3 style="margin-top:18px">Chương trình ${mName.toLowerCase()}</h3>
+ ${inM.length?inM.map(x=>`<article class="prog" style="--pc:${T[x.t][1]}"><div class="pdate"><b>${x.d.slice(8)}</b><small>${DOW[new Date(x.d).getDay()]}</small></div><div class="pinfo"><span class="ptype">${T[x.t][0]} · ${dd(x)}</span><b>${esc(x.n)}</b><span class="sm mut">Giảng viên: ${esc(x.g)} · Điều phối: ${esc(x.m)}</span></div><div class="pnum"><span>${x.p.toLocaleString('vi-VN')} người</span><span>${x.r?TR(x.r):'Miễn phí'}</span><span class="mut">chi ${TR(x.c)}</span></div></article>`).join(''):'<div class="panel empty">Chưa có chương trình nào trong tháng này.</div>'}`;
 },
 'doi-tac':()=>{
  const G=[['Thầy Trần Khánh Tư','Sáng lập CMA · Đóng gói di sản, AI','Phễu + chuyên sâu','Toàn bộ hệ sinh thái F1–F5',48,1250,4.9,'Chủ trì','#f5c451'],
@@ -941,6 +1051,9 @@ document.addEventListener('click',async e=>{
  if(t.dataset.demo){S.demo=!S.demo;try{localStorage.setItem('crm_demo',S.demo?'1':'')}catch(_){}mergeList();render();toast(S.demo?'Đã bật dữ liệu mẫu (chỉ trên máy này).':'Đã tắt dữ liệu mẫu.');return}
  if(t.dataset.cellsave){await saveEditor();return}
  if(t.dataset.kh){S.kh=t.dataset.kh;render();return}
+ if(t.dataset.cal){const [y,m]=S.calM.split('-').map(Number),d=new Date(y,m-1+(+t.dataset.cal),1);S.calM=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;render();return}
+ if(t.dataset.camp){S.camp=S.camp===t.dataset.camp?null:t.dataset.camp;S.bf={q:'',sp:'all',tt:'all',pt:'all',sort:'sp'};render();if(S.camp)setTimeout(()=>document.querySelector('.campd')?.scrollIntoView({behavior:'smooth',block:'start'}),60);return}
+ if(t.dataset.buyer){openBuyer(t.dataset.buyer);return}
  if(t.dataset.view){S.view=t.dataset.view;try{localStorage.setItem('crm_view',S.view)}catch(_){}render();return}
  if(t.id==='sideToggle'){const m=document.body.classList.toggle('side-mini');try{localStorage.setItem('crm_mini',m?'1':'')}catch(_){}t.setAttribute('aria-label',m?'Mở rộng menu':'Thu gọn menu');return}
  if(t.id==='menuBtn'){document.body.classList.add('menu-open');return}
@@ -974,6 +1087,7 @@ document.addEventListener('submit',async e=>{
 });
 document.addEventListener('input',e=>{
  if(e.target.id==='q'){S.f.q=e.target.value;const pos=e.target.selectionStart;render();const q=$('#q');q.focus();q.setSelectionRange(pos,pos)}
+ if(e.target.id==='bq'){S.bf.q=e.target.value;const pos=e.target.selectionStart;render();const q=$('#bq');q.focus();q.setSelectionRange(pos,pos)}
  if(e.target.id==='cq'){S.cf.q=e.target.value;const pos=e.target.selectionStart;render();const q=$('#cq');q.focus();q.setSelectionRange(pos,pos)}
 });
 document.addEventListener('change',async e=>{
@@ -981,6 +1095,7 @@ document.addEventListener('change',async e=>{
  if(e.target.id==='fst'){S.f.st=e.target.value;render()}
  if(e.target.id==='fpt'){S.f.pt=e.target.value;render()}
  if(e.target.id==='fform'){S.f.form=e.target.value;render()}
+ if(['bsp','btt','bpt','bsort'].includes(e.target.id)){S.bf[{bsp:'sp',btt:'tt',bpt:'pt',bsort:'sort'}[e.target.id]]=e.target.value;render()}
  if(e.target.id==='ckhoa'){S.cf.khoa=e.target.value;render()}
  if(e.target.id==='cst'){S.cf.st=e.target.value;render()}
  if(e.target.id==='cpt'){S.cf.pt=e.target.value;render()}

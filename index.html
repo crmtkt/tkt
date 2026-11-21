@@ -315,6 +315,19 @@ table.simple td:first-child{min-width:210px!important}
 .mcard summary span{font-size:14px;color:#dbe2ff}.mcard summary em{font-style:normal;color:var(--gold);font-size:13.5px}
 .mcard dl{margin:10px 0 6px}
 .kv2{display:grid;grid-template-columns:1fr auto;gap:4px 10px;font-size:13.5px;margin-top:8px}.kv2 span{color:var(--mut)}
+.plan{display:grid;gap:16px}
+.pm{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px}
+.pm header{display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap;margin-bottom:8px}.pm h3{margin:0}
+.prog{display:grid;grid-template-columns:56px minmax(0,1fr) auto;gap:12px;align-items:center;padding:10px;border-radius:12px;border-left:4px solid var(--pc);background:#0f1b47;margin-top:8px}
+.pdate{text-align:center;line-height:1.1}.pdate b{display:block;font-size:22px}.pdate small{color:var(--mut);font-size:12px}
+.pinfo{display:flex;flex-direction:column;gap:2px}.ptype{font-size:12px;font-weight:700;color:var(--pc)}
+.pnum{display:flex;flex-direction:column;align-items:flex-end;font-size:13.5px;white-space:nowrap}
+.gvs{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:14px}
+.gv{display:grid;grid-template-columns:96px minmax(0,1fr);gap:14px;background:var(--card);border:1px solid var(--line);border-top:4px solid var(--c);border-radius:16px;padding:14px}
+.gvimg{width:96px;height:96px;border-radius:16px;object-fit:cover}
+.gvn{font-size:17px}
+.gvini{display:grid;place-items:center;font-size:40px;font-weight:800;color:#1a1400;background:linear-gradient(135deg,#ffe29a,#f5b83d)}
+.gv .kv{grid-template-columns:96px minmax(0,1fr)}
 .bnav,.mscrim{display:none}
 .menubtn{display:grid;place-items:center;width:42px;height:42px;flex:none;border-radius:12px;border:1px solid var(--line);background:#111d48;color:var(--ink)}
 .menubtn svg{width:22px;height:22px}.menubtn:hover{border-color:var(--gold);color:var(--gold)}
@@ -352,6 +365,7 @@ body.solo .bnav,body.solo .menubtn{display:none}
 .toast{bottom:calc(76px + env(safe-area-inset-bottom))}
 }
 @media(max-width:600px){
+.prog{grid-template-columns:44px minmax(0,1fr)}.pnum{grid-column:2;flex-direction:row;gap:10px;align-items:center;flex-wrap:wrap}.gv{grid-template-columns:72px minmax(0,1fr)}.gvimg{width:72px;height:72px}.gv .kv{grid-template-columns:1fr}
 .vbars{gap:3px;height:180px}.vb b{display:none}.hb{grid-template-columns:minmax(80px,40%) minmax(0,1fr) auto}
 .kpis{grid-template-columns:repeat(2,minmax(0,1fr))}
 .cards{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.hvbody{padding:10px;gap:6px}.hvname{font-size:16px}.hvgrid{grid-template-columns:1fr!important}.hvq{display:none}.hvst{font-size:11.5px;padding:4px 9px;left:6px;bottom:6px}.hvfoot .sm{display:none}.hvfoot{justify-content:flex-end}table.wide .stick{min-width:170px!important}.hvgrid{grid-template-columns:1fr 1fr}.seg button{padding:6px 10px}
@@ -728,14 +742,32 @@ const MOD_DEMO={
  <div class="panel"><h3>Theo chiến dịch</h3>${hbars([['Sự kiện offline Sài Gòn 10/2026',540e6,'#ea580c'],['Zoom miễn phí hằng tuần',480e6,'#3b82f6'],['Ưu đãi học viên cũ',310e6,'#f5c451'],['Giới thiệu từ học viên',220e6,'#16a34a']],'#6366f1',TR)}</div></div>`;
 },
 'ke-hoach':()=>{
- const M=[['12/2026','Sự kiện offline Hà Nội','Thầy Tư','MC Thu Hà',350e6,90e6],['01/2027','Zoom Tết: Kế hoạch năm với AI','Thầy Tư','Oanh',150e6,15e6],['02/2027','Khai giảng Diamond Coaching','Thầy Tư, Coach','Mỹ Linh',200e6,20e6],['03/2027','Offline Sài Gòn: Đóng gói di sản','Thầy Tư, khách mời','MC Quang',400e6,110e6],['04/2027','Ra mắt sách nhóm viết sách','Thầy Tư, tác giả','MC Thu Hà',180e6,40e6],['05/2027','CMA Trainer khóa 2','Thầy Tư, Trainer','Oanh',250e6,25e6],['06/2027','Offline Đà Nẵng','Thầy Tư','MC Quang',300e6,95e6],['07/2027','Zoom chuyên đề Agent AI','Thầy Tư','Oanh',140e6,12e6],['08/2027','Tri ân học viên cũ','Ban tổ chức','Kim Anh',160e6,30e6],['09/2027','Diamond 2027 tuyển sinh','Thầy Tư','Mỹ Linh',260e6,35e6],['10/2027','Offline Sài Gòn','Thầy Tư','MC Thu Hà',420e6,120e6],['11/2027','Tổng kết năm, vinh danh','Ban tổ chức','Oanh',200e6,50e6]];
- return `<p class="mut">Bấm vào từng tháng để xem việc cần làm. Dùng màn hình này khi họp nhân sự.</p><div class="months12">${M.map(([m,ev,gv,mc,dt,cp],i)=>`<details class="mcard" ${i===0?'open':''}><summary><b>Tháng ${m}</b><span>${esc(ev)}</span><em>${TR(dt)}</em></summary>
- <dl class="kv sm"><dt>Sự kiện chính</dt><dd>${esc(ev)}</dd><dt>Giảng viên</dt><dd>${esc(gv)}</dd><dt>MC / điều phối</dt><dd>${esc(mc)}</dd><dt>Mục tiêu doanh thu</dt><dd>${VND(dt)}</dd><dt>Chi phí dự kiến</dt><dd>${VND(cp)}</dd></dl>
- <ul class="chk2"><li>Chốt địa điểm / link Zoom</li><li>Lên bài truyền thông 3 tuần trước</li><li>Phân công chăm sóc khách đăng ký</li></ul></details>`).join('')}</div>`;
+ const P=[ // [tháng, ngày, loại, tên, giảng viên, MC/điều phối, mục tiêu học viên, mục tiêu doanh thu, chi phí]
+ ['12/2026','05/12','pheu','Zoom miễn phí: AI cho người 40+','Thầy Tư','Oanh',300,0,3e6],['12/2026','12/12','pheu','Zoom miễn phí: Đóng gói kinh nghiệm thành khóa học','Thầy Tư','Mỹ Linh',300,0,3e6],['12/2026','14/12','chuyen','Offline Hà Nội: CMA F1 Công nghệ','Thầy Tư, GV Hoàng Nam','MC Thu Hà',120,240e6,85e6],['12/2026','20/12','chuyen','CMA Diamond: buổi 3 nhóm viết sách','Thầy Tư','Kim Anh',25,0,2e6],['12/2026','27/12','pheu','Workshop mini: Làm video bằng AI','GV Thảo Vy','Oanh',80,8e6,4e6],
+ ['01/2027','09/01','pheu','Zoom Tết: Kế hoạch năm mới với AI','Thầy Tư','Oanh',400,0,3e6],['01/2027','16/01','chuyen','Khai giảng Diamond Coaching','Thầy Tư, Coach Minh Đức','Mỹ Linh',30,300e6,20e6],['01/2027','23/01','pheu','Zoom miễn phí: Bán hàng không cần lộ mặt','GV Thảo Vy','Oanh',250,0,3e6],
+ ['02/2027','13/02','pheu','Zoom miễn phí: Agent AI cho chủ doanh nghiệp','Thầy Tư','Oanh',300,0,3e6],['02/2027','20/02','chuyen','CMA F2 Sale Marketing (online 4 buổi)','GV Quốc Huy','Kim Anh',60,180e6,15e6],['02/2027','27/02','chuyen','CMA Trainer khóa 2: khai giảng','Thầy Tư','Mỹ Linh',20,200e6,10e6],
+ ['03/2027','06/03','pheu','Zoom miễn phí: Đóng gói di sản','Thầy Tư','Oanh',350,0,3e6],['03/2027','15/03','chuyen','Offline Sài Gòn: Đóng gói di sản (2 ngày)','Thầy Tư, khách mời','MC Quang',200,420e6,120e6],['03/2027','22/03','pheu','Workshop mini: Viết sách cùng AI','GV Ngọc Lan','Oanh',80,8e6,4e6],['03/2027','29/03','chuyen','CMA F3 Tài chính','GV Hoàng Nam','Kim Anh',50,150e6,12e6]];
+ const months=[...new Set(P.map(x=>x[0]))],f=S.kh||'all',T={pheu:['Phễu','#38bdf8'],chuyen:['Chuyên sâu','#f5c451']};
+ const L=P.filter(x=>f==='all'||x[2]===f);
+ const sum=k=>L.reduce((a,x)=>a+x[k],0);
+ return `<p class="mut">Mỗi tháng có nhiều chương trình. <b style="color:#38bdf8">Phễu</b> là chương trình miễn phí hoặc giá thấp để thu hút khách; <b style="color:#f5c451">Chuyên sâu</b> là khóa học, lớp offline có doanh thu.</p>
+ <div class="tabs">${[['all','Tất cả'],['pheu','Chương trình phễu'],['chuyen','Chương trình chuyên sâu']].map(([k,t])=>`<button class="tab ${f===k?'on':''}" data-kh="${k}">${t}<span class="c">${k==='all'?P.length:P.filter(x=>x[2]===k).length}</span></button>`).join('')}</div>
+ ${kpi([[L.length,'Chương trình'],[L.reduce((a,x)=>a+x[6],0).toLocaleString('vi-VN'),'Mục tiêu người tham gia'],[TR(sum(7)),'Mục tiêu doanh thu','#34d399'],[TR(sum(8)),'Chi phí dự kiến']])}
+ <div class="plan">${months.map(m=>{const xs=L.filter(x=>x[0]===m);if(!xs.length)return '';const ph=xs.filter(x=>x[2]==='pheu').length,cs=xs.length-ph;return `<section class="pm"><header><h3>Tháng ${m}</h3><span class="mut sm">${ph} phễu · ${cs} chuyên sâu · mục tiêu ${TR(xs.reduce((a,x)=>a+x[7],0))}</span></header>
+  ${xs.map(x=>`<article class="prog" style="--pc:${T[x[2]][1]}"><div class="pdate"><b>${x[1].slice(0,2)}</b><small>Th${x[1].slice(3)}</small></div><div class="pinfo"><span class="ptype">${T[x[2]][0]}</span><b>${esc(x[3])}</b><span class="sm mut">Giảng viên: ${esc(x[4])} · Điều phối: ${esc(x[5])}</span></div><div class="pnum"><span>${x[6]} người</span><span>${x[7]?TR(x[7]):'Miễn phí'}</span><span class="mut">chi ${TR(x[8])}</span></div></article>`).join('')}</section>`}).join('')}</div>`;
 },
 'doi-tac':()=>{
- const D=[['Khách sạn A (Sài Gòn)','Hội trường sự kiện','Thuê hội trường giá ưu đãi','Chị P.','Đang hợp tác','#34d399'],['Studio quay dựng B','Quay dựng video','Quay sự kiện, dựng video ngắn','Anh K.','Đang hợp tác','#34d399'],['Nhà xuất bản C','Xuất bản sách','In và phát hành sách nhóm viết sách','Chị H.','Đang đàm phán','#60a5fa'],['Coach đồng hành D','Giảng viên trong hệ sinh thái','Đồng hành Diamond Coaching','Anh A.','Đang hợp tác','#34d399'],['Agency quảng cáo E','Quảng cáo','Chạy quảng cáo Facebook, TikTok','Anh V.','Tạm dừng','#94a3b8'],['Mắt Bão','Tên miền, email','Tên miền crmtkt.com','Hỗ trợ kỹ thuật','Đang hợp tác','#34d399']];
- return `${kpi([['6','Đối tác'],['4','Đang hợp tác','#34d399'],['1','Đang đàm phán'],['1','Tạm dừng']])}<div class="subs">${D.map(([n,lv,ht,dm,st,c])=>`<div class="sub" style="--c:${c}"><b>${esc(n)}</b><span class="mut sm">${esc(lv)}</span><p class="sm" style="margin:6px 0">${esc(ht)}</p><div class="sm">Đầu mối: ${esc(dm)}</div><div style="margin-top:6px">${pill(st,c)}</div></div>`).join('')}</div>`;
+ const G=[['Thầy Trần Khánh Tư','Sáng lập CMA · Đóng gói di sản, AI','Phễu + chuyên sâu','Toàn bộ hệ sinh thái F1–F5',48,1250,4.9,'Chủ trì','#f5c451'],
+ ['GV Hoàng Nam','Công nghệ AI, tự động hóa (F1, F3)','Chuyên sâu','CMA F1 Công nghệ, CMA F3 Tài chính',16,320,4.8,'Chia 40% doanh thu khóa','#34d399'],
+ ['GV Thảo Vy','Làm video, nội dung không lộ mặt','Phễu','Workshop video AI, Zoom bán hàng',22,860,4.7,'Phí theo buổi','#34d399'],
+ ['GV Quốc Huy','Sale, marketing, xây kênh','Chuyên sâu','CMA F2 Sale Marketing',10,180,4.6,'Chia 35% doanh thu khóa','#34d399'],
+ ['Coach Minh Đức','Coaching 1 kèm 1, phát triển bản thân','Chuyên sâu','Diamond Coaching',8,30,4.9,'Phí theo khóa','#60a5fa'],
+ ['GV Ngọc Lan','Viết sách, thương hiệu cá nhân','Phễu + chuyên sâu','Workshop viết sách, nhóm viết sách Diamond',6,140,4.8,'Đang thỏa thuận','#a78bfa']];
+ return `${kpi([[G.length,'Giảng viên'],[G.filter(g=>g[2].includes('Chuyên sâu')).length,'Dạy chương trình chuyên sâu'],[G.reduce((a,g)=>a+g[4],0),'Buổi đã dạy'],[G.reduce((a,g)=>a+g[5],0).toLocaleString('vi-VN'),'Học viên đã dạy']])}
+ <p class="mut">Giảng viên đào tạo trong hệ sinh thái CMA: dạy chương trình nào, hợp tác theo hình thức nào, hiệu quả ra sao.</p>
+ <div class="gvs">${G.map(([n,cm,loai,ct,bu,hv,dg,ht,c],i)=>`<article class="gv" style="--c:${c}">${i===0?`<span class="gvimg gvini">T</span>`:`<img src="${demoFace(i+3)}" alt="" class="gvimg">`}<div><b class="gvn">${esc(n)}</b><div class="sm" style="color:#dbe2ff">${esc(cm)}</div>
+  <div class="hvrow" style="margin:8px 0"><span class="chip">${esc(loai)}</span><span class="chip">★ ${dg}</span></div>
+  <dl class="kv sm"><dt>Chương trình</dt><dd>${esc(ct)}</dd><dt>Đã dạy</dt><dd>${bu} buổi · ${hv.toLocaleString('vi-VN')} học viên</dd><dt>Hợp tác</dt><dd>${esc(ht)}</dd></dl></div></article>`).join('')}</div>`;
 },
 'chi-phi':()=>{
  const C=[['Công cụ','Zoom Pro, Canva, ChatGPT, Claude',3.2e6],['Công cụ','Tên miền, email, lưu trữ',0.4e6],['Nhân sự','Chăm sóc khách hàng (2 người)',24e6],['Nhân sự','Vận hành, admin',12e6],['Nhân sự','Marketing, dựng video',14e6],['Mặt bằng','Văn phòng, điện nước',9e6],['Khác','Kế toán, thuế, phí ngân hàng',3.5e6]];
@@ -908,6 +940,7 @@ document.addEventListener('click',async e=>{
  if(t.id==='logout'){setTok('');S.loaded=false;clearInterval(poll);showLogin();return}
  if(t.dataset.demo){S.demo=!S.demo;try{localStorage.setItem('crm_demo',S.demo?'1':'')}catch(_){}mergeList();render();toast(S.demo?'Đã bật dữ liệu mẫu (chỉ trên máy này).':'Đã tắt dữ liệu mẫu.');return}
  if(t.dataset.cellsave){await saveEditor();return}
+ if(t.dataset.kh){S.kh=t.dataset.kh;render();return}
  if(t.dataset.view){S.view=t.dataset.view;try{localStorage.setItem('crm_view',S.view)}catch(_){}render();return}
  if(t.id==='sideToggle'){const m=document.body.classList.toggle('side-mini');try{localStorage.setItem('crm_mini',m?'1':'')}catch(_){}t.setAttribute('aria-label',m?'Mở rộng menu':'Thu gọn menu');return}
  if(t.id==='menuBtn'){document.body.classList.add('menu-open');return}

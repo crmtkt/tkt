@@ -1,0 +1,4 @@
+config.php
+data/*.sqlite*
+data/uploads/*
+!data/uploads/.gitkeep

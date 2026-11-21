@@ -1,0 +1,18 @@
+# CRM CMA | SKT
+Options -Indexes
+DirectoryIndex index.php
+
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  # Bật HTTPS (bỏ dấu # ở 2 dòng dưới sau khi Mắt Bão đã cấp SSL cho crmtkt.com)
+  # RewriteCond %{HTTPS} off
+  # RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
+  # Link form: https://crmtkt.com/dang-ky/ten-form
+  RewriteRule ^dang-ky/([a-z0-9-]+)/?$ form.php?s=$1 [L,QSA]
+</IfModule>
+
+# Không cho tải trực tiếp file cấu hình, thư viện, cơ sở dữ liệu
+<FilesMatch "^(config|config\.sample|lib)\.php$|\.(sqlite|md|log)$">
+  Require all denied
+</FilesMatch>

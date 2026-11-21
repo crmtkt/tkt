@@ -2,7 +2,8 @@
 <html lang="vi">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#070d24">
 <title>CRM CMA | SKT · Quản trị</title>
 <meta name="robots" content="noindex">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -17,7 +18,7 @@
 --paper:#ffffff;--pink:#1b2340;--pmut:#5b6585;--pline:#dde3f1}
 *{box-sizing:border-box;min-width:0}
 html{scroll-padding-top:72px}
-body{margin:0;background:radial-gradient(1200px 600px at 70% -10%,#22407f 0,transparent 60%),linear-gradient(180deg,var(--bg2),var(--bg));background-attachment:fixed;color:var(--ink);font:16px/1.55 "Be Vietnam Pro",system-ui,sans-serif;overflow-x:clip;min-height:100vh}
+body{margin:0;background:radial-gradient(1200px 600px at 70% -10%,#22407f 0,transparent 60%),linear-gradient(180deg,var(--bg2),var(--bg));background-attachment:fixed;background-color:var(--bg);color:var(--ink);font:16px/1.55 "Be Vietnam Pro",system-ui,sans-serif;overflow-x:clip;min-height:100vh}
 a{color:var(--gold2)}
 button,input,select,textarea{font:inherit}
 button{cursor:pointer}
@@ -205,7 +206,55 @@ form.paper{color-scheme:light;background:#fff;color:#241338;border-radius:22px;p
 .linkrow .inp{flex:1 1 260px;color:var(--gold2)}
 .fstats{margin-top:10px;color:var(--mut);font-size:14.5px}.fstats b{color:var(--ink);font-size:18px}
 @media(max-width:1100px){.eco{grid-template-columns:repeat(3,minmax(0,1fr))}.hero{grid-template-columns:1fr}.hero svg{max-height:240px}}
-@media(max-width:860px){.app{grid-template-columns:1fr}aside{position:static;height:auto;padding:12px}.brand{margin-bottom:10px}.nav{display:flex;overflow-x:auto;gap:8px;padding-bottom:6px}.nav a{flex:none;min-height:44px;font-size:14px}.side-foot{display:none}.stats{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.menubtn,.bnav,.mscrim{display:none}
+@media(max-width:860px){
+html{background:var(--bg)}
+body{background-attachment:scroll;padding-bottom:calc(64px + env(safe-area-inset-bottom))}
+.app{grid-template-columns:1fr}
+aside{position:fixed;z-index:30;top:0;left:0;bottom:0;width:min(300px,84vw);height:auto;padding:calc(16px + env(safe-area-inset-top)) 14px 24px;transform:translateX(-105%);transition:transform .22s;box-shadow:20px 0 60px -20px #000}
+body.menu-open aside{transform:none}
+.mscrim{position:fixed;inset:0;z-index:29;background:rgba(3,6,20,.6)}
+body.menu-open .mscrim{display:block}
+.nav a{min-height:48px;font-size:15px}
+.side-foot{display:none}
+.top{padding:calc(8px + env(safe-area-inset-top)) 12px 8px;gap:8px;min-height:56px}
+.top h1{font-size:17px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.menubtn{display:grid;place-items:center;width:44px;height:44px;flex:none;border-radius:12px;border:1px solid var(--line);background:#111d48;color:var(--ink)}
+.menubtn svg{width:22px;height:22px}
+#conn{font-size:0;width:12px;height:12px;padding:0;flex:none;border-radius:50%;background:#64748b}
+#conn.ok{background:#34d399}#conn.warn{background:#fb923c}
+.top #logout{min-height:40px;padding:6px 12px;font-size:14px}
+.bnav{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));position:fixed;left:0;right:0;bottom:0;z-index:15;background:rgba(7,13,36,.96);backdrop-filter:blur(10px);border-top:1px solid #1b2a5c;padding:6px 4px calc(6px + env(safe-area-inset-bottom))}
+.bnav a{display:flex;flex-direction:column;align-items:center;gap:2px;min-height:52px;justify-content:center;border-radius:12px;color:var(--mut);text-decoration:none;font-size:12px;font-weight:600}
+.bnav a svg{width:22px;height:22px}
+.bnav a.on{color:var(--gold);background:#141f4d}
+body.solo .bnav,body.solo .menubtn{display:none}
+.stats{grid-template-columns:repeat(2,minmax(0,1fr))}
+.band{padding:18px 14px}
+.toast{bottom:calc(76px + env(safe-area-inset-bottom))}
+}
+@media(max-width:600px){
+.hero{padding:20px;min-height:0}.hero p{font-size:16px}
+.courses{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:10px;margin:12px 0 16px}
+.course{padding:14px}.course b{font-size:19px}.course small{font-size:11.5px;display:block;line-height:1.3}
+.tabs{flex-wrap:nowrap;overflow-x:auto;margin:0 -14px 10px;padding:0 14px 4px;scrollbar-width:none}.tabs::-webkit-scrollbar{display:none}
+.tab{flex:none;white-space:nowrap}
+.bar{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px}
+.bar>#q,.bar>#phone{grid-column:1/-1}
+.bar .inp,.bar .btn{width:100%}
+.bar>a.btn{justify-content:center}
+.fcard .bar{display:flex}
+.fhead{flex-wrap:wrap}.fhead .st{flex:none}
+.linkrow .btn{width:100%}
+.stack td:first-child{padding-inline-start:0}.stack td:first-child::before{display:none}
+.stack tr{padding:12px 10px;border-bottom:1px solid #1c2a5c}
+.dh{padding:14px;gap:12px}.dh img,.dh .ava{width:64px;height:64px;font-size:22px;border-radius:14px}.dh h3{font-size:18px}
+.dbody{padding:12px;gap:12px}
+.panel{padding:14px;border-radius:14px}
+.drawer{width:100vw}
+.drawer .bar{display:flex}
+h2{font-size:24px}
+}
 @media(max-width:600px){.eco{grid-template-columns:repeat(2,minmax(0,1fr))}.courses,.grid2,.row2,.why,.months{grid-template-columns:1fr}.kv{grid-template-columns:1fr}.kv dt{margin-top:6px}table{font-size:14px}.stack thead{display:none}.stack tr{display:grid;padding-block:10px}.stack td{display:flow-root;border:0;padding:3px 0;padding-inline-start:8em;text-align:start}.stack td::before{content:attr(data-l);float:inline-start;width:7.5em;margin-inline-start:-8em;color:var(--mut);font-size:13px}.stack td:empty{display:none}.photo{flex-direction:column;align-items:flex-start}.why{gap:8px}.why div{padding:12px}.opts label{flex:1 1 calc(50% - 4px)}.levels label{padding:10px 12px}.fhero p{font-size:15.5px}}
 body.solo .app{grid-template-columns:1fr}body.solo aside,body.solo .top{display:none}
 @media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
@@ -225,9 +274,11 @@ body.solo .app{grid-template-columns:1fr}body.solo aside,body.solo .top{display:
   <p class="side-foot">Bản đồ vận hành cuộc đời thịnh vượng CMA — xây dần từng ô.</p>
 </aside>
 <main>
-  <div class="top"><h1 id="title">Tổng quan</h1><span class="pill" id="conn">Đang kết nối dữ liệu…</span></div>
+  <div class="top"><button class="menubtn" id="menuBtn" aria-label="Mở menu"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button><h1 id="title">Tổng quan</h1><span class="pill" id="conn">Đang kết nối dữ liệu…</span></div>
   <div id="view"></div>
 </main>
+<nav class="bnav" id="bnav" aria-label="Điều hướng nhanh"></nav>
+<div class="mscrim" id="mscrim"></div>
 </div>
 <div class="scrim" id="scrim"></div>
 <div class="drawer" id="drawer" role="dialog" aria-modal="true" aria-label="Hồ sơ học viên"></div>
@@ -312,6 +363,7 @@ function renderNav(route){
  $('#nav').innerHTML=`<a class="home ${route==='tong-quan'?'on':''}" href="#tong-quan">${svgI('home')}Tổng quan</a>`+
   MODS.map(m=>`<a href="#${m.id}" style="--c:${m.c}" class="${route===m.id?'on':''}">${svgI(m.ic)}${m.n}. ${m.name}</a>`).join('')+
   `<a class="home ${route==='form'?'on':''}" href="#form" style="border-color:#a43be6;color:#f0d9ff">${svgI('form')}Form thu thập</a>`;
+ $('#bnav').innerHTML=[['tong-quan','home','Tổng quan'],['san-pham','box','Sản phẩm'],['khach-hang','users','Khách hàng'],['form','form','Form']].map(([h,ic,t])=>`<a href="#${h}" class="${route===h?'on':''}">${svgI(ic)}<span>${t}</span></a>`).join('');
 }
 
 /* ---------- Views ---------- */
@@ -510,12 +562,13 @@ function showLogin(msg){
 /* ---------- Router ---------- */
 const TITLES={'tong-quan':'Tổng quan','form':'Form thu thập'};
 function route(){
+ document.body.classList.remove('menu-open');
+ if(!S.loaded)return;
  let r=(location.hash||'').slice(1)||'tong-quan';
  const m=MODS.find(x=>x.id===r);if(!m&&!TITLES[r])r='tong-quan';
  document.body.classList.remove('solo');
  renderNav(r);$('#title').textContent=m?`${m.n}. ${m.name}`:TITLES[r];
  S.route=r;render(true);
- const on=document.querySelector('#nav a.on');if(on&&innerWidth<=860)on.scrollIntoView({block:'nearest',inline:'center'});
 }
 function render(full){
  if(!S.loaded||!S.route)return;
@@ -536,6 +589,7 @@ document.addEventListener('click',async e=>{
  if(t.matches('a.f')&&t.dataset.eco==='4'){S.f.khoa='Diamond'}
  if(t.id==='closeD'){closeDrawer();return}
  if(t.id==='logout'){setTok('');S.loaded=false;clearInterval(poll);showLogin();return}
+ if(t.id==='menuBtn'){document.body.classList.add('menu-open');return}
  if(t.id==='eye'){const i=$('#lp'),show=i.type==='password';i.type=show?'text':'password';t.querySelector('.slash').style.display=show?'':'none';t.setAttribute('aria-label',show?'Ẩn mật khẩu':'Hiện mật khẩu');t.title=t.getAttribute('aria-label');i.focus();return}
  if(t.id==='newForm'){formModal();return}
  if(t.dataset.copy){const f=S.forms.find(x=>x.id===t.dataset.copy);try{await navigator.clipboard.writeText(formLink(f));toast('Đã sao chép link. Dán vào Zalo gửi học viên nhé.')}catch(_){toast('Bôi đen ô link rồi sao chép thủ công giúp em.',true)}return}
@@ -574,8 +628,10 @@ document.addEventListener('change',e=>{
  if(e.target.id==='fform'){S.f.form=e.target.value;render()}
  if(e.target.id==='feKhoa'){$('#feKhacWrap').style.display=e.target.value==='__khac'?'':'none'}
 });
-document.addEventListener('keydown',e=>{if(e.key==='Escape')closeDrawer();if(e.key==='Enter'&&e.target.matches('tr[data-open]'))openDrawer(e.target.dataset.open)});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeDrawer();document.body.classList.remove('menu-open')}if(e.key==='Enter'&&e.target.matches('tr[data-open]'))openDrawer(e.target.dataset.open)});
 $('#scrim').addEventListener('click',closeDrawer);
+$('#mscrim').addEventListener('click',()=>document.body.classList.remove('menu-open'));
+$('#nav').addEventListener('click',e=>{if(e.target.closest('a'))document.body.classList.remove('menu-open')});
 
 function exportCsv(fid){
  const f=S.forms.find(x=>x.id===fid);const cols=[['Ngày gửi','createdAt'],['Họ tên','hoTen'],['Năm sinh','namSinh'],['SĐT','sdt'],['Email','email'],['Tỉnh/thành','thanhPho'],['Công việc','congViec'],['Vai trò','vaiTro'],['Khóa đã và đang học','khoaDaHoc'],['Lý do đăng ký','lyDo'],['Cần thầy hỗ trợ','vanDe'],['Mong muốn','mongMuon'],['Kết quả mong đợi','ketQua'],['Rào cản','ngaiNgai'],['Muốn đóng gói','sanPhamRieng'],['Thời gian học/tuần','thoiGian'],['Cấp độ AI','aiLevel'],['Công cụ AI','aiTools'],['Đã dùng AI để','aiDaLam'],['Muốn AI giúp','aiMuon'],['Trạng thái','trangThai'],['Người phụ trách','phuTrach'],['Nhóm','nhom'],['Link Zalo','zaloGroup'],['Ghi chú','ghiChu']];

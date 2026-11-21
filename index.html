@@ -53,7 +53,7 @@ h3{font-size:19px;margin:0 0 8px}
 .f{border-radius:16px;padding:18px 14px;text-align:center;border:1.5px solid var(--c);background:linear-gradient(180deg,color-mix(in srgb,var(--c) 30%,#0b1433),#0e1a44);box-shadow:0 0 22px -8px var(--c);text-decoration:none;color:#fff;display:block}
 .f b{display:block;font-size:22px;font-weight:800}
 .f span{font-size:14px;color:#dbe2ff}
-a.f:hover{transform:translateY(-3px)}
+a.f:hover{box-shadow:0 0 30px -4px var(--c);filter:brightness(1.12)}
 .stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin-top:22px}
 .stat{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px}
 .stat b{font-size:30px;display:block;line-height:1.1}
@@ -206,6 +206,11 @@ form.paper{color-scheme:light;background:#fff;color:#241338;border-radius:22px;p
 .linkrow .inp{flex:1 1 260px;color:var(--gold2)}
 .fstats{margin-top:10px;color:var(--mut);font-size:14.5px}.fstats b{color:var(--ink);font-size:18px}
 @media(max-width:1100px){.eco{grid-template-columns:repeat(3,minmax(0,1fr))}.hero{grid-template-columns:1fr}.hero svg{max-height:240px}}
+.fams{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;margin:16px 0 0}
+.fam{all:unset;cursor:pointer;display:flex;flex-direction:column;gap:2px;padding:12px;border-radius:14px;border:1.5px solid color-mix(in srgb,var(--c) 55%,transparent);background:linear-gradient(180deg,color-mix(in srgb,var(--c) 22%,#0b1433),#0e1a44);min-height:44px}
+.fam b{font-size:17px}.fam span{font-size:13.5px;color:#dbe2ff}.fam small{font-size:12px;color:var(--mut)}
+.fam.on{border-color:var(--c);box-shadow:0 0 0 2px var(--c),0 0 22px -6px var(--c)}
+.fam:focus-visible{outline:3px solid var(--gold)}
 .menubtn,.bnav,.mscrim{display:none}
 @media(max-width:860px){
 html{background:var(--bg)}
@@ -234,6 +239,7 @@ body.solo .bnav,body.solo .menubtn{display:none}
 .toast{bottom:calc(76px + env(safe-area-inset-bottom))}
 }
 @media(max-width:600px){
+.fams{display:flex;overflow-x:auto;margin:14px -14px 0;padding:2px 14px 6px;scrollbar-width:none}.fams::-webkit-scrollbar{display:none}.fam{flex:none;width:132px}
 .hero{padding:20px;min-height:0}.hero p{font-size:16px}
 .courses{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:10px;margin:12px 0 16px}
 .course{padding:14px}.course b{font-size:19px}.course small{font-size:11.5px;display:block;line-height:1.3}
@@ -341,7 +347,7 @@ const MODS=[
 const ECO=[['CMA F1','Công nghệ','Thành thạo AI, Agent','#2f8bff'],['CMA F2','Sale Marketing','','#8b5cf6'],['CMA F3','Tài chính','','#e3a826'],['CMA F4','Vận hành','BMC','#22c55e'],['CMA F5','Đóng gói di sản','CMA Trainer · Diamond','#d946ef']];
 const STATUS=[['Mới đăng ký','#60a5fa'],['Đã liên hệ','#a78bfa'],['Đã vào nhóm Zalo','#22d3ee'],['Đang học','#34d399'],['Cần chăm sóc gấp','#fb923c'],['Tạm dừng','#94a3b8'],['Hoàn thành','#f5c451']];
 const stColor=s=>(STATUS.find(x=>x[0]===s)||['','#94a3b8'])[1];
-const COURSES={Diamond:{name:'CMA Diamond',sub:'Diamond CMA F5 · Đóng gói di sản',c1:'#7c2bd6',c2:'#c026d3'},Trainer:{name:'CMA Trainer',sub:'Đào tạo người đào tạo · F5',c1:'#b7791f',c2:'#e0a526'}};
+const COURSES={Diamond:{name:'CMA Diamond',sub:'Khóa thuộc CMA F5',c1:'#7c2bd6',c2:'#c026d3'},Trainer:{name:'CMA Trainer',sub:'Khóa thuộc CMA F5',c1:'#b7791f',c2:'#e0a526'}};
 const GROUPS=['Diamond thông thường','Nhóm viết sách','Nhóm thứ ba (chờ xác nhận tên)'];
 const YEARS=['2026','2025','2024'];
 const PREV=['CMA F1 – Công nghệ (AI, Agent)','CMA F2 – Sale Marketing','CMA F3 – Tài chính','CMA F4 – Vận hành (BMC)','CMA Diamond (khóa trước)','CMA Trainer (khóa trước)','Sự kiện offline Sài Gòn','Sự kiện offline Hà Nội','Chưa học khóa nào'];
@@ -352,7 +358,7 @@ const mName=m=>`Tháng ${+m.slice(5)}/${m.slice(0,4)}`;
 const DEFAULT_STAFF=['Kim Anh','Mỹ Linh','Oanh'];
 
 const S={list:[],forms:[],staff:DEFAULT_STAFF.slice(),loaded:false,canWrite:true,tok:'',site:'',user:'',
- f:{khoa:'Diamond',nam:'2026',nhom:'all',q:'',st:'all',pt:'all',form:'all'},open:null,phone:''};
+ f:{fam:'F5',khoa:'Diamond',nam:'2026',nhom:'all',q:'',st:'all',pt:'all',form:'all'},open:null,phone:''};
 
 /* ---------- UI helpers ---------- */
 let tt;
@@ -414,7 +420,10 @@ function vProducts(){
  const base=S.list.filter(x=>x.khoa===f.khoa&&(f.nam==='all'||String(x.nam||'2026')===f.nam));
  const rows=filtered();
  return `<div class="band">
- <h2>Ô 2 · Sản phẩm</h2><p class="mut" style="margin:0">Chọn khóa → năm → nhóm để ra danh sách. Bấm vào một người để mở hồ sơ, hành trình, trạng thái và người phụ trách.</p>
+ <h2>Ô 2 · Sản phẩm</h2><p class="mut" style="margin:0">Hệ sinh thái CMA F1 → F5. Chọn nhóm sản phẩm → khóa → năm → nhóm lớp để ra danh sách học viên.</p>
+ <div class="fams" role="group" aria-label="Nhóm sản phẩm">${ECO.map(([a,b,cc,col],i)=>{const k='F'+(i+1),n=k==='F5'?S.list.filter(x=>x.khoa==='Diamond'||x.khoa==='Trainer').length:0;return `<button class="fam ${f.fam===k?'on':''}" data-fam="${k}" style="--c:${col}"><b>${a}</b><span>${b}</span><small>${k==='F5'?'2 khóa · '+n+' học viên':'Chưa có khóa'}</small></button>`}).join('')}</div>
+ ${f.fam!=='F5'?(()=>{const e=ECO[+f.fam.slice(1)-1];return `<div class="panel empty" style="margin-top:16px;text-align:left"><h3 style="color:${e[3]}">${e[0]} · ${e[1]}${e[2]?' <small class="mut">('+e[2]+')</small>':''}</h3><p style="margin:0">Nhóm sản phẩm này chưa có khóa học nào trong CRM. Khi mở khóa mới thuộc ${e[0]}, anh/chị bổ sung để em thêm vào đây cùng form thu thập riêng.</p></div></div>`})():`
+ <h3 style="margin:18px 0 0">CMA F5 · Đóng gói di sản</h3>
  <div class="courses">${Object.entries(COURSES).map(([k,c])=>`<button class="course ${f.khoa===k?'on':''}" data-course="${k}" style="--c1:${c.c1};--c2:${c.c2}"><small>${c.sub}</small><b>${c.name}</b><span class="n">${cnt(k)} học viên</span></button>`).join('')}</div>
  <div class="tabs" role="group" aria-label="Năm">${['2026','2025','2024','all'].map(y=>`<button class="tab ${f.nam===y?'on':''}" data-nam="${y}">${y==='all'?'Tất cả các năm':'Năm '+y}</button>`).join('')}</div>
  ${f.khoa==='Diamond'?`<div class="tabs" role="group" aria-label="Nhóm">${['all',...GROUPS].map(g=>`<button class="tab ${f.nhom===g?'on':''}" data-nhom="${esc(g)}">${g==='all'?'Tất cả nhóm':esc(g)}<span class="c">${g==='all'?base.length:base.filter(x=>x.nhom===g).length}</span></button>`).join('')}</div>`:''}
@@ -432,7 +441,7 @@ function vProducts(){
  <td>${lvBar(+x.aiLevel||0)}</td><td style="white-space:nowrap">${fmtD(x.createdAt)}</td></tr>`).join('')}</tbody></table>`
  :`<div class="empty">${S.list.length?'Không có học viên khớp bộ lọc này.':'Chưa có học viên nào. Vào mục Form thu thập, sao chép link gửi học viên; phiếu sẽ hiện ở đây ngay khi họ bấm gửi.'}</div>`}</div>
  
- </div>`;
+ </div>`}`;
 }
 
 function vCustomers(){
@@ -575,6 +584,7 @@ function render(full){
  const r=S.route,y=scrollY;
  $('#view').innerHTML=r==='tong-quan'?vHome():r==='san-pham'?vProducts():r==='khach-hang'?vCustomers():r==='nhan-su'?vStaff():r==='form'?vForms():vModule(MODS.find(x=>x.id===r));
  scrollTo(0,full?0:y);
+ const fo=document.querySelector('.fam.on');if(fo){const c=fo.parentElement;c.scrollLeft=fo.offsetLeft-c.clientWidth/2+fo.clientWidth/2}
  setTimeout(loadPhotos,50);
 }
 addEventListener('hashchange',()=>{closeDrawer();route()});
@@ -586,7 +596,8 @@ document.addEventListener('click',async e=>{
  if(t.dataset.course){S.f.khoa=t.dataset.course;S.f.nhom='all';render();return}
  if(t.dataset.nam){S.f.nam=t.dataset.nam;render();return}
  if(t.dataset.nhom){S.f.nhom=t.dataset.nhom;render();return}
- if(t.matches('a.f')&&t.dataset.eco==='4'){S.f.khoa='Diamond'}
+ if(t.matches('a.f')&&t.dataset.eco){S.f.fam='F'+(+t.dataset.eco+1)}
+ if(t.dataset.fam){S.f.fam=t.dataset.fam;render();return}
  if(t.id==='closeD'){closeDrawer();return}
  if(t.id==='logout'){setTok('');S.loaded=false;clearInterval(poll);showLogin();return}
  if(t.id==='menuBtn'){document.body.classList.add('menu-open');return}
@@ -594,7 +605,7 @@ document.addEventListener('click',async e=>{
  if(t.id==='newForm'){formModal();return}
  if(t.dataset.copy){const f=S.forms.find(x=>x.id===t.dataset.copy);try{await navigator.clipboard.writeText(formLink(f));toast('Đã sao chép link. Dán vào Zalo gửi học viên nhé.')}catch(_){toast('Bôi đen ô link rồi sao chép thủ công giúp em.',true)}return}
  if(t.dataset.editform){formModal(S.forms.find(x=>x.id===t.dataset.editform));return}
- if(t.dataset.viewform){const f=S.forms.find(x=>x.id===t.dataset.viewform);S.f={...S.f,form:f.id,khoa:['Diamond','Trainer'].includes(f.khoa)?f.khoa:S.f.khoa,nam:'all',nhom:'all'};location.hash='san-pham';return}
+ if(t.dataset.viewform){const f=S.forms.find(x=>x.id===t.dataset.viewform);S.f={...S.f,fam:['Diamond','Trainer'].includes(f.khoa)?'F5':S.f.fam,form:f.id,khoa:['Diamond','Trainer'].includes(f.khoa)?f.khoa:S.f.khoa,nam:'all',nhom:'all'};location.hash='san-pham';return}
  if(t.dataset.export){exportCsv(t.dataset.export);return}
  if(t.dataset.toggleform){const f=S.forms.find(x=>x.id===t.dataset.toggleform);try{await api('form_save',{...f,mo:!f.mo});await reload();toast(f.mo?'Đã đóng form':'Đã mở lại form')}catch(err){toast(err.message,true)}return}
  if(t.dataset.delform){if(!t.dataset.sure){t.dataset.sure=1;t.textContent='Bấm lần nữa để xóa';return}try{await api('form_delete',{id:t.dataset.delform});await reload();toast('Đã xóa form')}catch(err){toast(err.message,true)}return}

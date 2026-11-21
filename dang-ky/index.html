@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Phiếu thông tin học viên · CMA | SKT</title>
+<meta name="robots" content="noindex">
+<meta property="og:title" content="Phiếu thông tin học viên · CMA | SKT">
+<meta property="og:description" content="Thầy Trần Khánh Tư và Ban tổ chức muốn hiểu anh/chị thật rõ để đồng hành tốt nhất.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--a1:#7c2bd6;--a2:#c026d3;--ac:#8b2fd9;--dk:#3d0f6e;--soft:#f3e8ff;--b1:#2b0a52;--b2:#150630;--ink:#241338;--mut:#6b5f7f;--line:#ddd3ea}
+*{box-sizing:border-box;min-width:0}
+body{margin:0;font:16px/1.55 "Be Vietnam Pro",system-ui,sans-serif;color:var(--ink);overflow-x:clip;min-height:100vh;
+ background:radial-gradient(900px 500px at 15% -5%,color-mix(in srgb,var(--a2) 40%,transparent),transparent 60%),radial-gradient(800px 500px at 100% 10%,color-mix(in srgb,var(--a1) 50%,transparent),transparent 60%),linear-gradient(180deg,var(--b1),var(--b2) 70%);background-attachment:fixed}
+.wrap{max-width:760px;margin:0 auto;padding:clamp(18px,4vw,48px) max(4vw,14px) 40px}
+.hero{text-align:center;padding:4px 0 18px;color:#fff}
+.hero svg{filter:drop-shadow(0 6px 18px rgba(245,196,81,.45))}
+.kick{margin:8px 0 2px;font-size:14px;font-weight:600;color:color-mix(in srgb,var(--a2) 35%,#fff)}
+.hero h1{font-size:clamp(28px,5vw,44px);line-height:1.1;margin:4px 0 10px;text-wrap:balance}
+.hero h1 span{background:linear-gradient(90deg,#ffe29a,#f5b83d);-webkit-background-clip:text;background-clip:text;color:transparent}
+.hero p{color:#efe8ff;max-width:36em;margin:6px auto 0;font-size:16.5px}
+.why{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:8px 0 20px}
+.why div{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);border-radius:14px;padding:14px;font-size:14.5px;color:#f1ecff}
+.why b{display:block;color:#ffd978;margin-bottom:2px;font-size:15.5px}
+.paper,.tcard{background:#fff;border-radius:22px;padding:clamp(18px,4vw,40px);box-shadow:0 30px 80px -30px #000;border-top:6px solid var(--ac)}
+.sec{border-top:1px solid #eee8f5;padding-top:26px;margin-top:26px}
+.sec:first-child{border:0;margin:0;padding:0}
+.sec h2{font-size:21px;color:var(--dk);display:flex;gap:12px;align-items:center;margin:0 0 4px}
+.sec h2 em{font-style:normal;width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,var(--a1),var(--a2));color:#fff;display:grid;place-items:center;font-size:16px;flex:none}
+.sec>p{color:var(--mut);margin:0 0 18px;font-size:15px}
+.fld{margin:0 0 20px}
+.fld>label,.lb{display:block;font-weight:600;margin:0 0 8px;font-size:16px}
+.hint{display:block;font-weight:400;color:var(--mut);font-size:14px;margin-top:3px}
+.req{color:#d6336c}
+.inp{width:100%;background:#fbf9fe;color:var(--ink);border:1.5px solid var(--line);border-radius:12px;min-height:50px;padding:12px 14px;font:inherit;font-size:16px}
+.inp:focus{outline:0;border-color:var(--ac);box-shadow:0 0 0 4px color-mix(in srgb,var(--ac) 18%,transparent);background:#fff}
+.inp::placeholder{color:#a196b3}
+textarea.inp{min-height:110px;resize:vertical}
+.opts{display:flex;flex-wrap:wrap;gap:8px}
+.opts label{display:flex;align-items:center;gap:10px;min-height:48px;padding:10px 14px;border-radius:12px;border:1.5px solid var(--line);background:#fbf9fe;cursor:pointer;font-size:15.5px}
+.opts input,.levels input{width:20px;height:20px;accent-color:var(--ac);flex:none}
+.opts label:has(input:checked),.levels label:has(input:checked){border-color:var(--ac);background:var(--soft);color:var(--dk);font-weight:600}
+.agree label{width:100%;align-items:flex-start;line-height:1.45}
+.agree input{margin-top:2px}
+.levels{display:grid;gap:10px}
+.levels label{display:grid;grid-template-columns:auto auto minmax(0,1fr);gap:12px;align-items:center;padding:12px 14px;border-radius:14px;border:1.5px solid var(--line);background:#fbf9fe;cursor:pointer}
+.levels b{font-size:15.5px}.levels small{font-size:14px;color:var(--mut);font-weight:400}
+.lvn{width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,var(--a1),var(--a2));color:#fff;display:grid;place-items:center;font-weight:800}
+.photo{display:flex;gap:18px;align-items:center}
+.pv{width:120px;height:120px;border-radius:50%;background:var(--soft);border:2px dashed color-mix(in srgb,var(--ac) 45%,#fff);display:grid;place-items:center;overflow:hidden;color:var(--dk);font-size:13px;text-align:center;flex:none;cursor:pointer;padding:8px;position:relative}
+.pv img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.pbtn small{display:block;color:var(--mut);font-size:13.5px;margin-top:6px}
+.btn2{display:inline-flex;align-items:center;min-height:46px;padding:8px 18px;border-radius:12px;border:1.5px solid var(--ac);color:var(--dk);font-weight:600;cursor:pointer;background:#fff}
+.vh{position:absolute;width:1px;height:1px;opacity:0;overflow:hidden}
+.photo:focus-within .btn2{outline:3px solid var(--a2);outline-offset:2px}
+.secure{background:var(--soft);border:1px solid color-mix(in srgb,var(--ac) 25%,#fff);border-radius:14px;padding:16px 18px;font-size:15px;margin-bottom:16px}
+.secure ul{margin:6px 0 0;padding-left:20px}.secure li{margin:3px 0}
+.err{color:#c2255c;font-size:14px;margin-top:6px;display:none}
+.bad .err{display:block}
+.bad .inp,.bad .opts label,.bad .levels label,.bad .pv{border-color:#e0679a}
+.send{display:flex;align-items:center;justify-content:center;width:100%;min-height:56px;border:0;border-radius:14px;background:linear-gradient(90deg,var(--a1),var(--a2));color:#fff;font:inherit;font-weight:700;font-size:17px;box-shadow:0 12px 28px -12px var(--ac);cursor:pointer}
+.send:disabled{opacity:.6}
+.send:focus-visible,.inp:focus-visible{outline:3px solid var(--a2);outline-offset:2px}
+.hp{position:absolute;left:-9999px}
+.foot{text-align:center;color:rgba(255,255,255,.7);font-size:13.5px;margin-top:22px}
+.tcard{text-align:center}
+.tcard h1{color:var(--dk);font-size:clamp(28px,5vw,40px);margin:4px 0 10px}
+.tcard .kick{color:var(--ac)}
+.tic svg{width:84px;height:84px}
+.lead{font-size:17px;color:#4a3f5e;max-width:34em;margin:0 auto 22px}
+.next{list-style:none;counter-reset:n;padding:0;margin:0 auto 22px;max-width:30em;text-align:left;display:grid;gap:12px}
+.next li{counter-increment:n;display:grid;grid-template-columns:36px minmax(0,1fr);gap:2px 12px;background:#fbf9fe;border:1px solid #eee8f5;border-radius:14px;padding:12px 14px}
+.next li::before{content:counter(n);grid-row:span 2;width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--a1),var(--a2));color:#fff;display:grid;place-items:center;font-weight:700}
+.next span{color:var(--mut);font-size:14.5px}
+.quote{color:#5b4a78;margin:0}.quote b{color:var(--ac)}
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#5b1f1f;color:#fee2e2;padding:12px 18px;border-radius:12px;display:none;max-width:90vw;z-index:9}
+.toast.on{display:block}
+@media(max-width:600px){.why{grid-template-columns:1fr;gap:8px}.why div{padding:12px}.opts label{flex:1 1 calc(50% - 4px)}.photo{flex-direction:column;align-items:flex-start}.hero p{font-size:15.5px}}
+@media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important}}
+</style>
+</head>
+<body>
+<main class="wrap" id="app"></main>
+<div class="toast" id="toast" role="alert"></div>
+<script src="/config.js"></script>
+<script>
+{
+let CFG=null;
+const API=window.CRM_API;
+const $=s=>document.querySelector(s);
+const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const DIA=`<svg viewBox="0 0 64 64" width="56" height="56" aria-hidden="true"><defs><linearGradient id="dmg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffe9a8"/><stop offset="1" stop-color="#f0b43c"/></linearGradient></defs><path d="M14 8h36l12 16-30 34L2 24z" fill="url(#dmg)"/><path d="M2 24h60M14 8l8 16 10 34 10-34 8-16M22 24l10-16 10 16" fill="none" stroke="#7a4a00" stroke-opacity=".45" stroke-width="1.6" stroke-linejoin="round"/></svg>`;
+const AI_LV=[['Chưa dùng','Chưa từng dùng công cụ AI nào, muốn bắt đầu từ đầu.'],['Mới làm quen','Đã thử hỏi ChatGPT vài lần, chưa dùng thường xuyên.'],['Dùng cơ bản','Dùng AI hằng tuần để viết nội dung, tìm ý tưởng, trả lời tin nhắn.'],['Ứng dụng vào công việc','Có câu lệnh riêng, dùng AI làm video, hình ảnh, kế hoạch, bán hàng.'],['Thành thạo / tự động hóa','Tạo trợ lý AI (GPTs, Project, Agent), kết nối công cụ, tự động hóa quy trình.']];
+const AI_TOOLS=['ChatGPT','Claude','Gemini','Copilot','Perplexity','NotebookLM','Canva AI','CapCut','HeyGen','Midjourney','ElevenLabs','Suno','Agent / tự động hóa (n8n, Make…)'];
+const Q=(k,label,inner,err)=>`<div class="fld"${k?` data-k="${k}"`:''}>${label}${inner}${err?`<div class="err">${err}</div>`:''}</div>`;
+const LB=(id,t,req,hint)=>`<label for="${id}">${t}${req?' <span class="req">*</span>':''}${hint?`<span class="hint">${hint}</span>`:''}</label>`;
+const SL=(t,req,hint)=>`<span class="lb">${t}${req?' <span class="req">*</span>':''}${hint?`<span class="hint">${hint}</span>`:''}</span>`;
+const radios=(n,list)=>`<div class="opts">${list.map(v=>`<label><input type="radio" name="${n}" value="${esc(v)}">${esc(v)}</label>`).join('')}</div>`;
+let tt;const toast=m=>{const t=$('#toast');t.textContent=m;t.className='toast on';clearTimeout(tt);tt=setTimeout(()=>t.className='toast',3600)};
+
+function hero(){
+ const kt=esc(CFG.khoaTen),t=esc(CFG.ten);
+ const title=CFG.ten.includes(CFG.khoaTen)?t.replace(kt,`<br><span>${kt}</span>`):t;
+ return `<header class="hero">${DIA}<p class="kick">${kt} · CMA | SKT</p><h1>${title}</h1>
+ <p>Thầy Trần Khánh Tư và Ban tổ chức muốn hiểu anh/chị thật rõ trước khi đồng hành. Mỗi câu trả lời giúp thầy thiết kế lộ trình, ví dụ và mức hỗ trợ đúng với anh/chị.${CFG.mau==='hocvien'?' Mất khoảng 7–10 phút.':''}</p></header>
+ <div class="why"><div><b>Lộ trình đúng người</b>Thầy biết anh/chị đang ở đâu để chọn bài và ví dụ phù hợp.</div><div><b>Hỗ trợ đúng lúc</b>Người phụ trách hiểu anh/chị cần gì để chăm sóc sát sao.</div><div><b>Thông tin được bảo mật</b>Chỉ thầy và đội ngũ chăm sóc học viên được xem.</div></div>`;
+}
+const photoQ=req=>Q('anh',SL('Ảnh chân dung',req,'Ảnh rõ mặt giúp thầy và đội ngũ nhớ anh/chị, nhất là khi gặp offline.'),`<div class="photo"><label class="pv" id="pv" for="photo">Bấm để chọn ảnh</label><div class="pbtn"><label class="btn2" for="photo">Chọn ảnh từ máy</label><input type="file" id="photo" accept="image/*" class="vh"><small>Ảnh được thu nhỏ tự động trước khi gửi.</small></div></div>`,'Vui lòng chọn một ảnh chân dung.');
+const secure=n=>`<div class="sec"><h2><em>${n}</em>Cam kết bảo mật</h2>
+ <div class="secure"><b>CMA | SKT cam kết với anh/chị:</b><ul><li>Thông tin chỉ dùng để hỗ trợ anh/chị trong quá trình học tập và chăm sóc sau khóa học.</li><li>Chỉ thầy Trần Khánh Tư và nhân sự được phân công chăm sóc anh/chị được xem.</li><li>Anh/chị có thể yêu cầu chỉnh sửa hoặc xóa thông tin bất cứ lúc nào qua Ban tổ chức.</li></ul></div>
+ ${Q('dongY','',`<div class="opts agree"><label><input type="checkbox" id="dongY"><span>Tôi đồng ý cung cấp thông tin trên cho CMA | SKT với mục đích hỗ trợ học tập. <span class="req">*</span></span></label></div>`,'Vui lòng tích đồng ý để gửi.')}
+ <input class="hp" name="web" id="web" tabindex="-1" autocomplete="off" aria-hidden="true">
+ <button class="send" id="sendBtn">Gửi thông tin cho thầy và Ban tổ chức</button></div>`;
+const basics=()=>`${Q('hoTen',LB('hoTen','Họ và tên',1),`<input class="inp" id="hoTen" autocomplete="name">`,'Vui lòng nhập họ tên.')}`;
+
+function formHocVien(){
+ return `<form class="paper" id="sForm" novalidate>
+ <div class="sec"><h2><em>1</em>Về anh/chị</h2><p>Để đội chăm sóc nhận ra và liên hệ đúng người.</p>
+  ${photoQ(1)}${basics()}
+  ${Q('namSinh',LB('namSinh','Năm sinh',1),`<input class="inp" id="namSinh" inputmode="numeric" maxlength="4" placeholder="Ví dụ 1978">`,'Năm sinh gồm 4 chữ số.')}
+  ${Q('sdt',LB('sdt','Số điện thoại (Zalo)',1),`<input class="inp" id="sdt" type="tel" inputmode="tel" autocomplete="tel">`,'Số điện thoại chưa đúng.')}
+  ${Q('email',LB('email','Email',1),`<input class="inp" id="email" type="email" inputmode="email" autocomplete="email">`,'Email chưa đúng.')}
+  ${Q('',LB('thanhPho','Tỉnh / thành đang sống'),`<input class="inp" id="thanhPho">`)}
+  ${Q('congViec',LB('congViec','Công việc hiện tại',1),`<input class="inp" id="congViec" placeholder="Ví dụ: chủ spa, giáo viên, kinh doanh bất động sản">`,'Vui lòng cho biết công việc.')}
+  ${Q('',SL('Vai trò trong công việc'),radios('vaiTro',['Chủ doanh nghiệp','Quản lý','Chuyên gia / giảng viên','Nhân viên','Kinh doanh tự do','Đã nghỉ hưu']))}
+ </div>
+ <div class="sec"><h2><em>2</em>Hành trình học tập</h2><p>Để thầy không dạy lại điều anh/chị đã biết, và nối tiếp đúng chỗ.</p>
+  ${Q('khoaDaHoc',LB('khoaDaHoc','Các khóa học, chương trình anh/chị đã và đang học',1,'Ghi cả khóa cùng thầy Tư / CMA và khóa bên ngoài. Ví dụ: CMA F1 Công nghệ (2025), sự kiện offline Sài Gòn 10/2026, khóa Marketing online…'),`<textarea class="inp" id="khoaDaHoc"></textarea>`,'Vui lòng ghi các khóa đã và đang học (nếu chưa học khóa nào, ghi "Chưa").')}
+ </div>
+ <div class="sec"><h2><em>3</em>Lý do, vấn đề và mong muốn</h2><p>Phần quan trọng nhất. Anh/chị càng chia sẻ thật, thầy càng hỗ trợ trúng.</p>
+  ${Q('lyDo',LB('lyDo',`Vì sao anh/chị quyết định đăng ký khóa ${esc(CFG.khoaTen)}?`,1),`<textarea class="inp" id="lyDo" placeholder="Điều gì khiến anh/chị nói “đây là lúc phải học”?"></textarea>`,'Vui lòng chia sẻ lý do.')}
+  ${Q('vanDe',LB('vanDe','Vấn đề lớn nhất anh/chị cần thầy Trần Khánh Tư hỗ trợ là gì?',1),`<textarea class="inp" id="vanDe" placeholder="Ví dụ: chưa biết đóng gói kinh nghiệm, doanh thu chững lại, đội ngũ chưa dùng được AI…"></textarea>`,'Vui lòng chia sẻ vấn đề cần hỗ trợ.')}
+  ${Q('mongMuon',LB('mongMuon','Mong muốn, nhu cầu của anh/chị khi tham gia',1),`<textarea class="inp" id="mongMuon"></textarea>`,'Vui lòng chia sẻ mong muốn.')}
+  ${Q('',LB('ketQua','Sau 6–12 tháng, kết quả cụ thể nào sẽ khiến anh/chị thấy khóa học rất xứng đáng?',0,'Một con số, một sản phẩm, một thay đổi. Ví dụ: ra mắt sách, có 100 học viên đầu tiên, tiết kiệm 2 giờ mỗi ngày.'),`<textarea class="inp" id="ketQua"></textarea>`)}
+  ${Q('',LB('ngaiNgai','Điều gì từng khiến anh/chị chưa làm được việc này trước đây?'),`<textarea class="inp" id="ngaiNgai" placeholder="Thời gian, công nghệ, thiếu người đồng hành, chưa có phương pháp…"></textarea>`)}
+  ${Q('',LB('sanPhamRieng','Anh/chị có kinh nghiệm, kiến thức hay câu chuyện nào muốn đóng gói thành sản phẩm (sách, khóa học, dịch vụ)?'),`<textarea class="inp" id="sanPhamRieng"></textarea>`)}
+  ${Q('',SL('Thời gian anh/chị dành cho việc học mỗi tuần'),radios('thoiGian',['Dưới 2 giờ','2–5 giờ','5–10 giờ','Trên 10 giờ']))}
+ </div>
+ <div class="sec"><h2><em>4</em>Mức độ sử dụng AI</h2><p>Không có đúng sai. Chọn mức gần nhất để thầy đi đúng tốc độ.</p>
+  ${Q('aiLevel',SL('Anh/chị đang ở mức nào?',1),`<div class="levels">${AI_LV.map(([a,b],i)=>`<label><input type="radio" name="aiLevel" value="${i+1}"><span class="lvn">${i+1}</span><span><b>${a}</b><br><small>${b}</small></span></label>`).join('')}</div>`,'Vui lòng chọn mức độ.')}
+  ${Q('',SL('Các công cụ AI anh/chị đã từng dùng'),`<div class="opts">${AI_TOOLS.map(v=>`<label><input type="checkbox" name="aiTools" value="${esc(v)}">${esc(v)}</label>`).join('')}</div>`)}
+  ${Q('',LB('aiDaLam','Anh/chị đã dùng AI để làm việc gì? Kết quả ra sao?'),`<textarea class="inp" id="aiDaLam"></textarea>`)}
+  ${Q('',LB('aiMuon','Việc nào anh/chị muốn AI làm thay hoặc làm cùng nhất?'),`<textarea class="inp" id="aiMuon" placeholder="Ví dụ: viết bài bán hàng, làm video, trả lời khách, lập kế hoạch…"></textarea>`)}
+ </div>
+ ${secure(5)}</form>`;
+}
+function formNhanh(){
+ return `<form class="paper" id="sForm" novalidate>
+ <div class="sec"><h2><em>1</em>Thông tin đăng ký</h2><p>Chỉ mất khoảng 2 phút.</p>
+  ${basics()}
+  ${Q('sdt',LB('sdt','Số điện thoại (Zalo)',1),`<input class="inp" id="sdt" type="tel" inputmode="tel" autocomplete="tel">`,'Số điện thoại chưa đúng.')}
+  ${Q('email',LB('email','Email'),`<input class="inp" id="email" type="email" inputmode="email" autocomplete="email">`,'Email chưa đúng.')}
+  ${Q('',LB('congViec','Công việc hiện tại'),`<input class="inp" id="congViec">`)}
+  ${Q('',LB('mongMuon','Anh/chị mong muốn điều gì khi tham gia?'),`<textarea class="inp" id="mongMuon"></textarea>`)}
+  ${photoQ(0)}
+ </div>${secure(2)}</form>`;
+}
+function render(){
+ if(!CFG){$('#app').innerHTML=`<div class="tcard"><h1>Không tìm thấy form</h1><p class="lead">Đường link có thể bị gõ sai. Anh/chị vui lòng liên hệ Ban tổ chức để nhận lại link.</p></div>`;return}
+ if(!CFG.mo){$('#app').innerHTML=hero()+`<div class="tcard"><h1>Form đã đóng</h1><p class="lead">Form này hiện không nhận thêm phiếu. Anh/chị vui lòng liên hệ Ban tổ chức qua Zalo.</p></div>`;return}
+ $('#app').innerHTML=hero()+(CFG.mau==='nhanh'?formNhanh():formHocVien())+`<p class="foot">CMA | SKT · Công nghệ · Quản trị · Tăng trưởng</p>`;
+}
+const THEMES={Diamond:['#7c2bd6','#c026d3','#8b2fd9','#3d0f6e','#f3e8ff','#2b0a52','#150630'],Trainer:['#b45309','#e0a526','#c27a0e','#5a3300','#fff4dc','#3a2205','#1c1104']};
+function theme(k){const t=THEMES[k]||['#1d4ed8','#0891b2','#1d4ed8','#0f2a66','#e6efff','#0b2150','#06122e'];['a1','a2','ac','dk','soft','b1','b2'].forEach((n,i)=>document.documentElement.style.setProperty('--'+n,t[i]))}
+(async()=>{
+ const slug=(new URLSearchParams(location.search).get('f')||'').toLowerCase();
+ $('#app').innerHTML='<div class="tcard"><p class="lead" style="margin:0">Đang mở phiếu…</p></div>';
+ if(!/^[a-z0-9-]{1,80}$/.test(slug)){render();return}
+ try{const r=await fetch(API+'?a=form&s='+encodeURIComponent(slug));const j=await r.json();if(j.ok){CFG=j.form;theme(CFG.khoa);document.title=CFG.ten+' · CMA | SKT'}}
+ catch(_){ $('#app').innerHTML='<div class="tcard"><h1>Chưa tải được phiếu</h1><p class="lead">Mạng đang chậm. Anh/chị tải lại trang giúp em.</p></div>';return}
+ render();
+})();
+
+let photoData='';
+function compress(file){return new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>{const im=new Image();im.onload=()=>{let m=420,q=.82,out='';for(let i=0;i<8;i++){const k=Math.min(1,m/Math.max(im.width,im.height)),c=document.createElement('canvas');c.width=Math.round(im.width*k);c.height=Math.round(im.height*k);const x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,c.width,c.height);x.drawImage(im,0,0,c.width,c.height);out=c.toDataURL('image/jpeg',q);if(out.length<46000)break;q=Math.max(.5,q-.08);m=Math.round(m*.88)}res(out)};im.onerror=rej;im.src=r.result};r.onerror=rej;r.readAsDataURL(file)})}
+function readForm(){
+ const v=id=>($('#'+id)?.value||'').trim(),rad=n=>document.querySelector(`input[name="${n}"]:checked`)?.value||'',chk=n=>[...document.querySelectorAll(`input[name="${n}"]:checked`)].map(x=>x.value);
+ const d={hoTen:v('hoTen'),sdt:v('sdt'),email:v('email'),congViec:v('congViec'),mongMuon:v('mongMuon'),dongY:$('#dongY').checked};
+ if(CFG.mau==='hocvien')Object.assign(d,{namSinh:v('namSinh'),thanhPho:v('thanhPho'),vaiTro:rad('vaiTro'),khoaDaHoc:v('khoaDaHoc'),lyDo:v('lyDo'),vanDe:v('vanDe'),ketQua:v('ketQua'),ngaiNgai:v('ngaiNgai'),sanPhamRieng:v('sanPhamRieng'),thoiGian:rad('thoiGian'),aiLevel:+rad('aiLevel')||0,aiTools:chk('aiTools'),aiDaLam:v('aiDaLam'),aiMuon:v('aiMuon')});
+ return d;
+}
+function validate(d){
+ const full=CFG.mau==='hocvien';
+ const bad={hoTen:!d.hoTen,sdt:!/^\+?\d{9,12}$/.test(d.sdt.replace(/[\s.-]/g,'')),email:(full||d.email)&&!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(d.email),dongY:!d.dongY};
+ if(full)Object.assign(bad,{anh:!photoData,namSinh:!/^(19|20)\d\d$/.test(d.namSinh),congViec:!d.congViec,khoaDaHoc:!d.khoaDaHoc,lyDo:!d.lyDo,vanDe:!d.vanDe,mongMuon:!d.mongMuon,aiLevel:!d.aiLevel});
+ let first=null;document.querySelectorAll('.fld[data-k]').forEach(el=>{const b=!!bad[el.dataset.k];el.classList.toggle('bad',b);if(b&&!first)first=el});
+ if(first)first.scrollIntoView({behavior:'smooth',block:'center'});return !first;
+}
+function thanks(d){
+ const name=esc(d.hoTen.trim().split(/\s+/).slice(-1)[0]||d.hoTen);
+ $('#app').innerHTML=`<div class="tcard"><div class="tic">${DIA}</div><p class="kick">Phiếu đã gửi thành công</p><h1>Cảm ơn anh/chị ${name}!</h1>
+ <p class="lead">Thầy Trần Khánh Tư và Ban tổ chức đã nhận được thông tin của anh/chị. Cảm ơn anh/chị đã dành thời gian chia sẻ thật lòng, đây là bước đầu tiên để hành trình ${esc(CFG.khoaTen)} đi đúng hướng.</p>
+ <ol class="next"><li><b>Ban tổ chức đọc kỹ phiếu</b><span>Thầy và đội ngũ xem mục tiêu, vấn đề và nhu cầu của anh/chị.</span></li><li><b>Người phụ trách liên hệ</b><span>Qua Zalo ${esc(d.sdt)} để làm quen và gửi link nhóm học.</span></li><li><b>Bắt đầu hành trình</b><span>Lộ trình được điều chỉnh theo đúng nhu cầu anh/chị đã chia sẻ.</span></li></ol>
+ <p class="quote">Chúc anh/chị một hành trình học tập nhiều niềm vui và thành quả.<br><b>CMA | SKT</b></p></div><p class="foot">CMA | SKT · Công nghệ · Quản trị · Tăng trưởng</p>`;
+ scrollTo(0,0);
+}
+document.addEventListener('submit',async e=>{
+ e.preventDefault();const d=readForm();
+ if(!validate(d))return toast('Còn vài mục chưa điền, đã đánh dấu đỏ.');
+ const b=$('#sendBtn');b.disabled=true;b.textContent='Đang gửi…';
+ try{
+  const r=await fetch(API,{method:'POST',body:JSON.stringify({a:'submit',s:CFG.s,data:d,anh:photoData,web:$('#web').value})});
+  const j=await r.json().catch(()=>({}));
+  if(!r.ok||!j.ok)throw new Error(j.error||'Chưa gửi được, anh/chị thử lại giúp.');
+  thanks(d);
+ }catch(err){toast(err.message||'Mất kết nối, anh/chị thử lại giúp.');b.disabled=false;b.textContent='Gửi thông tin cho thầy và Ban tổ chức'}
+});
+document.addEventListener('change',async e=>{
+ if(e.target.id==='photo'){const fl=e.target.files[0];if(!fl)return;try{photoData=await compress(fl);$('#pv').innerHTML=`<img src="${photoData}" alt="Ảnh chân dung">`;e.target.closest('.fld').classList.remove('bad')}catch(_){toast('Không đọc được ảnh này, thử ảnh khác.')}}
+});
+document.addEventListener('input',e=>{const f=e.target.closest('.fld.bad');if(f)f.classList.remove('bad')});
+}
+</script>
+</body>
+</html>

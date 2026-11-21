@@ -277,6 +277,16 @@ textarea.cellin{min-width:230px;resize:vertical}
 .kpis div{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px 14px}
 .kpis b{display:block;font-size:26px;line-height:1.1}.kpis span{font-size:13.5px;color:var(--mut)}
 .morebox{margin-top:22px}.morebox summary{cursor:pointer;color:var(--mut);min-height:44px;display:flex;align-items:center}
+.sidetoggle{display:flex;align-items:center;gap:10px;width:100%;min-height:44px;margin:0 0 14px;padding:8px 14px;border-radius:12px;border:1px dashed #3a4c8f;background:transparent;color:var(--mut);font:inherit;font-size:14.5px;font-weight:600;cursor:pointer}
+.sidetoggle:hover,.sidetoggle:focus-visible{color:var(--gold);border-color:var(--gold);border-style:solid}
+body.side-mini .sidetoggle{justify-content:center;padding:8px;border-style:solid;border-color:var(--gold);color:var(--gold);background:#1a2350}
+body.side-mini .sidetoggle .chev{transform:rotate(180deg);transform-origin:12px 12px}
+body.side-mini aside{overflow:visible;z-index:20}
+body.side-mini [data-tip]{position:relative}
+body.side-mini [data-tip]:hover::after,body.side-mini [data-tip]:focus-visible::after{content:attr(data-tip);position:absolute;left:calc(100% + 12px);top:50%;transform:translateY(-50%);white-space:nowrap;background:#f5c451;color:#1a1400;font-size:14px;font-weight:700;padding:7px 12px;border-radius:8px;box-shadow:0 8px 24px -8px #000;z-index:50;pointer-events:none}
+body.side-mini [data-tip]:hover::before,body.side-mini [data-tip]:focus-visible::before{content:"";position:absolute;left:calc(100% + 6px);top:50%;transform:translateY(-50%);border:6px solid transparent;border-right-color:#f5c451;z-index:50}
+@media(min-width:861px){.menubtn{display:none!important}}
+@media(max-width:860px){.sidetoggle{display:none}}
 .bnav,.mscrim{display:none}
 .menubtn{display:grid;place-items:center;width:42px;height:42px;flex:none;border-radius:12px;border:1px solid var(--line);background:#111d48;color:var(--ink)}
 .menubtn svg{width:22px;height:22px}.menubtn:hover{border-color:var(--gold);color:var(--gold)}
@@ -353,6 +363,7 @@ body.solo .app{grid-template-columns:1fr}body.solo aside,body.solo .top{display:
     <svg width="44" height="44" viewBox="0 0 44 44" aria-hidden="true"><polygon points="22,2 39,12 39,32 22,42 5,32 5,12" fill="none" stroke="#f5c451" stroke-width="2.5"/><circle cx="22" cy="22" r="9" fill="none" stroke="#f5c451" stroke-width="2.5"/><circle cx="22" cy="22" r="3.5" fill="#f5c451"/></svg>
     <span><b>CMA <span style="color:var(--mut);font-weight:400">|</span> SKT</b><small>CÔNG NGHỆ · QUẢN TRỊ · TĂNG TRƯỞNG</small></span>
   </a>
+  <button class="sidetoggle" id="sideToggle" data-tip="Mở rộng menu" aria-label="Thu gọn menu"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path class="chev" d="M15 6l-6 6 6 6M20 6l-6 6 6 6"/></svg><span class="lbl">Thu gọn menu</span></button>
   <nav class="nav" id="nav"></nav>
   <p class="side-foot">Bản đồ vận hành cuộc đời thịnh vượng CMA — xây dần từng ô.</p>
 </aside>
@@ -443,9 +454,9 @@ function toast(msg,bad){const t=$('#toast');t.textContent=msg;t.className='toast
 function setConn(txt,cls){const c=$('#conn');c.textContent=txt;c.className='pill '+(cls||'')}
 
 function renderNav(route){
- $('#nav').innerHTML=`<a class="home ${route==='tong-quan'?'on':''}" href="#tong-quan" title="Tổng quan">${svgI('home')}<span class="lbl">Tổng quan</span></a>`+
-  MODS.map(m=>`<a href="#${m.id}" style="--c:${m.c}" class="${route===m.id?'on':''}" title="${m.n}. ${m.name}">${svgI(m.ic)}<span class="lbl">${m.n}. ${m.name}</span></a>`).join('')+
-  `<a class="home ${route==='form'?'on':''}" href="#form" title="Form thu thập" style="border-color:#a43be6;color:#f0d9ff">${svgI('form')}<span class="lbl">Form thu thập</span></a>`;
+ $('#nav').innerHTML=`<a class="home ${route==='tong-quan'?'on':''}" href="#tong-quan" data-tip="Tổng quan">${svgI('home')}<span class="lbl">Tổng quan</span></a>`+
+  MODS.map(m=>`<a href="#${m.id}" style="--c:${m.c}" class="${route===m.id?'on':''}" data-tip="${m.n}. ${m.name}">${svgI(m.ic)}<span class="lbl">${m.n}. ${m.name}</span></a>`).join('')+
+  `<a class="home ${route==='form'?'on':''}" href="#form" data-tip="Form thu thập" style="border-color:#a43be6;color:#f0d9ff">${svgI('form')}<span class="lbl">Form thu thập</span></a>`;
  $('#bnav').innerHTML=[['tong-quan','home','Tổng quan'],['san-pham','box','Sản phẩm'],['khach-hang','users','Khách hàng'],['form','form','Form']].map(([h,ic,t])=>`<a href="#${h}" class="${route===h?'on':''}">${svgI(ic)}<span>${t}</span></a>`).join('');
 }
 
@@ -801,7 +812,8 @@ document.addEventListener('click',async e=>{
  if(t.dataset.demo){S.demo=!S.demo;try{localStorage.setItem('crm_demo',S.demo?'1':'')}catch(_){}mergeList();render();toast(S.demo?'Đã bật dữ liệu mẫu (chỉ trên máy này).':'Đã tắt dữ liệu mẫu.');return}
  if(t.dataset.cellsave){await saveEditor();return}
  if(t.dataset.view){S.view=t.dataset.view;try{localStorage.setItem('crm_view',S.view)}catch(_){}render();return}
- if(t.id==='menuBtn'){if(innerWidth>860){const m=document.body.classList.toggle('side-mini');try{localStorage.setItem('crm_mini',m?'1':'')}catch(_){}t.setAttribute('aria-label',m?'Mở rộng menu':'Thu gọn menu')}else document.body.classList.add('menu-open');return}
+ if(t.id==='sideToggle'){const m=document.body.classList.toggle('side-mini');try{localStorage.setItem('crm_mini',m?'1':'')}catch(_){}t.setAttribute('aria-label',m?'Mở rộng menu':'Thu gọn menu');return}
+ if(t.id==='menuBtn'){document.body.classList.add('menu-open');return}
  if(t.id==='eye'){const i=$('#lp'),show=i.type==='password';i.type=show?'text':'password';t.querySelector('.slash').style.display=show?'':'none';t.setAttribute('aria-label',show?'Ẩn mật khẩu':'Hiện mật khẩu');t.title=t.getAttribute('aria-label');i.focus();return}
  if(t.id==='newForm'){formModal();return}
  if(t.dataset.copy){const f=S.forms.find(x=>x.id===t.dataset.copy);try{await navigator.clipboard.writeText(formLink(f));toast('Đã sao chép link. Dán vào Zalo gửi học viên nhé.')}catch(_){toast('Bôi đen ô link rồi sao chép thủ công giúp em.',true)}return}

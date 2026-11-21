@@ -287,6 +287,34 @@ body.side-mini [data-tip]:hover::after,body.side-mini [data-tip]:focus-visible::
 body.side-mini [data-tip]:hover::before,body.side-mini [data-tip]:focus-visible::before{content:"";position:absolute;left:calc(100% + 6px);top:50%;transform:translateY(-50%);border:6px solid transparent;border-right-color:#f5c451;z-index:50}
 @media(min-width:861px){.menubtn{display:none!important}}
 @media(max-width:860px){.sidetoggle{display:none}}
+.samplenote{display:inline-block;margin:6px 0 16px;padding:6px 12px;border-radius:99px;background:#2a2108;color:#fde68a;border:1px dashed #a16207;font-size:13.5px}
+.hbars{display:grid;gap:9px}
+.hb{display:grid;grid-template-columns:minmax(90px,38%) minmax(0,1fr) auto;gap:10px;align-items:center;font-size:14px}
+.hbk{color:#dbe2ff;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.hbt{height:14px;border-radius:7px;background:#0d1840;overflow:hidden}.hbt i{display:block;height:100%;border-radius:7px}
+.hbv{font-size:13.5px;white-space:nowrap}
+.vbars{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:6px;align-items:end;height:220px;padding-top:10px}
+.vb{display:flex;flex-direction:column;align-items:center;gap:4px;height:100%}
+.vb b{font-size:11.5px;color:var(--mut);white-space:nowrap}
+.vbt{flex:1;width:100%;max-width:38px;display:flex;align-items:flex-end;background:#0d1840;border-radius:8px;overflow:hidden}.vbt i{display:block;width:100%;border-radius:8px 8px 0 0}
+.vb small{font-size:12px;color:var(--mut)}
+table.simple{min-width:100%!important;width:100%}
+table.simple td{min-width:0!important}
+table.simple td:first-child{min-width:210px!important}
+.steps{list-style:none;margin:0;padding:0;counter-reset:s;display:grid;gap:8px}
+.steps li{counter-increment:s;display:grid;grid-template-columns:30px minmax(0,1fr);gap:0 10px;align-items:start}
+.steps li::before{content:counter(s);grid-row:span 2;width:28px;height:28px;border-radius:50%;display:grid;place-items:center;font-size:13px;font-weight:700;background:#1f2e66;color:#c7d2fe}
+.steps li.done::before{content:"✓";background:#0f3b33;color:#6ee7b7}
+.steps li.done b{color:var(--mut);text-decoration:line-through}
+.steps small{color:var(--mut);font-size:12.5px}
+.chk2{margin:6px 0 0;padding-left:18px;font-size:14px;color:#dbe2ff}.chk2 li{margin:3px 0}
+.months12{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px}
+.mcard{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px 14px}
+.mcard[open]{border-color:var(--gold)}
+.mcard summary{cursor:pointer;display:grid;gap:2px;list-style:none}.mcard summary::-webkit-details-marker{display:none}
+.mcard summary span{font-size:14px;color:#dbe2ff}.mcard summary em{font-style:normal;color:var(--gold);font-size:13.5px}
+.mcard dl{margin:10px 0 6px}
+.kv2{display:grid;grid-template-columns:1fr auto;gap:4px 10px;font-size:13.5px;margin-top:8px}.kv2 span{color:var(--mut)}
 .bnav,.mscrim{display:none}
 .menubtn{display:grid;place-items:center;width:42px;height:42px;flex:none;border-radius:12px;border:1px solid var(--line);background:#111d48;color:var(--ink)}
 .menubtn svg{width:22px;height:22px}.menubtn:hover{border-color:var(--gold);color:var(--gold)}
@@ -324,6 +352,7 @@ body.solo .bnav,body.solo .menubtn{display:none}
 .toast{bottom:calc(76px + env(safe-area-inset-bottom))}
 }
 @media(max-width:600px){
+.vbars{gap:3px;height:180px}.vb b{display:none}.hb{grid-template-columns:minmax(80px,40%) minmax(0,1fr) auto}
 .kpis{grid-template-columns:repeat(2,minmax(0,1fr))}
 .cards{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.hvbody{padding:10px;gap:6px}.hvname{font-size:16px}.hvgrid{grid-template-columns:1fr!important}.hvq{display:none}.hvst{font-size:11.5px;padding:4px 9px;left:6px;bottom:6px}.hvfoot .sm{display:none}.hvfoot{justify-content:flex-end}table.wide .stick{min-width:170px!important}.hvgrid{grid-template-columns:1fr 1fr}.seg button{padding:6px 10px}
 .fams{display:flex;overflow-x:auto;margin:14px -14px 0;padding:2px 14px 6px;scrollbar-width:none}.fams::-webkit-scrollbar{display:none}.fam{flex:none;width:132px}
@@ -436,7 +465,7 @@ const ECO=[['CMA F1','Công nghệ','Thành thạo AI, Agent','#2f8bff'],['CMA F
 const STATUS=[['Mới đăng ký','#60a5fa'],['Đã liên hệ','#a78bfa'],['Đã vào nhóm Zalo','#22d3ee'],['Đang học','#34d399'],['Cần chăm sóc gấp','#fb923c'],['Tạm dừng','#94a3b8'],['Hoàn thành','#f5c451']];
 const stColor=s=>(STATUS.find(x=>x[0]===s)||['','#94a3b8'])[1];
 const COURSES={Diamond:{name:'CMA Diamond',sub:'Khóa thuộc CMA F5',c1:'#7c2bd6',c2:'#c026d3'},Trainer:{name:'CMA Trainer',sub:'Khóa thuộc CMA F5',c1:'#b7791f',c2:'#e0a526'}};
-const GROUPS=['Diamond thông thường','Nhóm viết sách','Nhóm thứ ba (chờ xác nhận tên)'];
+const GROUPS=['Diamond thông thường','Nhóm viết sách','Diamond Coaching'];
 const YEARS=['2026','2025','2024'];
 const PREV=['CMA F1 – Công nghệ (AI, Agent)','CMA F2 – Sale Marketing','CMA F3 – Tài chính','CMA F4 – Vận hành (BMC)','CMA Diamond (khóa trước)','CMA Trainer (khóa trước)','Sự kiện offline Sài Gòn','Sự kiện offline Hà Nội','Chưa học khóa nào'];
 const AI_LV=[['Chưa dùng','Chưa từng dùng công cụ AI nào, muốn bắt đầu từ đầu.'],['Mới làm quen','Đã thử hỏi ChatGPT vài lần, chưa dùng thường xuyên.'],['Dùng cơ bản','Dùng AI hằng tuần để viết nội dung, tìm ý tưởng, trả lời tin nhắn.'],['Ứng dụng vào công việc','Có câu lệnh riêng, dùng AI làm video, hình ảnh, kế hoạch, bán hàng.'],['Thành thạo / tự động hóa','Tạo trợ lý AI (GPTs, Project, Agent), kết nối công cụ, tự động hóa quy trình.']];
@@ -527,7 +556,7 @@ function demoData(){
  ['Phạm Quốc Bảo','0912345604','1970','Giám đốc công ty xây dựng','Bình Dương','Chủ doanh nghiệp','Diamond','Diamond thông thường','Đã liên hệ',['Oanh'],2,['ChatGPT','Gemini']],
  ['Võ Ngọc Ánh','0912345605','1986','Chuyên gia dinh dưỡng','Cần Thơ','Chuyên gia / giảng viên','Diamond','Nhóm viết sách','Đang học',['Kim Anh','Oanh'],4,['ChatGPT','Claude','NotebookLM','HeyGen']],
  ['Đặng Hoàng Long','0912345606','1978','Chủ nhà hàng','Hải Phòng','Chủ doanh nghiệp','Trainer','','Mới đăng ký',[],1,['ChatGPT']],
- ['Bùi Thị Mai','0912345607','1981','Giáo viên tiếng Anh','Nha Trang','Chuyên gia / giảng viên','Diamond','Nhóm thứ ba (chờ xác nhận tên)','Đang học',['Mỹ Linh'],3,['ChatGPT','Canva AI']],
+ ['Bùi Thị Mai','0912345607','1981','Giáo viên tiếng Anh','Nha Trang','Chuyên gia / giảng viên','Diamond','Diamond Coaching','Đang học',['Mỹ Linh'],3,['ChatGPT','Canva AI']],
  ['Hoàng Đức Thắng','0912345608','1973','Kinh doanh thiết bị y tế','Huế','Quản lý','Diamond','Diamond thông thường','Tạm dừng',['Oanh'],2,['Copilot']],
  ['Ngô Thanh Tâm','0912345609','1988','Coach phát triển bản thân','TP. Hồ Chí Minh','Kinh doanh tự do','Trainer','','Đang học',['Kim Anh'],5,['ChatGPT','Claude','Agent / tự động hóa (n8n, Make…)']],
  ['Nguyễn Thị Hồng Nhung','0912345601','1979','Chủ chuỗi spa','TP. Hồ Chí Minh','Chủ doanh nghiệp','Trainer','','Mới đăng ký',['Kim Anh'],3,['ChatGPT','Canva AI','CapCut']]];
@@ -658,17 +687,85 @@ function vCustomers(){
  <div class="viewbar"><span class="mut">${list.length} khách hàng</span><div class="seg" role="group" aria-label="Kiểu xem"><button class="${S.view==='card'?'on':''}" data-view="card">Thẻ khách hàng</button><button class="${S.view==='table'?'on':''}" data-view="table">Bảng đầy đủ</button></div></div>
  ${list.length?(S.view==='table'?listTable(recs):`<div class="cards">${list.map(({main,rs})=>cardHV(main,`<small class="mut" style="display:block;margin-top:6px">Lớp đã và đang học (${rs.length})</small>${classChips(rs)}`)).join('')}</div>`)
   :`<div class="panel empty">${S.list.length?'Không có khách hàng khớp bộ lọc.':'Chưa có khách hàng nào. Gửi link form cho học viên, hoặc bấm "Xem dữ liệu mẫu" để xem thử.'}</div>`}
+ ${personaPanel()}
  <details class="morebox"><summary>Các nhánh khác của ô Khách hàng (đang xây dần)</summary>${subsHTML(MODS[0])}</details></div>`;
 }
 function subsHTML(m){return `<div class="subs">${(m.subs||[]).map(([a,b])=>`<div class="sub" style="--c:${m.cc}"><b>${a}</b><span class="mut" style="font-size:14.5px">${b}</span><br><span class="soon">Đang xây dần</span></div>`).join('')}</div>`}
 
-function vModule(m){return `<div class="band"><h2>Ô ${m.n} · ${m.name}</h2><p class="mut" style="margin:0">Các nhánh bên trong ô này theo buổi họp 21/11. Sẽ đắp dần nội dung sau khi xong ô Sản phẩm.</p>${subsHTML(m)}</div>`}
+/* ---------- Các ô đang xây: bản xem thử với dữ liệu mẫu ---------- */
+const VND=n=>new Intl.NumberFormat('vi-VN').format(Math.round(n))+' đ';
+const TR=n=>(n/1e6).toLocaleString('vi-VN',{maximumFractionDigits:1})+' tr';
+const sampleNote=`<div class="samplenote">Số liệu mẫu để hình dung cách ô này vận hành. Khi có dữ liệu thật, em sẽ nối vào CRM.</div>`;
+const hbars=(rows,color,fmt)=>{const mx=Math.max(...rows.map(r=>r[1]),1);return `<div class="hbars">${rows.map(([k,v,c])=>`<div class="hb"><span class="hbk">${esc(k)}</span><span class="hbt"><i style="width:${(v/mx*100).toFixed(1)}%;background:${c||color}"></i></span><b class="hbv">${fmt?fmt(v):v}</b></div>`).join('')}</div>`};
+const vbars=(rows,color,fmt)=>{const mx=Math.max(...rows.map(r=>r[1]),1);return `<div class="vbars">${rows.map(([k,v,hl])=>`<div class="vb"><b>${fmt?fmt(v):v}</b><span class="vbt"><i style="height:${(v/mx*100).toFixed(1)}%;background:${hl?'var(--gold)':color}"></i></span><small>${esc(k)}</small></div>`).join('')}</div>`};
+const kpi=list=>`<div class="kpis">${list.map(([v,l,c])=>`<div><b style="${c?'color:'+c:''}">${v}</b><span>${l}</span></div>`).join('')}</div>`;
+const pill=(t,c)=>`<span class="st" style="--sc:${c}">${esc(t)}</span>`;
+const tbl=(head,rows)=>`<div class="widewrap"><table class="wide simple"><thead><tr>${head.map(h=>`<th>${h}</th>`).join('')}</tr></thead><tbody>${rows.map(r=>`<tr>${r.map(c=>`<td>${c}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`;
+const steps=(list)=>`<ol class="steps">${list.map(([t,who,done])=>`<li class="${done?'done':''}"><b>${esc(t)}</b><small>${esc(who)}</small></li>`).join('')}</ol>`;
+
+const MOD_DEMO={
+'marketing':()=>{
+ const camps=[['Zoom miễn phí "AI cho người 40+"','Facebook, Zalo','Thu hút',12e6,420,68,'Đang chạy','#34d399'],['Sự kiện offline Hà Nội 12/2026','Facebook, Zalo, giới thiệu','Chuyển đổi',35e6,180,26,'Chuẩn bị','#60a5fa'],['Chuỗi video "Đóng gói di sản"','TikTok, YouTube','Nhận diện',8e6,1250,40,'Đang chạy','#34d399'],['Ưu đãi học viên cũ lên Diamond','Zalo, gọi điện','Chuyển đổi',2e6,95,18,'Đang chạy','#34d399'],['Ra mắt sách nhóm viết sách','Facebook, sự kiện','Nhận diện',15e6,0,0,'Lên kế hoạch','#a78bfa']];
+ return `${kpi([[ '5','Chiến dịch'],[VND(72e6),'Ngân sách quý'],['1.945','Khách tiềm năng'],['152','Đăng ký mới','#34d399']])}
+ <div class="grid2" style="margin-bottom:16px"><div class="panel"><h3>Phễu tháng này</h3>${hbars([['Tiếp cận',18500,'#3b82f6'],['Quan tâm (inbox, bình luận)',1945,'#6366f1'],['Tham gia Zoom miễn phí',420,'#a855f7'],['Tư vấn 1 kèm 1',96,'#d946ef'],['Đăng ký khóa học',38,'#f5c451']],'#6366f1',v=>v.toLocaleString('vi-VN'))}</div>
+ <div class="panel"><h3>Theo kênh</h3>${hbars([['Facebook',820,'#3b82f6'],['Zalo',540,'#0ea5e9'],['TikTok',390,'#ec4899'],['YouTube',140,'#ef4444'],['Giới thiệu',55,'#f5c451']],'#3b82f6',v=>v+' KH')}</div></div>
+ <h3>Chiến dịch</h3>${tbl(['Chiến dịch','Kênh','Giai đoạn phễu','Ngân sách','Khách tiềm năng','Đăng ký','Trạng thái'],camps.map(c=>[`<b>${esc(c[0])}</b>`,esc(c[1]),esc(c[2]),VND(c[3]),c[4].toLocaleString('vi-VN'),c[5],pill(c[6],c[7])]))}
+ <h3 style="margin-top:18px">Việc cần làm theo kênh</h3><div class="subs">${[['Facebook','#3b82f6',['3 bài/tuần về câu chuyện học viên','Chạy quảng cáo Zoom miễn phí','Trả lời bình luận trong 2 giờ']],['TikTok','#ec4899',['5 video ngắn/tuần, không lộ mặt','Dùng AI dựng kịch bản','Gắn link đăng ký Zoom']],['YouTube','#ef4444',['1 video dài/tuần từ buổi Zoom','Cắt 3 shorts từ mỗi buổi']],['Zalo','#0ea5e9',['Nhắc lịch Zoom trước 1 ngày','Gửi tài liệu sau buổi học','Chăm sóc nhóm Diamond']]].map(([k,c,l])=>`<div class="sub" style="--c:${c}"><b>${k}</b><ul class="chk2">${l.map(x=>`<li>${esc(x)}</li>`).join('')}</ul></div>`).join('')}</div>`;
+},
+'quy-trinh':()=>{
+ const P=[['Sự kiện Zoom miễn phí','#3b82f6',[['Chốt chủ đề, slide, link Zoom','Oanh',1],['Đăng bài + nhắc Zalo trước 1 ngày','Mỹ Linh',1],['Kiểm tra âm thanh, MC mở màn','Oanh',1],['Thầy Tư chia sẻ 90 phút','Thầy Tư',0],['Gửi form đăng ký + quà sau buổi','Kim Anh',0],['Gọi tư vấn người quan tâm trong 48 giờ','Kim Anh, Mỹ Linh',0]]],
+ ['Sự kiện offline (Sài Gòn / Hà Nội)','#ea580c',[['Đặt hội trường, âm thanh, màn hình','Oanh',1],['Mời giảng viên, MC, chốt kịch bản','Oanh',1],['Bán vé, xác nhận danh sách','Mỹ Linh',0],['Check-in bằng mã QR, chụp ảnh','Ban tổ chức',0],['Chăm sóc sau sự kiện, gửi ảnh, khảo sát','Kim Anh',0]]],
+ ['Chăm sóc học viên Diamond','#a855f7',[['Học viên điền phiếu thông tin','Học viên',1],['Người phụ trách gọi làm quen trong 24 giờ','Kim Anh / Mỹ Linh',1],['Thêm vào nhóm Zalo, gửi tài liệu buổi 1','Người phụ trách',1],['Xếp nhóm: thông thường / viết sách / Coaching','Oanh',0],['Theo dõi tiến độ hằng tháng','Người phụ trách',0],['Đánh giá cuối khóa, mời lên lớp tiếp theo','Thầy Tư, BTC',0]]],
+ ['Tuyển nhân sự','#16a34a',[['Mô tả công việc, đăng tuyển','Oanh',1],['Lọc hồ sơ, phỏng vấn','Oanh',0],['Thử việc 2 tuần với quy trình mẫu','Trưởng nhóm',0],['Cấp tài khoản CRM, phân quyền','Admin',0]]]];
+ return `<p class="mut">Mỗi quy trình là các bước nối tiếp, ghi rõ ai làm. Bước có dấu ✓ là đã xong trong đợt hiện tại.</p><div class="grid2">${P.map(([t,c,st])=>`<div class="panel" style="border-top:4px solid ${c}"><h3>${esc(t)}</h3><div class="mut sm" style="margin-bottom:8px">${st.filter(x=>x[2]).length}/${st.length} bước đã xong</div>${steps(st)}</div>`).join('')}</div>`;
+},
+'doanh-thu':()=>{
+ const months=[['T12',180e6],['T1',95e6],['T2',120e6],['T3',260e6,1],['T4',140e6],['T5',150e6],['T6',310e6,1],['T7',130e6],['T8',160e6],['T9',210e6],['T10',175e6],['T11',290e6,1]];
+ const total=months.reduce((a,b)=>a+b[1],0);
+ return `${kpi([[TR(total),'Doanh thu 12 tháng'],[TR(290e6),'Tháng này','#34d399'],[TR(300e6),'Mục tiêu tháng'],['97%','Đạt mục tiêu']])}
+ <div class="panel" style="margin-bottom:16px"><h3>Doanh thu theo tháng</h3><p class="mut sm" style="margin:0 0 6px">Cột vàng là tháng có sự kiện offline.</p>${vbars(months,'#6366f1',TR)}</div>
+ <div class="grid2"><div class="panel"><h3>Theo khóa học</h3>${hbars([['CMA Diamond',1.18e9,'#c026d3'],['CMA Trainer',420e6,'#e0a526'],['CMA F1 · Công nghệ',260e6,'#2f8bff'],['CMA F2 · Sale Marketing',180e6,'#8b5cf6'],['Sự kiện offline (vé)',160e6,'#ea580c']],'#6366f1',TR)}</div>
+ <div class="panel"><h3>Theo chiến dịch</h3>${hbars([['Sự kiện offline Sài Gòn 10/2026',540e6,'#ea580c'],['Zoom miễn phí hằng tuần',480e6,'#3b82f6'],['Ưu đãi học viên cũ',310e6,'#f5c451'],['Giới thiệu từ học viên',220e6,'#16a34a']],'#6366f1',TR)}</div></div>`;
+},
+'ke-hoach':()=>{
+ const M=[['12/2026','Sự kiện offline Hà Nội','Thầy Tư','MC Thu Hà',350e6,90e6],['01/2027','Zoom Tết: Kế hoạch năm với AI','Thầy Tư','Oanh',150e6,15e6],['02/2027','Khai giảng Diamond Coaching','Thầy Tư, Coach','Mỹ Linh',200e6,20e6],['03/2027','Offline Sài Gòn: Đóng gói di sản','Thầy Tư, khách mời','MC Quang',400e6,110e6],['04/2027','Ra mắt sách nhóm viết sách','Thầy Tư, tác giả','MC Thu Hà',180e6,40e6],['05/2027','CMA Trainer khóa 2','Thầy Tư, Trainer','Oanh',250e6,25e6],['06/2027','Offline Đà Nẵng','Thầy Tư','MC Quang',300e6,95e6],['07/2027','Zoom chuyên đề Agent AI','Thầy Tư','Oanh',140e6,12e6],['08/2027','Tri ân học viên cũ','Ban tổ chức','Kim Anh',160e6,30e6],['09/2027','Diamond 2027 tuyển sinh','Thầy Tư','Mỹ Linh',260e6,35e6],['10/2027','Offline Sài Gòn','Thầy Tư','MC Thu Hà',420e6,120e6],['11/2027','Tổng kết năm, vinh danh','Ban tổ chức','Oanh',200e6,50e6]];
+ return `<p class="mut">Bấm vào từng tháng để xem việc cần làm. Dùng màn hình này khi họp nhân sự.</p><div class="months12">${M.map(([m,ev,gv,mc,dt,cp],i)=>`<details class="mcard" ${i===0?'open':''}><summary><b>Tháng ${m}</b><span>${esc(ev)}</span><em>${TR(dt)}</em></summary>
+ <dl class="kv sm"><dt>Sự kiện chính</dt><dd>${esc(ev)}</dd><dt>Giảng viên</dt><dd>${esc(gv)}</dd><dt>MC / điều phối</dt><dd>${esc(mc)}</dd><dt>Mục tiêu doanh thu</dt><dd>${VND(dt)}</dd><dt>Chi phí dự kiến</dt><dd>${VND(cp)}</dd></dl>
+ <ul class="chk2"><li>Chốt địa điểm / link Zoom</li><li>Lên bài truyền thông 3 tuần trước</li><li>Phân công chăm sóc khách đăng ký</li></ul></details>`).join('')}</div>`;
+},
+'doi-tac':()=>{
+ const D=[['Khách sạn A (Sài Gòn)','Hội trường sự kiện','Thuê hội trường giá ưu đãi','Chị P.','Đang hợp tác','#34d399'],['Studio quay dựng B','Quay dựng video','Quay sự kiện, dựng video ngắn','Anh K.','Đang hợp tác','#34d399'],['Nhà xuất bản C','Xuất bản sách','In và phát hành sách nhóm viết sách','Chị H.','Đang đàm phán','#60a5fa'],['Coach đồng hành D','Giảng viên trong hệ sinh thái','Đồng hành Diamond Coaching','Anh A.','Đang hợp tác','#34d399'],['Agency quảng cáo E','Quảng cáo','Chạy quảng cáo Facebook, TikTok','Anh V.','Tạm dừng','#94a3b8'],['Mắt Bão','Tên miền, email','Tên miền crmtkt.com','Hỗ trợ kỹ thuật','Đang hợp tác','#34d399']];
+ return `${kpi([['6','Đối tác'],['4','Đang hợp tác','#34d399'],['1','Đang đàm phán'],['1','Tạm dừng']])}<div class="subs">${D.map(([n,lv,ht,dm,st,c])=>`<div class="sub" style="--c:${c}"><b>${esc(n)}</b><span class="mut sm">${esc(lv)}</span><p class="sm" style="margin:6px 0">${esc(ht)}</p><div class="sm">Đầu mối: ${esc(dm)}</div><div style="margin-top:6px">${pill(st,c)}</div></div>`).join('')}</div>`;
+},
+'chi-phi':()=>{
+ const C=[['Công cụ','Zoom Pro, Canva, ChatGPT, Claude',3.2e6],['Công cụ','Tên miền, email, lưu trữ',0.4e6],['Nhân sự','Chăm sóc khách hàng (2 người)',24e6],['Nhân sự','Vận hành, admin',12e6],['Nhân sự','Marketing, dựng video',14e6],['Mặt bằng','Văn phòng, điện nước',9e6],['Khác','Kế toán, thuế, phí ngân hàng',3.5e6]];
+ const tot=C.reduce((a,b)=>a+b[2],0),cat={};C.forEach(c=>cat[c[0]]=(cat[c[0]]||0)+c[2]);
+ return `${kpi([[TR(tot),'Chi phí cứng mỗi tháng'],[TR(tot*12),'Chi phí cứng cả năm'],[TR(95e6),'Phát sinh tháng 12 (sự kiện)'],[Math.round(tot/290e6*100)+'%','So với doanh thu tháng']])}
+ <div class="grid2"><div class="panel"><h3>Theo nhóm chi phí</h3>${hbars(Object.entries(cat).map(([k,v],i)=>[k,v,['#6366f1','#f5c451','#16a34a','#94a3b8'][i]]),'#6366f1',TR)}</div>
+ <div class="panel"><h3>Chi phí phát sinh gần đây</h3>${tbl(['Khoản','Ngày','Số tiền'],[['Đặt cọc hội trường Hà Nội','15/11/2026',VND(30e6)],['Quảng cáo Zoom miễn phí','18/11/2026',VND(12e6)],['In tài liệu, quà tặng','20/11/2026',VND(8.5e6)]])}</div></div>
+ <h3 style="margin-top:18px">Chi phí cứng hằng tháng</h3>${tbl(['Nhóm','Khoản','Mỗi tháng'],C.map(c=>[esc(c[0]),esc(c[1]),VND(c[2])]).concat([['<b>Tổng</b>','',`<b>${VND(tot)}</b>`]]))}`;
+}};
+function personaPanel(){
+ const L=S.list;if(!L.length)return '';
+ const ages=L.map(x=>parseInt(x.namSinh,10)).filter(y=>y>1900).map(y=>new Date().getFullYear()-y);
+ const avg=ages.length?Math.round(ages.reduce((a,b)=>a+b,0)/ages.length):0,over40=ages.filter(a=>a>=40).length;
+ const ai=[1,2,3,4,5].map(n=>[AI_LV[n-1][0],L.filter(x=>+x.aiLevel===n).length,['#ef4444','#f97316','#f5c451','#34d399','#22d3ee'][n-1]]);
+ const city={};L.forEach(x=>{if(x.thanhPho)city[x.thanhPho]=(city[x.thanhPho]||0)+1});
+ const role={};L.forEach(x=>{if(x.vaiTro)role[x.vaiTro]=(role[x.vaiTro]||0)+1});
+ return `<h3 style="margin-top:22px">Chân dung khách hàng</h3><p class="mut sm" style="margin:0 0 10px">Tính tự động từ phiếu học viên${S.demo?' (đang gồm cả dữ liệu mẫu)':''}.</p>
+ ${kpi([[avg?avg+' tuổi':'—','Tuổi trung bình'],[ages.length?Math.round(over40/ages.length*100)+'%':'—','Từ 40 tuổi trở lên'],[L.filter(x=>+x.aiLevel<=2).length,'Mới làm quen AI (cấp 1–2)','#fb923c'],[Object.keys(city).length,'Tỉnh/thành']])}
+ <div class="grid2"><div class="panel"><h3>Mức độ dùng AI</h3>${hbars(ai,'#6366f1',v=>v+' người')}</div><div class="panel"><h3>Vai trò công việc</h3>${hbars(Object.entries(role).sort((a,b)=>b[1]-a[1]).slice(0,6).map(([k,v])=>[k,v,'#3b82f6']),'#3b82f6',v=>v+' người')}</div></div>`;
+}
+function vModule(m){const d=MOD_DEMO[m.id];return `<div class="band"><h2>Ô ${m.n} · ${m.name}</h2>${d?sampleNote+d():''}<details class="morebox"><summary>Các nhánh của ô này (theo buổi họp 21/11)</summary>${subsHTML(m)}</details></div>`}
 
 function vStaff(){
  return `<div class="band"><h2>Ô 6 · Nhân sự</h2><p class="mut" style="margin:0 0 14px">Danh sách người phụ trách chăm sóc học viên. Ai có trong danh sách này sẽ hiện để tích chọn trong hồ sơ.</p>
  <div class="panel" style="max-width:560px">${S.staff.map((s,i)=>{const n=S.list.filter(x=>arr(x.phuTrach).includes(s)).length;return `<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid #1c2a5c"><b style="flex:1">${esc(s)}</b><span class="mut" style="font-size:14px">${n} học viên</span>${S.canWrite?`<button class="btn ghost sm" data-delstaff="${i}">Bỏ</button>`:''}</div>`}).join('')}
  ${S.canWrite?`<form id="staffForm" class="bar" style="margin-top:12px"><input class="inp" id="newStaff" placeholder="Tên nhân sự mới" style="flex:1"><button class="btn">Thêm</button></form>`:''}</div>
- ${subsHTML({cc:'#22b062',subs:[['Đào tạo nhân sự','Tài liệu, quy trình cho người mới.'],['Phân quyền','Phần nào nhân sự được xem, phần nào không.']]})}</div>`;
+ <h3 style="margin-top:22px">Đội ngũ và công việc</h3>${sampleNote}
+ <div class="subs">${[['Kim Anh','Chăm sóc khách hàng','#3b82f6','Gọi làm quen trong 24 giờ, chăm sóc nhóm Diamond',['Học viên phụ trách',S.list.filter(x=>arr(x.phuTrach).includes('Kim Anh')).length],['Cuộc gọi tuần này',34]],['Mỹ Linh','Chăm sóc khách hàng','#a855f7','Tư vấn sau Zoom, chăm sóc CMA Trainer',['Học viên phụ trách',S.list.filter(x=>arr(x.phuTrach).includes('Mỹ Linh')).length],['Cuộc gọi tuần này',28]],['Oanh','Vận hành, admin CRM','#16a34a','Sự kiện, form thu thập, xếp nhóm lớp',['Sự kiện đang lo',2],['Form đang mở',S.forms.filter(f=>f.mo).length]]].map(([n,r,c,d,a,b])=>`<div class="sub" style="--c:${c}"><b>${n}</b><span class="mut sm">${r}</span><p class="sm" style="margin:6px 0">${d}</p><div class="kv2"><span>${a[0]}</span><b>${a[1]}</b><span>${b[0]}</span><b>${b[1]}</b></div></div>`).join('')}</div>
+ <h3 style="margin-top:18px">Đào tạo nhân sự mới</h3><div class="panel" style="max-width:640px">${steps([['Đọc quy trình chăm sóc học viên Diamond','Ngày 1',1],['Xem 3 buổi Zoom gần nhất','Ngày 1–2',1],['Thực hành CRM: lọc, sửa trạng thái, ghi nhật ký','Ngày 2',0],['Gọi thử 5 học viên cùng trưởng nhóm','Ngày 3',0],['Tự phụ trách 10 học viên','Tuần 2',0]])}</div>
+ <details class="morebox"><summary>Các nhánh khác (đang xây dần)</summary>${subsHTML({cc:'#22b062',subs:[['Phân quyền','Phần nào nhân sự được xem, phần nào không.']]})}</details></div>`;
 }
 
 /* ---------- Drawer (profile) ---------- */

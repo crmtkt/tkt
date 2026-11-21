@@ -348,6 +348,21 @@ table.simple td:first-child{min-width:210px!important}
 .campd{margin-top:16px;padding:16px;border-radius:18px;background:#0f1a45;border:2px solid var(--c)}
 .campd header{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;flex-wrap:wrap;margin-bottom:12px}
 .campd .kpis{grid-template-columns:repeat(4,minmax(0,1fr))}
+.calpick{display:flex;flex-direction:column;align-items:center;gap:6px}.calpick select{min-height:40px;font-size:15px}
+.funnel{display:grid;gap:8px}
+.fs{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);gap:12px;align-items:center}
+.fsb{height:40px;border-radius:10px;background:linear-gradient(90deg,#6366f1,#c026d3);display:flex;align-items:center;padding:0 12px;min-width:70px}
+.fsb b{font-size:15px;white-space:nowrap}
+.fsl{display:flex;flex-direction:column}.fsl small{color:var(--mut);font-size:12.5px}
+.vbars.v6{grid-template-columns:repeat(6,minmax(0,1fr));height:200px}
+table.progtbl td.pg{min-width:180px!important;max-width:220px;font-size:13.5px;line-height:1.4}
+table.progtbl td.pg small{display:block;font-size:11.5px;font-weight:700;margin-top:3px}
+table.progtbl td.pd{background:#0f3b33}table.progtbl td.pd small{color:#6ee7b7}
+table.progtbl td.pl{background:#4a2a12}table.progtbl td.pl small{color:#fed7aa}
+table.progtbl td.po{background:#16245a}table.progtbl td.po small{color:#93c5fd}
+.gvb{all:unset;cursor:pointer;display:grid;grid-template-columns:96px minmax(0,1fr);gap:14px;background:var(--card);border:1px solid var(--line);border-top:4px solid var(--c);border-radius:16px;padding:14px}
+.gvb:hover,.gvb.on{border-color:var(--c);box-shadow:0 0 0 1px var(--c)}
+.gvb:focus-visible{outline:3px solid var(--gold)}
 .bnav,.mscrim{display:none}
 .menubtn{display:grid;place-items:center;width:42px;height:42px;flex:none;border-radius:12px;border:1px solid var(--line);background:#111d48;color:var(--ink)}
 .menubtn svg{width:22px;height:22px}.menubtn:hover{border-color:var(--gold);color:var(--gold)}
@@ -385,6 +400,7 @@ body.solo .bnav,body.solo .menubtn{display:none}
 .toast{bottom:calc(76px + env(safe-area-inset-bottom))}
 }
 @media(max-width:600px){
+.fs{grid-template-columns:1fr;gap:2px}.gvb{grid-template-columns:72px minmax(0,1fr)}.calpick select{font-size:14px}
 .cal{gap:3px}.cd{min-height:58px;padding:3px}.cev{font-size:0;padding:0;height:7px;border-radius:4px;border:0;background:var(--pc)}.cdh{font-size:11px}.calhead h3{font-size:17px}.calhead .btn{padding:5px 8px}.campd{padding:10px}.campd .kpis{grid-template-columns:repeat(2,minmax(0,1fr))}
 .prog{grid-template-columns:44px minmax(0,1fr)}.pnum{grid-column:2;flex-direction:row;gap:10px;align-items:center;flex-wrap:wrap}.gv{grid-template-columns:72px minmax(0,1fr)}.gvimg{width:72px;height:72px}.gv .kv{grid-template-columns:1fr}
 .vbars{gap:3px;height:180px}.vb b{display:none}.hb{grid-template-columns:minmax(80px,40%) minmax(0,1fr) auto}
@@ -583,6 +599,19 @@ function demoFace(i){
  return 'data:image/svg+xml;charset=utf-8,'+encodeURIComponent(svg);
 }
 let DEMO_CACHE=null;
+function demoProgress(i){
+ const plans=[['Đạt: Chốt chủ đề sách, viết dàn ý 10 chương','Đạt: Viết xong chương 1–2 cùng AI','Chậm: Chương 3 trễ 1 tuần do bận kinh doanh','Đang viết chương 4–5'],
+ ['Đạt: Thiết kế xong 4 buổi đào tạo mẫu','Đạt: Dạy thử buổi 1 cho 20 người','Đang quay video giới thiệu khóa học'],
+ ['Chậm: Chưa cài được ChatGPT, cần kèm 1-1','Đạt: Dùng AI viết 10 bài đăng bán nhà','Đang làm kịch bản video'],
+ ['Đạt: Hoàn thành bản đồ BMC cho công ty','Đạt: Đội 5 người dùng AI viết báo cáo','Đang xây trợ lý AI cho phòng kinh doanh'],
+ ['Đạt: Ra mắt kênh TikTok, 1.200 người theo dõi','Đạt: Khóa dinh dưỡng online có 35 học viên','Đạt: Doanh thu khóa đầu 180 triệu','Đang đóng gói khóa 2'],
+ ['Đang học buổi 1–2, làm quen với AI'],
+ ['Đạt: Viết xong lời giới thiệu sách','Chậm: Chưa nộp chương 1','Đang viết chương 1'],
+ ['Chậm: Tạm dừng vì đi công tác','Chậm: Chưa quay lại lớp'],
+ ['Đạt: Xây xong quy trình tự động hóa chăm sóc khách','Đạt: Tạo 3 Agent cho học viên coaching','Đạt: 12 học viên coaching mới','Đang đóng gói chương trình Trainer'],
+ ['Đang chuẩn bị buổi khai giảng Trainer']][i%10];
+ const o={};plans.forEach((t,k)=>o[MONTHS[k]]=t);return o;
+}
 function demoData(){
  if(DEMO_CACHE)return DEMO_CACHE;
  const P=[['Nguyễn Thị Hồng Nhung','0912345601','1979','Chủ chuỗi spa','TP. Hồ Chí Minh','Chủ doanh nghiệp','Diamond','Nhóm viết sách','Đang học',['Kim Anh'],3,['ChatGPT','Canva AI','CapCut']],
@@ -600,7 +629,7 @@ function demoData(){
  DEMO_CACHE=P.map((r,i)=>{const id='demo-'+(i+1);PH.set(id,demoFace(i===9?0:i));return {id,demo:true,hasPhoto:true,formId:'',hoTen:r[0],sdt:r[1],namSinh:r[2],congViec:r[3],thanhPho:r[4],vaiTro:r[5],khoa:r[6],nhom:r[7],nam:i===3?'2025':'2026',trangThai:r[8],phuTrach:r[9],aiLevel:r[10],aiTools:r[11],
   email:'mau'+(i+1)+'@example.com',khoaDaHoc:['CMA F1 Công nghệ (2025)','Sự kiện offline Sài Gòn 10/2026','Chưa'][i%3],lyDo:'Muốn đóng gói kinh nghiệm thành sản phẩm và tăng trưởng bền vững',vanDe:VD[i%4],mongMuon:MM[i%4],thoiGian:['2–5 giờ','5–10 giờ'][i%2],
   createdAt:'2026-11-'+String(10+i).padStart(2,'0'),zaloGroup:i%2?'https://zalo.me/g/mau':'' ,ghiChu:'',hanhTrinh:[{ngay:'2026-11-'+String(10+i).padStart(2,'0'),noiDung:'Điền phiếu thông tin học viên'}],
-  nhatKy:i%3===2?[]:[{ngay:'2026-11-2'+(i%2),nguoi:r[9][0]||'Kim Anh',noiDung:['Gửi link nhóm Zalo và tài liệu buổi 1','Gọi điện hỏi thăm, hẹn lịch 1 kèm 1','Nhắc bài tập tuần 1'][i%3]}],tienDo:{}}});
+  nhatKy:i%3===2?[]:[{ngay:'2026-11-2'+(i%2),nguoi:r[9][0]||'Kim Anh',noiDung:['Gửi link nhóm Zalo và tài liệu buổi 1','Gọi điện hỏi thăm, hẹn lịch 1 kèm 1','Nhắc bài tập tuần 1'][i%3]}],tienDo:demoProgress(i)}});
  return DEMO_CACHE;
 }
 const isDemo=id=>String(id).startsWith('demo-');
@@ -634,6 +663,13 @@ function listCards(rows){return `<div class="cards">${rows.map(x=>cardHV(x)).joi
 const EDIT={hoTen:'text',sdt:'text',namSinh:'text',email:'text',congViec:'text',thanhPho:'text',khoa:'course',nhom:'group',nam:'year',trangThai:'status',phuTrach:'staff',khoaDaHoc:'area',lyDo:'area',vanDe:'area',mongMuon:'area',ghiChu:'area',zaloGroup:'text'};
 const shown=(x,f)=>{const v=x[f];if(f==='phuTrach')return ptTags(x);if(f==='trangThai')return `<span class="st" style="--sc:${stColor(v)}">${esc(v||'Mới đăng ký')}</span>`;if(f==='khoa')return esc(courseTxt({khoa:v}));if(f==='nhom')return x.khoa==='Diamond'?esc(v||'Chưa xếp nhóm'):'<span class="mut">—</span>';if(f==='namSinh')return esc(v?v+' ('+age(x)+')':'');if(f==='zaloGroup')return safeUrl(v)?`<a class="mini" href="${esc(v)}" target="_blank" rel="noopener">Mở nhóm ↗</a>`:'';const t=Array.isArray(v)?v.join(', '):String(v??'');return esc(EDIT[f]==='area'?clip(t,140):t)};
 const ec=(x,f,cls)=>`<td class="ed ${cls||''}" data-id="${esc(x.id)}" data-f="${f}" tabindex="0" title="Bấm để sửa">${shown(x,f)||'<span class="mut">+ Thêm</span>'}</td>`;
+function listProgress(rows){
+ const MS=MONTHS,cls=t=>!t?'pe':/^chậm|^cham|^!/i.test(t)?'pl':/^xong|^đạt|^dat|^✓/i.test(t)?'pd':'po';
+ const done=rows.reduce((a,x)=>a+MS.filter(m=>cls((x.tienDo||{})[m])==='pd').length,0),late=rows.reduce((a,x)=>a+MS.filter(m=>cls((x.tienDo||{})[m])==='pl').length,0);
+ return `<p class="mut sm" style="margin:0 0 8px">Mỗi ô là kết quả học viên đạt được trong tháng. Bắt đầu bằng <b>"Đạt:"</b> sẽ tô xanh, <b>"Chậm:"</b> tô cam. Bấm vào tên để mở hồ sơ và cập nhật.</p>
+ ${kpi([[rows.length,'Học viên'],[done,'Mục tiêu tháng đã đạt','#34d399'],[late,'Tháng bị chậm','#fb923c'],[rows.filter(x=>MS.some(m=>cls((x.tienDo||{})[m])==='pl')).length,'Học viên cần kèm thêm','#fb923c']])}
+ <div class="widewrap"><table class="wide progtbl"><thead><tr><th>Học viên</th>${MS.map(m=>`<th>${mName(m)}</th>`).join('')}</tr></thead><tbody>${rows.map(x=>`<tr><td class="stick"><button class="who linkbtn" data-open="${esc(x.id)}">${ava(x,'ava tbimg')}<span><b>${esc(x.hoTen)}</b><br><small class="mut">${esc(courseTxt(x))}</small></span></button></td>${MS.map(m=>{const t=(x.tienDo||{})[m]||'';return `<td class="pg ${cls(t)}">${t?esc(t.replace(/^(Đạt|Chậm|Xong)\s*:\s*/i,'')):'<span class="mut">—</span>'}${t?`<small>${cls(t)==='pd'?'Đạt':cls(t)==='pl'?'Chậm':'Đang làm'}</small>`:''}</td>`}).join('')}</tr>`).join('')}</tbody></table></div>`;
+}
 function listTable(rows){
  const H=[['Học viên',''],['Điện thoại',''],['Năm sinh',''],['Email',''],['Công việc',''],['Tỉnh/thành',''],['Khóa',''],['Nhóm',''],['Năm',''],['Trạng thái',''],['Phụ trách',''],['Mức AI',''],['Đã và đang học',''],['Lý do đăng ký',''],['Cần thầy hỗ trợ',''],['Mong muốn',''],['Ghi chú nội bộ',''],['Nhóm Zalo',''],['Chăm sóc gần nhất',''],['Ngày vào','']];
  return `<p class="mut sm" style="margin:0 0 8px">Bấm vào ô bất kỳ để sửa. Nhấn Enter hoặc bấm ra ngoài để lưu, Esc để hủy.</p><div class="widewrap"><table class="wide"><thead><tr>${H.map(h=>`<th>${h[0]}</th>`).join('')}</tr></thead><tbody>${rows.map(x=>{const lc=lastCare(x);return `<tr>
@@ -691,8 +727,8 @@ function vProducts(){
   <select class="inp" id="fform" aria-label="Form"><option value="all">Mọi form</option>${S.forms.map(x=>`<option value="${esc(x.id)}" ${f.form===x.id?'selected':''}>${esc(x.ten)}</option>`).join('')}</select><a class="btn ghost" href="#form" style="text-decoration:none;display:inline-flex;align-items:center">Lấy link form</a>
  </div>
  ${demoBar()}
- <div class="viewbar"><span class="mut">${rows.length} học viên</span><div class="seg" role="group" aria-label="Kiểu xem"><button class="${S.view==='card'?'on':''}" data-view="card">Thẻ học viên</button><button class="${S.view==='table'?'on':''}" data-view="table">Bảng đầy đủ</button></div></div>
- ${rows.length?(S.view==='table'?listTable(rows):listCards(rows))
+ <div class="viewbar"><span class="mut">${rows.length} học viên</span><div class="seg" role="group" aria-label="Kiểu xem"><button class="${S.view==='card'?'on':''}" data-view="card">Thẻ học viên</button><button class="${S.view==='table'?'on':''}" data-view="table">Bảng đầy đủ</button><button class="${S.view==='prog'?'on':''}" data-view="prog">Tiến độ tháng</button></div></div>
+ ${rows.length?(S.view==='table'?listTable(rows):S.view==='prog'?listProgress(rows):listCards(rows))
  :`<div class="panel empty">${S.list.length?'Không có học viên khớp bộ lọc này.':'Chưa có học viên nào. Vào mục Form thu thập, sao chép link gửi học viên; phiếu sẽ hiện ở đây ngay khi họ bấm gửi.'}</div>`}
  
  </div>`}`;
@@ -729,10 +765,11 @@ function subsHTML(m){return `<div class="subs">${(m.subs||[]).map(([a,b])=>`<div
 
 /* ---------- Các ô đang xây: bản xem thử với dữ liệu mẫu ---------- */
 const VND=n=>new Intl.NumberFormat('vi-VN').format(Math.round(n))+' đ';
-const TR=n=>Math.abs(n)>=1e9?(n/1e9).toLocaleString('vi-VN',{maximumFractionDigits:2})+' tỷ':(n/1e6).toLocaleString('vi-VN',{maximumFractionDigits:1})+' tr';
+const TR=n=>Math.abs(n)<1e6&&n!==0?new Intl.NumberFormat('vi-VN').format(Math.round(n/1000)*1000)+' đ':Math.abs(n)>=1e9?(n/1e9).toLocaleString('vi-VN',{maximumFractionDigits:2})+' tỷ':(n/1e6).toLocaleString('vi-VN',{maximumFractionDigits:1})+' tr';
 const sampleNote=`<div class="samplenote">Số liệu mẫu để hình dung cách ô này vận hành. Khi có dữ liệu thật, em sẽ nối vào CRM.</div>`;
 const hbars=(rows,color,fmt)=>{const mx=Math.max(...rows.map(r=>r[1]),1);return `<div class="hbars">${rows.map(([k,v,c])=>`<div class="hb"><span class="hbk">${esc(k)}</span><span class="hbt"><i style="width:${(v/mx*100).toFixed(1)}%;background:${c||color}"></i></span><b class="hbv">${fmt?fmt(v):v}</b></div>`).join('')}</div>`};
 const vbars=(rows,color,fmt)=>{const mx=Math.max(...rows.map(r=>r[1]),1);return `<div class="vbars">${rows.map(([k,v,hl])=>`<div class="vb"><b>${fmt?fmt(v):v}</b><span class="vbt"><i style="height:${(v/mx*100).toFixed(1)}%;background:${hl?'var(--gold)':color}"></i></span><small>${esc(k)}</small></div>`).join('')}</div>`};
+const vbarsN=(rows,color,fmt)=>{const mx=Math.max(...rows.map(r=>r[1]),1);return `<div class="vbars v6">${rows.map(([k,v,hl])=>`<div class="vb"><b>${fmt?fmt(v):v}</b><span class="vbt"><i style="height:${(v/mx*100).toFixed(1)}%;background:${hl?'var(--gold)':color}"></i></span><small>${esc(k)}</small></div>`).join('')}</div>`};
 const kpi=list=>`<div class="kpis">${list.map(([v,l,c])=>`<div><b style="${c?'color:'+c:''}">${v}</b><span>${l}</span></div>`).join('')}</div>`;
 const pill=(t,c)=>`<span class="st" style="--sc:${c}">${esc(t)}</span>`;
 const tbl=(head,rows)=>`<div class="widewrap"><table class="wide simple"><thead><tr>${head.map(h=>`<th>${h}</th>`).join('')}</tr></thead><tbody>${rows.map(r=>`<tr>${r.map(c=>`<td>${c}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`;
@@ -815,14 +852,60 @@ function openBuyer(id){
  <p class="mut sm">Đây là học viên mẫu để xem thử. Khi nối dữ liệu bán hàng thật, mỗi học viên sẽ mở đúng hồ sơ trong CRM.</p></div>`;
  $('#drawer').classList.add('on');$('#scrim').classList.add('on');$('#closeD').focus();
 }
+
+const GV_DEMO=[
+ {id:'g0',n:'Thầy Trần Khánh Tư',cm:'Sáng lập CMA · Đóng gói di sản, AI',loai:'Phễu + chuyên sâu',dg:4.9,ht:'Chủ trì, không chia',share:0,c:'#f5c451',ps:[['12/10/2026','Chuyên sâu','Offline Sài Gòn: Đóng gói di sản 2026',86,3.96e9,520e6,4.9],['09–11/2026','Phễu','Zoom miễn phí "AI cho người 40+" (12 buổi)',1240,0,45e6,4.8],['03/2026','Chuyên sâu','CMA Diamond 2026 khai giảng',42,6.3e9,180e6,4.9],['06/2026','Chuyên sâu','Offline Hà Nội: CMA F1',150,2.25e9,380e6,4.8]]},
+ {id:'g1',n:'GV Hoàng Nam',cm:'Công nghệ AI, tự động hóa (F1, F3)',loai:'Chuyên sâu',dg:4.8,ht:'Chia 40% doanh thu khóa',share:.4,c:'#34d399',ps:[['06/2026','Chuyên sâu','CMA F1 Công nghệ (Hà Nội)',150,2.25e9,380e6,4.8],['08/2026','Chuyên sâu','CMA F3 Tài chính (online)',55,1.1e9,60e6,4.7],['10/2026','Phễu','Zoom: Agent AI cho chủ doanh nghiệp',420,0,6e6,4.8]]},
+ {id:'g2',n:'GV Thảo Vy',cm:'Làm video, nội dung không lộ mặt',loai:'Phễu',dg:4.7,ht:'Phí theo buổi (8 tr/buổi)',share:0,c:'#34d399',ps:[['07/2026','Phễu','Workshop mini: Làm video bằng AI',110,55e6,12e6,4.7],['09/2026','Phễu','Workshop mini: Xây kênh TikTok',130,65e6,12e6,4.6],['11/2026','Phễu','Zoom: Bán hàng không cần lộ mặt',380,0,5e6,4.8]]},
+ {id:'g3',n:'GV Quốc Huy',cm:'Sale, marketing, xây kênh',loai:'Chuyên sâu',dg:4.6,ht:'Chia 35% doanh thu khóa',share:.35,c:'#34d399',ps:[['05/2026','Chuyên sâu','CMA F2 Sale Marketing khóa 1',45,1.12e9,55e6,4.6],['09–11/2026','Chuyên sâu','CMA F2 Sale Marketing (online)',40,1.0e9,40e6,4.7]]},
+ {id:'g4',n:'Coach Minh Đức',cm:'Coaching 1 kèm 1, phát triển bản thân',loai:'Chuyên sâu',dg:4.9,ht:'Phí theo khóa (300 tr/khóa)',share:0,c:'#60a5fa',ps:[['10–11/2026','Chuyên sâu','Diamond Coaching (ưu đãi học viên cũ)',6,1.5e9,300e6,4.9]]},
+ {id:'g5',n:'GV Ngọc Lan',cm:'Viết sách, thương hiệu cá nhân',loai:'Phễu + chuyên sâu',dg:4.8,ht:'Chia 30% nhóm viết sách',share:.3,c:'#a78bfa',ps:[['08/2026','Phễu','Workshop mini: Viết sách cùng AI',95,47e6,10e6,4.8],['10–11/2026','Chuyên sâu','Nhóm viết sách Diamond',5,0.9e9,40e6,4.9]]}];
+function gvDetail(g){
+ const rv=g.ps.reduce((a,p)=>a+p[4],0),cp=g.ps.reduce((a,p)=>a+p[5],0),share=g.ps.reduce((a,p)=>a+p[4]*g.share,0),hv=g.ps.reduce((a,p)=>a+p[3],0);
+ return `<section class="campd" style="--c:${g.c}"><header><div><span class="mut sm">${esc(g.cm)}</span><h3 style="margin:2px 0">${esc(g.n)}</h3><div class="sm">Hợp tác: <b>${esc(g.ht)}</b> · Đánh giá trung bình ★ ${g.dg}</div></div><button class="btn ghost sm" data-gv="${g.id}">Đóng chi tiết</button></header>
+ ${kpi([[g.ps.length,'Chương trình đã chạy'],[hv.toLocaleString('vi-VN'),'Học viên đã dạy'],[TR(rv),'Doanh thu mang lại','#34d399'],[TR(cp),'Chi phí tổ chức'],[TR(share),'Chia cho giảng viên'],[TR(rv-cp-share),'Lợi nhuận còn lại','#34d399'],[rv?Math.round((rv-cp-share)/rv*100)+'%':'—','Biên lợi nhuận'],[g.ps.filter(p=>p[1]==='Chuyên sâu').length+' / '+g.ps.filter(p=>p[1]==='Phễu').length,'Chuyên sâu / phễu']])}
+ <h3>Các chương trình, chiến dịch đã chạy</h3>${tbl(['Thời gian','Loại','Chương trình','Học viên','Doanh thu','Chi phí','Chia giảng viên','Lợi nhuận','Đánh giá'],g.ps.map(p=>[esc(p[0]),pill(p[1],p[1]==='Phễu'?'#38bdf8':'#f5c451'),`<b>${esc(p[2])}</b>`,p[3].toLocaleString('vi-VN'),p[4]?TR(p[4]):'<span class="mut">Miễn phí</span>',TR(p[5]),TR(p[4]*g.share),`<b>${TR(p[4]-p[5]-p[4]*g.share)}</b>`,'★ '+p[6]]).concat([['<b>Tổng</b>','','',`<b>${hv.toLocaleString('vi-VN')}</b>`,`<b>${TR(rv)}</b>`,`<b>${TR(cp)}</b>`,`<b>${TR(share)}</b>`,`<b>${TR(rv-cp-share)}</b>`,'']]))}
+ <div class="grid2" style="margin-top:14px"><div class="panel"><h3>Doanh thu theo chương trình</h3>${hbars(g.ps.filter(p=>p[4]).map(p=>[p[2],p[4],g.c]),'#6366f1',TR)}</div><div class="panel"><h3>Nhận xét</h3><ul class="chk2"><li>Chương trình hiệu quả nhất: <b>${esc(g.ps.slice().sort((a,b)=>(b[4]-b[5])-(a[4]-a[5]))[0][2])}</b></li><li>Học viên đánh giá cao phần thực hành trực tiếp.</li><li>Đề xuất: mở thêm 1 chương trình phễu mỗi tháng để nuôi khách cho khóa chuyên sâu.</li></ul></div></div></section>`;
+}
+function staffReport(name){
+ const B=campDemo().flatMap(c=>c.buyers_list).filter(b=>b.phuTrach.includes(name));
+ const R=S.list.filter(x=>arr(x.phuTrach).includes(name));
+ const cls={};B.forEach(b=>{(cls[b.sp]=cls[b.sp]||[]).push(b)});
+ const rev=B.reduce((a,b)=>a+b.gia,0),paid=B.reduce((a,b)=>a+b.daThu,0),debt=B.reduce((a,b)=>a+b.no,0);
+ const P={'Kim Anh':[180,52,34,'1 giờ 20 phút',94,4.8],'Mỹ Linh':[160,41,28,'2 giờ',91,4.7],'Oanh':[90,22,15,'3 giờ',88,4.6]}[name]||[0,0,0,'—',0,0];
+ const sel=S.staffCls&&cls[S.staffCls]?S.staffCls:null;
+ return `<section class="campd" style="--c:#22b062"><header><div><span class="mut sm">Báo cáo công việc</span><h3 style="margin:2px 0">${esc(name)}</h3><div class="sm">Đang chăm sóc ${Object.keys(cls).length} lớp · ${B.length} học viên (dữ liệu mẫu) · ${R.length} hồ sơ trong CRM</div></div><button class="btn ghost sm" data-staff="${esc(name)}">Đóng báo cáo</button></header>
+ ${kpi([[B.length,'Học viên đang chăm sóc'],[TR(rev),'Doanh thu mang lại','#34d399'],[TR(paid),'Đã thu'],[TR(debt),'Công nợ đang phụ trách','#fb923c'],[P[1]+'/'+P[0],'Khách được giao → đã chốt'],[P[0]?Math.round(P[1]/P[0]*100)+'%':'—','Tỷ lệ chuyển đổi','#34d399'],[P[3],'Thời gian phản hồi TB'],[P[4]+'%','Học viên hài lòng · ★ '+P[5]]])}
+ <div class="grid2" style="margin-bottom:14px"><div class="panel"><h3>Doanh thu theo lớp</h3>${hbars(Object.entries(cls).map(([k,v])=>[k,v.reduce((a,b)=>a+b.gia,0),'#22b062']),'#22b062',TR)}</div>
+ <div class="panel"><h3>Tiến độ công việc tuần này</h3>${hbars([['Cuộc gọi chăm sóc',P[2],'#3b82f6'],['Tin nhắn Zalo đã trả lời',P[2]*4,'#0ea5e9'],['Nhắc đóng học phí',Math.round(B.filter(b=>b.no).length*.8),'#fb923c'],['Ghi nhật ký chăm sóc',Math.round(P[2]*.9),'#34d399']],'#6366f1',v=>v)}</div></div>
+ <h3>Các lớp đang chăm sóc <span class="mut sm" style="font-weight:400">· bấm vào lớp để xem danh sách</span></h3>
+ <div class="camps">${Object.entries(cls).map(([k,v])=>{const r=v.reduce((a,b)=>a+b.gia,0),d=v.reduce((a,b)=>a+b.no,0),pd=v.reduce((a,b)=>a+b.daThu,0);return `<button class="camp ${sel===k?'on':''}" data-scls="${esc(k)}" style="--c:#22b062"><b>${esc(k)}</b><div class="campn"><span><b>${v.length}</b> học viên</span><span><b>${TR(r)}</b> doanh thu</span><span class="warnTxt">Nợ ${TR(d)}</span></div><i style="width:${(pd/r*100).toFixed(0)}%"></i></button>`}).join('')}</div>
+ ${sel?(()=>{const v=cls[sel],r=v.reduce((a,b)=>a+b.gia,0),pd=v.reduce((a,b)=>a+b.daThu,0),d=v.reduce((a,b)=>a+b.no,0);
+  return `<div class="panel" style="margin-top:14px"><h3>${esc(sel)} · ${esc(name)} phụ trách</h3>
+  ${kpi([[v.length,'Học viên'],[TR(r),'Doanh thu','#34d399'],[TR(pd),'Đã thu'],[TR(d),'Công nợ','#fb923c'],[v.filter(b=>b.tt==='full').length,'Đóng đủ'],[v.filter(b=>b.tt==='coc').length,'Đặt cọc','#fb923c'],[Math.round(pd/r*100)+'%','Tỷ lệ đã thu'],[v.filter(b=>b.nhatKy.length>1).length,'Đã chăm sóc từ 2 lần']])}
+  <div class="widewrap"><table class="wide"><thead><tr><th>Học viên</th><th>Điện thoại</th><th>Email</th><th>Thanh toán</th><th>Đã thu</th><th>Còn nợ</th><th>Hạn đóng</th><th>Ghi chú chăm sóc gần nhất</th><th>Hồ sơ</th></tr></thead><tbody>
+  ${v.slice().sort((a,b)=>b.no-a.no).map(b=>{const lc=b.nhatKy[b.nhatKy.length-1];return `<tr><td class="stick"><button class="who linkbtn" data-buyer="${b.id}"><img class="ava tbimg" src="${face(b.face)}" alt=""><span><b>${esc(b.hoTen)}</b><br><small class="mut">${esc(b.congViec)}</small></span></button></td><td class="nw"><a class="mini" href="tel:${b.sdt}">${b.sdt}</a></td><td>${esc(b.email)}</td><td>${b.tt==='full'?pill('Đã đóng đủ','#34d399'):pill('Đặt cọc','#fb923c')}</td><td class="nw">${TR(b.daThu)}</td><td class="nw">${b.no?`<b class="warnTxt">${TR(b.no)}</b>`:'0'}</td><td class="nw">${b.hanTT?fmtD(b.hanTT):''}</td><td class="tx">${fmtD(lc.ngay)} · ${esc(lc.noiDung)}</td><td><button class="btn sm" data-buyer="${b.id}">Xem</button></td></tr>`}).join('')}</tbody></table></div></div>`})():''}
+ </section>`;
+}
 const MOD_DEMO={
 'marketing':()=>{
- const camps=[['Zoom miễn phí "AI cho người 40+"','Facebook, Zalo','Thu hút',12e6,420,68,'Đang chạy','#34d399'],['Sự kiện offline Hà Nội 12/2026','Facebook, Zalo, giới thiệu','Chuyển đổi',35e6,180,26,'Chuẩn bị','#60a5fa'],['Chuỗi video "Đóng gói di sản"','TikTok, YouTube','Nhận diện',8e6,1250,40,'Đang chạy','#34d399'],['Ưu đãi học viên cũ lên Diamond','Zalo, gọi điện','Chuyển đổi',2e6,95,18,'Đang chạy','#34d399'],['Ra mắt sách nhóm viết sách','Facebook, sự kiện','Nhận diện',15e6,0,0,'Lên kế hoạch','#a78bfa']];
- return `${kpi([[ '5','Chiến dịch'],[VND(72e6),'Ngân sách quý'],['1.945','Khách tiềm năng'],['152','Đăng ký mới','#34d399']])}
- <div class="grid2" style="margin-bottom:16px"><div class="panel"><h3>Phễu tháng này</h3>${hbars([['Tiếp cận',18500,'#3b82f6'],['Quan tâm (inbox, bình luận)',1945,'#6366f1'],['Tham gia Zoom miễn phí',420,'#a855f7'],['Tư vấn 1 kèm 1',96,'#d946ef'],['Đăng ký khóa học',38,'#f5c451']],'#6366f1',v=>v.toLocaleString('vi-VN'))}</div>
- <div class="panel"><h3>Theo kênh</h3>${hbars([['Facebook',820,'#3b82f6'],['Zalo',540,'#0ea5e9'],['TikTok',390,'#ec4899'],['YouTube',140,'#ef4444'],['Giới thiệu',55,'#f5c451']],'#3b82f6',v=>v+' KH')}</div></div>
- <h3>Chiến dịch</h3>${tbl(['Chiến dịch','Kênh','Giai đoạn phễu','Ngân sách','Khách tiềm năng','Đăng ký','Trạng thái'],camps.map(c=>[`<b>${esc(c[0])}</b>`,esc(c[1]),esc(c[2]),VND(c[3]),c[4].toLocaleString('vi-VN'),c[5],pill(c[6],c[7])]))}
- <h3 style="margin-top:18px">Việc cần làm theo kênh</h3><div class="subs">${[['Facebook','#3b82f6',['3 bài/tuần về câu chuyện học viên','Chạy quảng cáo Zoom miễn phí','Trả lời bình luận trong 2 giờ']],['TikTok','#ec4899',['5 video ngắn/tuần, không lộ mặt','Dùng AI dựng kịch bản','Gắn link đăng ký Zoom']],['YouTube','#ef4444',['1 video dài/tuần từ buổi Zoom','Cắt 3 shorts từ mỗi buổi']],['Zalo','#0ea5e9',['Nhắc lịch Zoom trước 1 ngày','Gửi tài liệu sau buổi học','Chăm sóc nhóm Diamond']]].map(([k,c,l])=>`<div class="sub" style="--c:${c}"><b>${k}</b><ul class="chk2">${l.map(x=>`<li>${esc(x)}</li>`).join('')}</ul></div>`).join('')}</div>`;
+ const pct=(a,b)=>b?(a/b*100).toLocaleString('vi-VN',{maximumFractionDigits:1})+'%':'—';
+ const F=[['Tiếp cận (lượt xem quảng cáo, bài viết)',420000],['Tương tác (bình luận, nhắn tin, bấm link)',18600],['Để lại thông tin (khách tiềm năng)',3150],['Tham gia Zoom miễn phí',1240],['Được tư vấn 1 kèm 1',410],['Mua khóa chuyên sâu',152]];
+ const CH=[['Facebook Ads','#3b82f6',180e6,1420,610,64,2.9e9],['Zalo (nhóm, OA)','#0ea5e9',25e6,620,280,38,1.9e9],['TikTok','#ec4899',60e6,690,190,21,0.7e9],['YouTube','#ef4444',20e6,240,90,12,0.6e9],['Giới thiệu từ học viên','#f5c451',15e6,180,140,17,1.3e9]];
+ const CP=[['Zoom miễn phí "AI cho người 40+"','Facebook, Zalo',45e6,1350,520,48,2.2e9],['Offline Sài Gòn 10/2026','Facebook, Zalo, giới thiệu',120e6,980,410,86,3.96e9],['Chuỗi video "Đóng gói di sản"','TikTok, YouTube',35e6,560,140,9,0.45e9],['Ưu đãi học viên cũ lên Diamond','Zalo, gọi điện',8e6,95,62,11,2.4e9],['Giới thiệu từ học viên','Giới thiệu',12e6,165,120,9,1.07e9]];
+ const tr=[['T6',1800,4.1],['T7',2050,4.4],['T8',2300,4.0],['T9',2700,4.6],['T10',3600,5.2],['T11',3150,4.8]];
+ const spend=CH.reduce((a,c)=>a+c[2],0),leads=CH.reduce((a,c)=>a+c[3],0),buy=CH.reduce((a,c)=>a+c[5],0),rev=CH.reduce((a,c)=>a+c[6],0);
+ return `${kpi([[TR(spend),'Chi phí marketing tháng'],[leads.toLocaleString('vi-VN'),'Khách tiềm năng'],[TR(spend/leads),'Chi phí / khách tiềm năng'],[buy,'Đơn chuyên sâu','#34d399'],[pct(buy,leads),'Tỷ lệ chốt (khách → mua)','#34d399'],[TR(spend/buy),'Chi phí / đơn'],[TR(rev),'Doanh thu từ marketing','#34d399'],[(rev/spend).toLocaleString('vi-VN',{maximumFractionDigits:1})+' lần','ROAS (doanh thu / chi phí)']])}
+ <div class="panel" style="margin-bottom:16px"><h3>Phễu chuyển đổi tháng 11/2026</h3><p class="mut sm" style="margin:0 0 10px">Mỗi bước ghi số người, tỷ lệ so với bước trước và so với đầu phễu.</p>
+ <div class="funnel">${F.map(([k,v],i)=>`<div class="fs"><div class="fsb" style="width:${Math.max(6,Math.sqrt(v/F[0][1])*100).toFixed(1)}%"><b>${v.toLocaleString('vi-VN')}</b></div><div class="fsl"><span>${esc(k)}</span><small>${i?`${pct(v,F[i-1][1])} từ bước trước · ${pct(v,F[0][1])} từ đầu phễu`:'Đầu phễu'}</small></div></div>`).join('')}</div>
+ <p class="sm" style="margin:10px 0 0">Điểm nghẽn: chỉ <b class="warnTxt">${pct(F[3][1],F[2][1])}</b> khách tiềm năng vào Zoom. Nên nhắc Zalo trước buổi 1 ngày và 1 giờ.</p></div>
+ <h3>Hiệu quả theo kênh</h3>${tbl(['Kênh','Chi phí','Khách tiềm năng','Chi phí/khách','Vào Zoom','Tỷ lệ vào Zoom','Mua','Tỷ lệ chốt','Doanh thu','ROAS'],CH.map(c=>[`<b style="color:${c[1]}">${esc(c[0])}</b>`,TR(c[2]),c[3].toLocaleString('vi-VN'),TR(c[2]/c[3]),c[4],pct(c[4],c[3]),c[5],`<b>${pct(c[5],c[3])}</b>`,TR(c[6]),`<b>${(c[6]/c[2]).toLocaleString('vi-VN',{maximumFractionDigits:1})}×</b>`]).concat([['<b>Tổng</b>',`<b>${TR(spend)}</b>`,`<b>${leads.toLocaleString('vi-VN')}</b>`,TR(spend/leads),CH.reduce((a,c)=>a+c[4],0),pct(CH.reduce((a,c)=>a+c[4],0),leads),`<b>${buy}</b>`,`<b>${pct(buy,leads)}</b>`,`<b>${TR(rev)}</b>`,`<b>${(rev/spend).toLocaleString('vi-VN',{maximumFractionDigits:1})}×</b>`]]))}
+ <div class="grid2" style="margin:16px 0"><div class="panel"><h3>Tỷ lệ chốt theo kênh</h3>${hbars(CH.map(c=>[c[0],c[5]/c[3]*100,c[1]]),'#6366f1',v=>v.toLocaleString('vi-VN',{maximumFractionDigits:1})+'%')}</div>
+ <div class="panel"><h3>Chi phí cho mỗi đơn</h3>${hbars(CH.map(c=>[c[0],c[2]/c[5],c[1]]),'#6366f1',TR)}</div></div>
+ <div class="grid2" style="margin-bottom:16px"><div class="panel"><h3>Khách tiềm năng 6 tháng</h3>${vbarsN(tr.map(t=>[t[0],t[1]]),'#3b82f6',v=>v.toLocaleString('vi-VN'))}</div>
+ <div class="panel"><h3>Tỷ lệ chốt 6 tháng</h3>${vbarsN(tr.map(t=>[t[0],t[2],t[2]>=5]),'#34d399',v=>v.toLocaleString('vi-VN')+'%')}</div></div>
+ <h3>Hiệu quả theo chiến dịch</h3>${tbl(['Chiến dịch','Kênh','Chi phí','Khách tiềm năng','Tư vấn','Tỷ lệ tư vấn','Mua','Tỷ lệ chốt','Doanh thu','ROI'],CP.map(c=>[`<b>${esc(c[0])}</b>`,esc(c[1]),TR(c[2]),c[3].toLocaleString('vi-VN'),c[4],pct(c[4],c[3]),c[5],`<b>${pct(c[5],c[3])}</b>`,TR(c[6]),`<b>${Math.round((c[6]-c[2])/c[2]*100).toLocaleString('vi-VN')}%</b>`]))}
+ <h3 style="margin-top:18px">Việc cần làm theo kênh</h3><div class="subs">${[['Facebook','#3b82f6',['3 bài/tuần về câu chuyện học viên','Chạy quảng cáo Zoom miễn phí','Trả lời bình luận trong 2 giờ']],['TikTok','#ec4899',['5 video ngắn/tuần, không lộ mặt','Dùng AI dựng kịch bản','Gắn link đăng ký Zoom']],['YouTube','#ef4444',['1 video dài/tuần từ buổi Zoom','Cắt 3 shorts từ mỗi buổi']],['Zalo','#0ea5e9',['Nhắc lịch Zoom trước 1 ngày và 1 giờ','Gửi tài liệu sau buổi học','Chăm sóc nhóm Diamond']]].map(([k,c,l])=>`<div class="sub" style="--c:${c}"><b>${k}</b><ul class="chk2">${l.map(x=>`<li>${esc(x)}</li>`).join('')}</ul></div>`).join('')}</div>`;
 },
 'quy-trinh':()=>{
  const P=[['Sự kiện Zoom miễn phí','#3b82f6',[['Chốt chủ đề, slide, link Zoom','Oanh',1],['Đăng bài + nhắc Zalo trước 1 ngày','Mỹ Linh',1],['Kiểm tra âm thanh, MC mở màn','Oanh',1],['Thầy Tư chia sẻ 90 phút','Thầy Tư',0],['Gửi form đăng ký + quà sau buổi','Kim Anh',0],['Gọi tư vấn người quan tâm trong 48 giờ','Kim Anh, Mỹ Linh',0]]],
@@ -860,24 +943,20 @@ const MOD_DEMO={
  return `<p class="mut">Mỗi tháng có nhiều chương trình. <b style="color:#38bdf8">Phễu</b>: miễn phí hoặc giá thấp để thu hút khách. <b style="color:#f5c451">Chuyên sâu</b>: khóa học, lớp offline có doanh thu.</p>
  <div class="tabs">${[['all','Tất cả'],['pheu','Chương trình phễu'],['chuyen','Chương trình chuyên sâu']].map(([k,t])=>`<button class="tab ${f===k?'on':''}" data-kh="${k}">${t}<span class="c">${k==='all'?P.length:P.filter(x=>x.t===k).length}</span></button>`).join('')}</div>
  ${kpi([[L.length,'Chương trình cả năm'],[sum(L,'p').toLocaleString('vi-VN'),'Mục tiêu người tham gia'],[TR(sum(L,'r')),'Mục tiêu doanh thu năm','#34d399'],[TR(sum(L,'c')),'Chi phí dự kiến']])}
- <div class="calhead"><button class="btn ghost sm" data-cal="-1">‹ Tháng trước</button><h3>${mName}</h3><button class="btn ghost sm" data-cal="1">Tháng sau ›</button></div>
+ <div class="calhead"><button class="btn ghost sm" data-cal="-1">‹ Tháng trước</button><div class="calpick"><h3>${mName}</h3><select class="inp" id="calSel" aria-label="Chọn tháng">${(()=>{const o=[];for(let y=2025;y<=2027;y++)for(let mm=1;mm<=12;mm++){const k=`${y}-${String(mm).padStart(2,'0')}`,n=P.filter(x=>x.d.startsWith(k)).length;o.push(`<option value="${k}" ${k===ym?'selected':''}>Tháng ${mm}/${y}${n?` · ${n} chương trình`:''}</option>`)}return o.join('')})()}</select></div><button class="btn ghost sm" data-cal="1">Tháng sau ›</button></div>
  <div class="calsum mut sm">${inM.filter(x=>x.t==='pheu').length} phễu · ${inM.filter(x=>x.t==='chuyen').length} chuyên sâu · mục tiêu ${TR(sum(inM,'r'))} · chi phí ${TR(sum(inM,'c'))}</div>
  <div class="cal"><div class="cdh">Thứ 2</div><div class="cdh">Thứ 3</div><div class="cdh">Thứ 4</div><div class="cdh">Thứ 5</div><div class="cdh">Thứ 6</div><div class="cdh we">Thứ 7</div><div class="cdh we">Chủ nhật</div>${cells.join('')}</div>
  <h3 style="margin-top:18px">Chương trình ${mName.toLowerCase()}</h3>
  ${inM.length?inM.map(x=>`<article class="prog" style="--pc:${T[x.t][1]}"><div class="pdate"><b>${x.d.slice(8)}</b><small>${DOW[new Date(x.d).getDay()]}</small></div><div class="pinfo"><span class="ptype">${T[x.t][0]} · ${dd(x)}</span><b>${esc(x.n)}</b><span class="sm mut">Giảng viên: ${esc(x.g)} · Điều phối: ${esc(x.m)}</span></div><div class="pnum"><span>${x.p.toLocaleString('vi-VN')} người</span><span>${x.r?TR(x.r):'Miễn phí'}</span><span class="mut">chi ${TR(x.c)}</span></div></article>`).join(''):'<div class="panel empty">Chưa có chương trình nào trong tháng này.</div>'}`;
 },
 'doi-tac':()=>{
- const G=[['Thầy Trần Khánh Tư','Sáng lập CMA · Đóng gói di sản, AI','Phễu + chuyên sâu','Toàn bộ hệ sinh thái F1–F5',48,1250,4.9,'Chủ trì','#f5c451'],
- ['GV Hoàng Nam','Công nghệ AI, tự động hóa (F1, F3)','Chuyên sâu','CMA F1 Công nghệ, CMA F3 Tài chính',16,320,4.8,'Chia 40% doanh thu khóa','#34d399'],
- ['GV Thảo Vy','Làm video, nội dung không lộ mặt','Phễu','Workshop video AI, Zoom bán hàng',22,860,4.7,'Phí theo buổi','#34d399'],
- ['GV Quốc Huy','Sale, marketing, xây kênh','Chuyên sâu','CMA F2 Sale Marketing',10,180,4.6,'Chia 35% doanh thu khóa','#34d399'],
- ['Coach Minh Đức','Coaching 1 kèm 1, phát triển bản thân','Chuyên sâu','Diamond Coaching',8,30,4.9,'Phí theo khóa','#60a5fa'],
- ['GV Ngọc Lan','Viết sách, thương hiệu cá nhân','Phễu + chuyên sâu','Workshop viết sách, nhóm viết sách Diamond',6,140,4.8,'Đang thỏa thuận','#a78bfa']];
- return `${kpi([[G.length,'Giảng viên'],[G.filter(g=>g[2].includes('Chuyên sâu')).length,'Dạy chương trình chuyên sâu'],[G.reduce((a,g)=>a+g[4],0),'Buổi đã dạy'],[G.reduce((a,g)=>a+g[5],0).toLocaleString('vi-VN'),'Học viên đã dạy']])}
- <p class="mut">Giảng viên đào tạo trong hệ sinh thái CMA: dạy chương trình nào, hợp tác theo hình thức nào, hiệu quả ra sao.</p>
- <div class="gvs">${G.map(([n,cm,loai,ct,bu,hv,dg,ht,c],i)=>`<article class="gv" style="--c:${c}">${i===0?`<span class="gvimg gvini">T</span>`:`<img src="${demoFace(i+3)}" alt="" class="gvimg">`}<div><b class="gvn">${esc(n)}</b><div class="sm" style="color:#dbe2ff">${esc(cm)}</div>
-  <div class="hvrow" style="margin:8px 0"><span class="chip">${esc(loai)}</span><span class="chip">★ ${dg}</span></div>
-  <dl class="kv sm"><dt>Chương trình</dt><dd>${esc(ct)}</dd><dt>Đã dạy</dt><dd>${bu} buổi · ${hv.toLocaleString('vi-VN')} học viên</dd><dt>Hợp tác</dt><dd>${esc(ht)}</dd></dl></div></article>`).join('')}</div>`;
+ const G=GV_DEMO,sel=G.find(g=>g.id===S.gv);
+ return `${kpi([[G.length,'Giảng viên'],[G.filter(g=>g.loai.includes('Chuyên sâu')).length,'Dạy chương trình chuyên sâu'],[G.reduce((a,g)=>a+g.ps.length,0),'Chương trình đã chạy'],[TR(G.reduce((a,g)=>a+g.ps.reduce((x,p)=>x+p[4],0),0)),'Doanh thu từ giảng viên','#34d399']])}
+ <p class="mut">Giảng viên đào tạo trong hệ sinh thái CMA. <b>Bấm vào giảng viên</b> để xem các chương trình đã chạy, học viên, doanh thu, chi phí và phần chia.</p>
+ <div class="gvs">${G.map((g,i)=>{const rv=g.ps.reduce((a,p)=>a+p[4],0);return `<button class="gv gvb ${S.gv===g.id?'on':''}" data-gv="${g.id}" style="--c:${g.c}">${i===0?`<span class="gvimg gvini">T</span>`:`<img src="${face(i+3)}" alt="" class="gvimg">`}<div><b class="gvn">${esc(g.n)}</b><div class="sm" style="color:#dbe2ff">${esc(g.cm)}</div>
+  <div class="hvrow" style="margin:8px 0"><span class="chip">${esc(g.loai)}</span><span class="chip">★ ${g.dg}</span></div>
+  <dl class="kv sm"><dt>Chương trình</dt><dd>${g.ps.length} đã chạy</dd><dt>Học viên</dt><dd>${g.ps.reduce((a,p)=>a+p[3],0).toLocaleString('vi-VN')}</dd><dt>Doanh thu</dt><dd><b>${TR(rv)}</b></dd><dt>Hợp tác</dt><dd>${esc(g.ht)}</dd></dl></div></button>`}).join('')}</div>
+ ${sel?gvDetail(sel):''}`;
 },
 'chi-phi':()=>{
  const C=[['Công cụ','Zoom Pro, Canva, ChatGPT, Claude',3.2e6],['Công cụ','Tên miền, email, lưu trữ',0.4e6],['Nhân sự','Chăm sóc khách hàng (2 người)',24e6],['Nhân sự','Vận hành, admin',12e6],['Nhân sự','Marketing, dựng video',14e6],['Mặt bằng','Văn phòng, điện nước',9e6],['Khác','Kế toán, thuế, phí ngân hàng',3.5e6]];
@@ -904,8 +983,9 @@ function vStaff(){
  return `<div class="band"><h2>Ô 6 · Nhân sự</h2><p class="mut" style="margin:0 0 14px">Danh sách người phụ trách chăm sóc học viên. Ai có trong danh sách này sẽ hiện để tích chọn trong hồ sơ.</p>
  <div class="panel" style="max-width:560px">${S.staff.map((s,i)=>{const n=S.list.filter(x=>arr(x.phuTrach).includes(s)).length;return `<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid #1c2a5c"><b style="flex:1">${esc(s)}</b><span class="mut" style="font-size:14px">${n} học viên</span>${S.canWrite?`<button class="btn ghost sm" data-delstaff="${i}">Bỏ</button>`:''}</div>`}).join('')}
  ${S.canWrite?`<form id="staffForm" class="bar" style="margin-top:12px"><input class="inp" id="newStaff" placeholder="Tên nhân sự mới" style="flex:1"><button class="btn">Thêm</button></form>`:''}</div>
- <h3 style="margin-top:22px">Đội ngũ và công việc</h3>${sampleNote}
- <div class="subs">${[['Kim Anh','Chăm sóc khách hàng','#3b82f6','Gọi làm quen trong 24 giờ, chăm sóc nhóm Diamond',['Học viên phụ trách',S.list.filter(x=>arr(x.phuTrach).includes('Kim Anh')).length],['Cuộc gọi tuần này',34]],['Mỹ Linh','Chăm sóc khách hàng','#a855f7','Tư vấn sau Zoom, chăm sóc CMA Trainer',['Học viên phụ trách',S.list.filter(x=>arr(x.phuTrach).includes('Mỹ Linh')).length],['Cuộc gọi tuần này',28]],['Oanh','Vận hành, admin CRM','#16a34a','Sự kiện, form thu thập, xếp nhóm lớp',['Sự kiện đang lo',2],['Form đang mở',S.forms.filter(f=>f.mo).length]]].map(([n,r,c,d,a,b])=>`<div class="sub" style="--c:${c}"><b>${n}</b><span class="mut sm">${r}</span><p class="sm" style="margin:6px 0">${d}</p><div class="kv2"><span>${a[0]}</span><b>${a[1]}</b><span>${b[0]}</span><b>${b[1]}</b></div></div>`).join('')}</div>
+ <h3 style="margin-top:22px">Báo cáo theo nhân sự <span class="mut sm" style="font-weight:400">· bấm vào người để xem báo cáo</span></h3>${sampleNote}
+ <div class="camps">${S.staff.map(n=>{const B=campDemo().flatMap(c=>c.buyers_list).filter(b=>b.phuTrach.includes(n)),r=B.reduce((a,b)=>a+b.gia,0),d=B.reduce((a,b)=>a+b.no,0),role={'Kim Anh':'Chăm sóc khách hàng','Mỹ Linh':'Chăm sóc khách hàng','Oanh':'Vận hành, admin CRM'}[n]||'Nhân sự';return `<button class="camp ${S.staffSel===n?'on':''}" data-staff="${esc(n)}" style="--c:#22b062"><span class="mut sm">${role}</span><b>${esc(n)}</b><div class="campn"><span><b>${B.length}</b> học viên</span><span><b>${TR(r)}</b> doanh thu</span><span class="warnTxt">Nợ ${TR(d)}</span></div><i style="width:${r?((r-d)/r*100).toFixed(0):0}%"></i></button>`}).join('')}</div>
+ ${S.staffSel?staffReport(S.staffSel):''}
  <h3 style="margin-top:18px">Đào tạo nhân sự mới</h3><div class="panel" style="max-width:640px">${steps([['Đọc quy trình chăm sóc học viên Diamond','Ngày 1',1],['Xem 3 buổi Zoom gần nhất','Ngày 1–2',1],['Thực hành CRM: lọc, sửa trạng thái, ghi nhật ký','Ngày 2',0],['Gọi thử 5 học viên cùng trưởng nhóm','Ngày 3',0],['Tự phụ trách 10 học viên','Tuần 2',0]])}</div>
  <details class="morebox"><summary>Các nhánh khác (đang xây dần)</summary>${subsHTML({cc:'#22b062',subs:[['Phân quyền','Phần nào nhân sự được xem, phần nào không.']]})}</details></div>`;
 }
@@ -1054,6 +1134,9 @@ document.addEventListener('click',async e=>{
  if(t.dataset.cal){const [y,m]=S.calM.split('-').map(Number),d=new Date(y,m-1+(+t.dataset.cal),1);S.calM=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;render();return}
  if(t.dataset.camp){S.camp=S.camp===t.dataset.camp?null:t.dataset.camp;S.bf={q:'',sp:'all',tt:'all',pt:'all',sort:'sp'};render();if(S.camp)setTimeout(()=>document.querySelector('.campd')?.scrollIntoView({behavior:'smooth',block:'start'}),60);return}
  if(t.dataset.buyer){openBuyer(t.dataset.buyer);return}
+ if(t.dataset.gv){S.gv=S.gv===t.dataset.gv?null:t.dataset.gv;render();if(S.gv)setTimeout(()=>document.querySelector('.campd')?.scrollIntoView({behavior:'smooth'}),60);return}
+ if(t.dataset.staff){S.staffSel=S.staffSel===t.dataset.staff?null:t.dataset.staff;S.staffCls=null;render();if(S.staffSel)setTimeout(()=>document.querySelector('.campd')?.scrollIntoView({behavior:'smooth'}),60);return}
+ if(t.dataset.scls){S.staffCls=S.staffCls===t.dataset.scls?null:t.dataset.scls;render();return}
  if(t.dataset.view){S.view=t.dataset.view;try{localStorage.setItem('crm_view',S.view)}catch(_){}render();return}
  if(t.id==='sideToggle'){const m=document.body.classList.toggle('side-mini');try{localStorage.setItem('crm_mini',m?'1':'')}catch(_){}t.setAttribute('aria-label',m?'Mở rộng menu':'Thu gọn menu');return}
  if(t.id==='menuBtn'){document.body.classList.add('menu-open');return}
@@ -1095,6 +1178,7 @@ document.addEventListener('change',async e=>{
  if(e.target.id==='fst'){S.f.st=e.target.value;render()}
  if(e.target.id==='fpt'){S.f.pt=e.target.value;render()}
  if(e.target.id==='fform'){S.f.form=e.target.value;render()}
+ if(e.target.id==='calSel'){S.calM=e.target.value;render()}
  if(['bsp','btt','bpt','bsort'].includes(e.target.id)){S.bf[{bsp:'sp',btt:'tt',bpt:'pt',bsort:'sort'}[e.target.id]]=e.target.value;render()}
  if(e.target.id==='ckhoa'){S.cf.khoa=e.target.value;render()}
  if(e.target.id==='cst'){S.cf.st=e.target.value;render()}

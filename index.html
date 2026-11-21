@@ -211,6 +211,43 @@ form.paper{color-scheme:light;background:#fff;color:#241338;border-radius:22px;p
 .fam b{font-size:17px}.fam span{font-size:13.5px;color:#dbe2ff}.fam small{font-size:12px;color:var(--mut)}
 .fam.on{border-color:var(--c);box-shadow:0 0 0 2px var(--c),0 0 22px -6px var(--c)}
 .fam:focus-visible{outline:3px solid var(--gold)}
+.viewbar{display:flex;justify-content:space-between;align-items:center;gap:10px;margin:4px 0 12px;flex-wrap:wrap}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:12px;padding:3px;background:#0d1840}
+.seg button{border:0;background:transparent;color:var(--mut);min-height:38px;padding:6px 14px;border-radius:9px;font-weight:600;font-size:14px}
+.seg button.on{background:var(--gold);color:#1a1400}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:14px}
+.hv{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px;display:flex;flex-direction:column;gap:10px}
+.hvtop{display:flex;gap:12px;align-items:center}
+.hvimg{width:72px!important;height:72px!important;border-radius:16px!important;font-size:24px;object-fit:cover}
+.hvname{font-size:17px;display:block;line-height:1.25}
+.sm{font-size:13.5px}
+.hvrow{display:flex;flex-wrap:wrap;gap:6px}
+.chip{font-size:13px;padding:3px 10px;border-radius:99px;background:#1f2e66;color:#dbe2ff}
+.hvgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.hvgrid small,.hvq small{display:block;font-size:12px;color:var(--mut);margin-bottom:3px}
+.hvq{margin:0;font-size:14px;line-height:1.45;background:#0f1b47;border-radius:10px;padding:8px 10px}
+.hvfoot .btn{flex:none;white-space:nowrap}
+.hvfoot{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:auto;padding-top:6px;border-top:1px solid #1c2a5c}
+.qst{appearance:auto;min-height:38px;width:100%;border-radius:10px;padding:4px 8px;font-size:14px;font-weight:600;color:var(--sc);background:color-mix(in srgb,var(--sc) 14%,#0d1840);border:1px solid color-mix(in srgb,var(--sc) 50%,transparent)}
+.mini{color:var(--gold2);text-decoration:none;font-size:14px;white-space:nowrap}
+.warnTxt{color:var(--warn);font-size:13px}
+.widewrap{overflow-x:auto;border:1px solid var(--line);border-radius:16px;background:var(--card)}
+table.wide{width:max-content;min-width:100%!important;font-size:14px}
+table.wide td{min-width:110px!important}
+table.wide td:nth-child(4){min-width:170px!important;max-width:220px}
+table.wide td:nth-child(6){min-width:170px!important}
+table.wide td:nth-child(7){min-width:170px!important}
+table.wide td:nth-child(8){min-width:130px!important}
+table.wide th{position:sticky;top:0;background:#16245a;white-space:nowrap}
+table.wide td{vertical-align:top}
+table.wide td.tx{min-width:230px!important;max-width:260px;line-height:1.4}
+table.wide .nw{white-space:nowrap}
+table.wide .stick{position:sticky;left:0;background:var(--card);z-index:1;min-width:220px!important;box-shadow:6px 0 10px -8px #000}
+table.wide th:first-child{position:sticky;left:0;z-index:2}
+table.wide tbody tr{cursor:default}
+.linkbtn{all:unset;cursor:pointer;display:flex;gap:10px;align-items:center}
+.linkbtn:hover b{color:var(--gold2)}
+.linkbtn:focus-visible{outline:2px solid var(--gold)}
 .menubtn,.bnav,.mscrim{display:none}
 @media(max-width:860px){
 html{background:var(--bg)}
@@ -239,6 +276,7 @@ body.solo .bnav,body.solo .menubtn{display:none}
 .toast{bottom:calc(76px + env(safe-area-inset-bottom))}
 }
 @media(max-width:600px){
+.cards{grid-template-columns:1fr}table.wide .stick{min-width:170px!important}.hvgrid{grid-template-columns:1fr 1fr}.seg button{padding:6px 10px}
 .fams{display:flex;overflow-x:auto;margin:14px -14px 0;padding:2px 14px 6px;scrollbar-width:none}.fams::-webkit-scrollbar{display:none}.fam{flex:none;width:132px}
 .hero{padding:20px;min-height:0}.hero p{font-size:16px}
 .courses{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:10px;margin:12px 0 16px}
@@ -357,7 +395,7 @@ const MONTHS=['2026-12','2027-01','2027-02','2027-03','2027-04','2027-05'];
 const mName=m=>`Tháng ${+m.slice(5)}/${m.slice(0,4)}`;
 const DEFAULT_STAFF=['Kim Anh','Mỹ Linh','Oanh'];
 
-const S={list:[],forms:[],staff:DEFAULT_STAFF.slice(),loaded:false,canWrite:true,tok:'',site:'',user:'',
+const S={view:(()=>{try{return localStorage.getItem('crm_view')||'card'}catch(_){return 'card'}})(),list:[],forms:[],staff:DEFAULT_STAFF.slice(),loaded:false,canWrite:true,tok:'',site:'',user:'',
  f:{fam:'F5',khoa:'Diamond',nam:'2026',nhom:'all',q:'',st:'all',pt:'all',form:'all'},open:null,phone:''};
 
 /* ---------- UI helpers ---------- */
@@ -415,6 +453,44 @@ function filtered(){
 const ava=(x,cls='ava')=>{const im=x.hasPhoto&&PH.get(x.id)||'';if(x.hasPhoto&&!im)return `<span class="${cls}" data-pid="${esc(x.id)}">${esc((x.hoTen||'?').trim().split(/\s+/).pop()[0]||'?')}</span>`;return im?`<img class="${cls}" src="${im}" alt="">`:`<span class="${cls}">${esc((x.hoTen||'?').trim().split(/\s+/).pop()[0]||'?')}</span>`};
 const lvBar=n=>`<span class="lv" title="Cấp độ AI ${n||0}/5">${[1,2,3,4,5].map(i=>`<i class="${i<=n?'on':''}"></i>`).join('')}</span>`;
 
+
+const age=x=>{const y=parseInt(x.namSinh,10);return y>1900?(new Date().getFullYear()-y)+' tuổi':''};
+const courseTxt=x=>x.khoa==='Diamond'?`CMA Diamond${x.nhom?' · '+x.nhom:''}`:x.khoa==='Trainer'?'CMA Trainer':(x.khoa||'');
+const lastCare=x=>{const n=arr(x.nhatKy);return n.length?n[n.length-1]:null};
+const clip=(t,n)=>{t=String(t||'').trim();return t.length>n?t.slice(0,n-1)+'…':t};
+const stSel=x=>`<select class="qst" data-id="${esc(x.id)}" aria-label="Trạng thái của ${esc(x.hoTen)}" style="--sc:${stColor(x.trangThai)}">${STATUS.map(([s])=>`<option ${x.trangThai===s?'selected':''}>${s}</option>`).join('')}</select>`;
+const ptTags=x=>arr(x.phuTrach).length?arr(x.phuTrach).map(p=>`<span class="tag">${esc(p)}</span>`).join(''):'<span class="warnTxt">Chưa giao</span>';
+const telLink=x=>{const d=String(x.sdt||'').replace(/[^\d+]/g,'');return d?`<a class="mini" href="tel:${esc(d)}">${esc(x.sdt)}</a>`:''};
+function listCards(rows){
+ return `<div class="cards">${rows.map(x=>{const lc=lastCare(x),z=safeUrl(x.zaloGroup);return `<article class="hv">
+  <div class="hvtop">${ava(x,'ava hvimg')}<div class="hvid"><b class="hvname">${esc(x.hoTen)}</b>
+   <div class="mut sm">${[age(x),x.thanhPho].filter(Boolean).map(esc).join(' · ')}</div>
+   <div class="sm">${esc(clip(x.congViec,60))}${x.vaiTro?` <span class="mut">(${esc(x.vaiTro)})</span>`:''}</div></div></div>
+  <div class="hvrow"><span class="chip">${esc(courseTxt(x))}</span><span class="chip">${esc(x.nam||'')}</span></div>
+  <div class="hvgrid">
+   <div><small>Trạng thái</small>${stSel(x)}</div>
+   <div><small>Phụ trách</small><div>${ptTags(x)}</div></div>
+   <div><small>Điện thoại</small><div>${telLink(x)}${z?` · <a class="mini" href="${esc(z)}" target="_blank" rel="noopener">Nhóm Zalo ↗</a>`:''}</div></div>
+   <div><small>Mức AI</small><div>${lvBar(+x.aiLevel||0)} <span class="sm mut">${esc(clip(arr(x.aiTools).join(', '),40))}</span></div></div>
+  </div>
+  ${x.vanDe?`<p class="hvq"><small>Cần thầy hỗ trợ</small>${esc(clip(x.vanDe,160))}</p>`:''}
+  ${x.mongMuon?`<p class="hvq"><small>Mong muốn</small>${esc(clip(x.mongMuon,140))}</p>`:''}
+  ${x.khoaDaHoc?`<p class="hvq"><small>Đã và đang học</small>${esc(clip(Array.isArray(x.khoaDaHoc)?x.khoaDaHoc.join(', '):x.khoaDaHoc,120))}</p>`:''}
+  <div class="hvfoot"><span class="sm mut">${lc?`Chăm sóc gần nhất ${fmtD(lc.ngay)}: ${esc(clip(lc.noiDung,60))}`:'Vào CRM '+fmtD(x.createdAt)}</span><button class="btn sm" data-open="${esc(x.id)}">Mở hồ sơ</button></div>
+ </article>`}).join('')}</div>`;
+}
+function listTable(rows){
+ const H=['Học viên','Điện thoại','Tuổi','Công việc','Tỉnh/thành','Khóa · nhóm · năm','Trạng thái','Phụ trách','Mức AI','Đã và đang học','Lý do đăng ký','Cần thầy hỗ trợ','Mong muốn','Chăm sóc gần nhất','Ngày vào'];
+ return `<div class="widewrap"><table class="wide"><thead><tr>${H.map(h=>`<th>${h}</th>`).join('')}</tr></thead><tbody>${rows.map(x=>{const lc=lastCare(x);return `<tr>
+  <td class="stick"><button class="who linkbtn" data-open="${esc(x.id)}">${ava(x)}<span><b>${esc(x.hoTen)}</b></span></button></td>
+  <td>${telLink(x)}</td><td class="nw">${esc(age(x))}</td><td>${esc(clip(x.congViec,60))}</td><td>${esc(x.thanhPho||'')}</td>
+  <td>${esc(courseTxt(x))}<br><small class="mut">${esc(x.nam||'')}</small></td>
+  <td>${stSel(x)}</td><td>${ptTags(x)}</td><td>${lvBar(+x.aiLevel||0)}</td>
+  <td class="tx">${esc(clip(Array.isArray(x.khoaDaHoc)?x.khoaDaHoc.join(', '):x.khoaDaHoc,120))}</td>
+  <td class="tx">${esc(clip(x.lyDo,140))}</td><td class="tx">${esc(clip(x.vanDe,140))}</td><td class="tx">${esc(clip(x.mongMuon,140))}</td>
+  <td class="tx">${lc?`${fmtD(lc.ngay)} · ${esc(lc.nguoi||'')}<br>${esc(clip(lc.noiDung,80))}`:'<span class="mut">Chưa có</span>'}</td>
+  <td class="nw">${fmtD(x.createdAt)}</td></tr>`}).join('')}</tbody></table></div>`;
+}
 function vProducts(){
  const f=S.f,cnt=k=>S.list.filter(x=>x.khoa===k).length;
  const base=S.list.filter(x=>x.khoa===f.khoa&&(f.nam==='all'||String(x.nam||'2026')===f.nam));
@@ -433,13 +509,9 @@ function vProducts(){
   <select class="inp" id="fpt" aria-label="Người phụ trách"><option value="all">Mọi người phụ trách</option><option value="none" ${f.pt==='none'?'selected':''}>Chưa có người phụ trách</option>${S.staff.map(s=>`<option ${f.pt===s?'selected':''}>${esc(s)}</option>`).join('')}</select>
   <select class="inp" id="fform" aria-label="Form"><option value="all">Mọi form</option>${S.forms.map(x=>`<option value="${esc(x.id)}" ${f.form===x.id?'selected':''}>${esc(x.ten)}</option>`).join('')}</select><a class="btn ghost" href="#form" style="text-decoration:none;display:inline-flex;align-items:center">Lấy link form</a>
  </div>
- <div class="panel" style="padding:6px 6px 2px">${rows.length?`<table class="stack"><thead><tr><th>Học viên</th><th>Nhóm / năm</th><th>Trạng thái</th><th>Phụ trách</th><th>AI</th><th>Ngày vào</th></tr></thead><tbody>
- ${rows.map(x=>`<tr data-open="${esc(x.id)}" tabindex="0"><td><div class="who">${ava(x)}<div><b>${esc(x.hoTen)}</b>${x.mau?' <span class="tag mau">Mẫu</span>':''}<br><small class="mut">${esc(x.sdt)}</small></div></div></td>
- <td>${esc(x.khoa==='Diamond'?(x.nhom||'Chưa xếp nhóm'):'CMA Trainer')}<br><small class="mut">${esc(x.nam||'2026')}</small></td>
- <td><span class="st" style="--sc:${stColor(x.trangThai)}">${esc(x.trangThai||'Mới đăng ký')}</span></td>
- <td>${arr(x.phuTrach).length?arr(x.phuTrach).map(p=>`<span class="tag">${esc(p)}</span>`).join(''):'<small class="mut" style="color:var(--warn)">Chưa giao</small>'}</td>
- <td>${lvBar(+x.aiLevel||0)}</td><td style="white-space:nowrap">${fmtD(x.createdAt)}</td></tr>`).join('')}</tbody></table>`
- :`<div class="empty">${S.list.length?'Không có học viên khớp bộ lọc này.':'Chưa có học viên nào. Vào mục Form thu thập, sao chép link gửi học viên; phiếu sẽ hiện ở đây ngay khi họ bấm gửi.'}</div>`}</div>
+ <div class="viewbar"><span class="mut">${rows.length} học viên</span><div class="seg" role="group" aria-label="Kiểu xem"><button class="${S.view==='card'?'on':''}" data-view="card">Thẻ học viên</button><button class="${S.view==='table'?'on':''}" data-view="table">Bảng đầy đủ</button></div></div>
+ ${rows.length?(S.view==='table'?listTable(rows):listCards(rows))
+ :`<div class="panel empty">${S.list.length?'Không có học viên khớp bộ lọc này.':'Chưa có học viên nào. Vào mục Form thu thập, sao chép link gửi học viên; phiếu sẽ hiện ở đây ngay khi họ bấm gửi.'}</div>`}
  
  </div>`}`;
 }
@@ -600,6 +672,7 @@ document.addEventListener('click',async e=>{
  if(t.dataset.fam){S.f.fam=t.dataset.fam;render();return}
  if(t.id==='closeD'){closeDrawer();return}
  if(t.id==='logout'){setTok('');S.loaded=false;clearInterval(poll);showLogin();return}
+ if(t.dataset.view){S.view=t.dataset.view;try{localStorage.setItem('crm_view',S.view)}catch(_){}render();return}
  if(t.id==='menuBtn'){document.body.classList.add('menu-open');return}
  if(t.id==='eye'){const i=$('#lp'),show=i.type==='password';i.type=show?'text':'password';t.querySelector('.slash').style.display=show?'':'none';t.setAttribute('aria-label',show?'Ẩn mật khẩu':'Hiện mật khẩu');t.title=t.getAttribute('aria-label');i.focus();return}
  if(t.id==='newForm'){formModal();return}
@@ -633,7 +706,8 @@ document.addEventListener('input',e=>{
  if(e.target.id==='q'){S.f.q=e.target.value;const pos=e.target.selectionStart;render();const q=$('#q');q.focus();q.setSelectionRange(pos,pos)}
  if(e.target.id==='phone'){S.phone=e.target.value;const pos=e.target.selectionStart;render();const q=$('#phone');q.focus();q.setSelectionRange(pos,pos)}
 });
-document.addEventListener('change',e=>{
+document.addEventListener('change',async e=>{
+ if(e.target.matches('select.qst')){const id=e.target.dataset.id,x=S.list.find(r=>r.id===id);if(!x)return;const v=e.target.value;e.target.disabled=true;await patch(id,{trangThai:v,hanhTrinh:[...arr(x.hanhTrinh),{ngay:today(),noiDung:'Chuyển trạng thái: '+v}]},'Đã đổi trạng thái: '+v);return}
  if(e.target.id==='fst'){S.f.st=e.target.value;render()}
  if(e.target.id==='fpt'){S.f.pt=e.target.value;render()}
  if(e.target.id==='fform'){S.f.form=e.target.value;render()}

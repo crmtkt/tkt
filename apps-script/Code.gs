@@ -263,7 +263,7 @@ const FORM_KEYS = {
   hocvien: ['anh', 'namSinh', 'email', 'thanhPho', 'congViec', 'vaiTro', 'khoaDaHoc', 'lyDo', 'vanDe', 'mongMuon', 'ketQua', 'ngaiNgai', 'sanPhamRieng', 'thoiGian', 'aiLevel', 'aiTools', 'aiDaLam', 'aiMuon'],
   nhanh: ['anh', 'email', 'congViec', 'mongMuon'],
 };
-function phoneN_(s) { let p = phone_(s); if (/^84\d{9,10}$/.test(p)) p = '0' + p.slice(2); return p; }
+function phoneN_(s) { let p = phone_(s); if (/^84\d{9,10}$/.test(p)) p = '0' + p.slice(2); if (/^[1-9]\d{8}$/.test(p)) p = '0' + p; return p; } // Sheet có thể làm mất số 0 đầu
 function nameKey_(s) { return String(s || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/đ/g, 'd').replace(/[^a-z0-9 ]+/g, ' ').trim().split(/\s+/).filter(String); }
 function sameName_(a, b) { const x = nameKey_(a), y = nameKey_(b); return x.length > 0 && y.length > 0 && x[x.length - 1] === y[y.length - 1]; }
 function matchRecs_(sdt, hoTen) { return rows_('records').filter(r => phoneN_(r.sdt) === sdt && sameName_(r.hoTen, hoTen)); }

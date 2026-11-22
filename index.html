@@ -482,12 +482,27 @@ async function api(a,body){
  return j;
 }
 const PH=new Map();let phBusy=false;
+/* Ảnh lưu sẵn trên máy (IndexedDB) theo phiên bản ảnh: lần sau mở CRM là có ảnh ngay, không phải tải lại. */
+const IDB=(()=>{let p;return()=>p||(p=new Promise(res=>{try{const r=indexedDB.open('crm_ph',1);r.onupgradeneeded=()=>r.result.createObjectStore('ph');r.onsuccess=()=>res(r.result);r.onerror=()=>res(null)}catch(_){res(null)}}))})();
+async function idbGet(keys){const db=await IDB();if(!db||!keys.length)return {};return new Promise(res=>{const o={};try{const tx=db.transaction('ph'),st=tx.objectStore('ph');keys.forEach(k=>{const q=st.get(k);q.onsuccess=()=>{if(q.result)o[k]=q.result}});tx.oncomplete=()=>res(o);tx.onerror=()=>res(o)}catch(_){res(o)}})}
+async function idbPut(map){const db=await IDB();if(!db)return;try{const st=db.transaction('ph','readwrite').objectStore('ph');Object.entries(map).forEach(([k,v])=>st.put(v,k))}catch(_){}}
+async function idbClear(){const db=await IDB();if(db)try{db.transaction('ph','readwrite').objectStore('ph').clear()}catch(_){}}
+const phKey=id=>{const r=S.list.find(x=>x.id===id);return id+'@'+(r&&r.phV||'')};
+function paintPhotos(){document.querySelectorAll('[data-pid]').forEach(e=>{if(!PH.has(e.dataset.pid))return;const u=PH.get(e.dataset.pid);if(u&&/^data:image\/jpeg;base64,/.test(u)){const im=document.createElement('img');im.className=e.className;im.src=u;im.alt='';e.replaceWith(im)}else e.removeAttribute('data-pid')})}
 async function loadPhotos(){
- if(phBusy)return;const ids=[...new Set([...document.querySelectorAll('[data-pid]')].map(e=>e.dataset.pid))].filter(id=>!PH.has(id)).slice(0,8);
- if(!ids.length)return;phBusy=true;
- try{const j=await api('photos',{ids});ids.forEach(id=>PH.set(id,j.photos[id]||''));document.querySelectorAll('[data-pid]').forEach(e=>{const u=PH.get(e.dataset.pid);if(u&&/^data:image\/jpeg;base64,/.test(u)){const im=document.createElement('img');im.className=e.className;im.src=u;im.alt='';e.replaceWith(im)}})}catch(_){ids.forEach(id=>PH.has(id)||PH.set(id,''))}finally{phBusy=false}
- if(document.querySelector('[data-pid]'))setTimeout(loadPhotos,30)
+ if(phBusy)return;const all=[...new Set([...document.querySelectorAll('[data-pid]')].map(e=>e.dataset.pid))].filter(id=>!PH.has(id));
+ if(!all.length){paintPhotos();return}phBusy=true;
+ try{
+  const got=await idbGet(all.map(phKey));all.forEach(id=>{const u=got[phKey(id)];if(u)PH.set(id,u)});paintPhotos();
+  const need=all.filter(id=>!PH.has(id)).slice(0,12);
+  if(need.length){const j=await api('photos',{ids:need});const save={};need.forEach(id=>{const u=j.photos[id]||'';PH.set(id,u);if(u)save[phKey(id)]=u});idbPut(save);paintPhotos()}
+ }catch(_){all.forEach(id=>PH.has(id)||PH.set(id,''));paintPhotos()}finally{phBusy=false}
+ if([...document.querySelectorAll('[data-pid]')].some(e=>!PH.has(e.dataset.pid)))setTimeout(loadPhotos,30);
 }
+/* Dữ liệu lần trước lưu trên máy: mở CRM hiện ngay, rồi cập nhật ngầm từ máy chủ. */
+const CK='crm_cache_v1';
+const saveCache=j=>{try{localStorage.setItem(CK,JSON.stringify({t:Date.now(),forms:j.forms,records:j.records,staff:j.staff}))}catch(_){}};
+const loadCache=()=>{try{return JSON.parse(localStorage.getItem(CK)||'null')}catch(_){return null}};
 
 const $=s=>document.querySelector(s);
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -1211,7 +1226,7 @@ document.addEventListener('click',async e=>{
  if(t.matches('a.f')&&t.dataset.eco){S.f.fam='F'+(+t.dataset.eco+1)}
  if(t.dataset.fam){S.f.fam=t.dataset.fam;render();return}
  if(t.id==='closeD'){closeDrawer();return}
- if(t.id==='logout'){setTok('');S.loaded=false;clearInterval(poll);showLogin();return}
+ if(t.id==='logout'){setTok('');try{localStorage.removeItem(CK)}catch(_){}idbClear();PH.clear();S.loaded=false;clearInterval(poll);showLogin();return}
  if(t.dataset.demo){S.demo=!S.demo;try{localStorage.setItem('crm_demo',S.demo?'1':'')}catch(_){}mergeList();render();toast(S.demo?'Đã bật dữ liệu mẫu (chỉ trên máy này).':'Đã tắt dữ liệu mẫu.');return}
  if(t.dataset.cellsave){await saveEditor();return}
  if(t.dataset.kh){S.kh=t.dataset.kh;render();return}
@@ -1295,7 +1310,7 @@ async function saveStaff(list){
  try{await api('staff_save',{list});S.staff=list;render();toast('Đã cập nhật nhân sự')}catch(err){toast(err.message,true)}
 }
 async function reload(quiet){
- const j=await api('bootstrap');
+ const j=await api('bootstrap');saveCache(j);
  S.forms=j.forms;S.real=j.records;mergeList();S.staff=j.staff&&j.staff.length?j.staff:DEFAULT_STAFF.slice();S.loaded=true;
  setConn(`Đã đồng bộ · ${S.real.length} học viên`,'ok');
  if(quiet&&($('#drawer').classList.contains('on')||EDITING))return; // không làm mất chữ đang gõ trong hồ sơ
@@ -1307,11 +1322,12 @@ async function reload(quiet){
 let poll;
 async function boot(){
  if(!TOK){showLogin();return}
- let me;try{me=await api('me')}catch(err){showLogin(/hết/.test(err.message)?'':err.message);return}
- S.user=me.user;
+ S.user='crmtkt';
  $('.top').insertAdjacentHTML('beforeend',$('#logout')?'':`<button class="btn ghost sm" id="logout">Đăng xuất</button>`);
- try{await reload()}catch(err){setConn('Chưa tải được dữ liệu','warn');toast(err.message,true);return}
- route();
+ const c=loadCache();
+ if(c&&Array.isArray(c.records)){S.forms=c.forms||[];S.real=c.records;mergeList();S.staff=c.staff&&c.staff.length?c.staff:DEFAULT_STAFF.slice();S.loaded=true;route();setConn('Đang cập nhật…','')}
+ try{await reload(!!c)}catch(err){if(!TOK)return;setConn(c?'Đang xem dữ liệu đã lưu · chưa cập nhật được':'Chưa tải được dữ liệu','warn');toast(err.message,true);if(!c)return}
+ if(!c)route();
  clearInterval(poll);poll=setInterval(()=>{if(document.visibilityState==='visible')reload(true).catch(()=>{})},30000);
 }
 try{if(localStorage.getItem('crm_mini'))document.body.classList.add('side-mini')}catch(_){}

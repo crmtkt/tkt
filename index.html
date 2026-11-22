@@ -250,9 +250,9 @@ table.wide tbody tr{cursor:default}
 .linkbtn:focus-visible{outline:2px solid var(--gold)}
 .cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:16px}
 .hv{background:var(--card);border:1px solid var(--line);border-radius:18px;overflow:hidden;display:flex;flex-direction:column;padding:0;gap:0}
-.hvpic{all:unset;cursor:pointer;position:relative;display:block;aspect-ratio:1/1;overflow:hidden;background:#0d1840}
+.hvpic{all:unset;cursor:pointer;position:relative;display:block;aspect-ratio:4/5;overflow:hidden;background:radial-gradient(120% 90% at 50% 30%,#26397a,#0b1434)}
 .hvpic:focus-visible{outline:3px solid var(--gold);outline-offset:-3px}
-.hvphoto{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center 30%;display:grid;place-items:center;font-size:72px;font-weight:800;color:var(--gold);background:linear-gradient(160deg,#22346f,#0d1840)}
+.hvphoto{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;object-position:center;display:grid;place-items:center;font-size:72px;font-weight:800;color:var(--gold);background:linear-gradient(160deg,#22346f,#0d1840)}
 .hvst{position:absolute;left:10px;bottom:10px;padding:5px 12px;border-radius:99px;font-size:13px;font-weight:700;color:#0b1433;background:var(--sc);box-shadow:0 4px 14px -4px #000}
 .hvmau{position:absolute;right:10px;top:10px}
 .hvbody{padding:14px;display:flex;flex-direction:column;gap:8px;flex:1}
@@ -438,6 +438,11 @@ body.solo .app{grid-template-columns:1fr}body.solo aside,body.solo .top{display:
 .paysum{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:0 0 12px}.paysum div{background:#0b1638;border:1px solid #1c2a5c;border-radius:12px;padding:10px}.paysum b{display:block;font-size:18px}.paysum span{font-size:12.5px;color:var(--mut,#94a3b8)}
 .rpt td:not(:first-child),.rpt th:not(:first-child){text-align:right}
 @media(max-width:560px){.paysum{grid-template-columns:1fr 1fr}}
+.dh img{object-fit:contain;background:#0b1434;cursor:zoom-in}
+.phbtn{display:inline-flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;margin-top:6px}
+.lightbox{position:fixed;inset:0;z-index:200;background:rgba(3,8,26,.92);display:grid;place-items:center;padding:20px;cursor:zoom-out}
+.lightbox img{max-width:100%;max-height:100%;object-fit:contain;border-radius:12px;box-shadow:0 20px 60px #000}
+.prewrap{white-space:pre-wrap;line-height:1.55;font-size:14.5px;margin:0}
 </style>
 <script>new MutationObserver(()=>{for(const c of document.querySelectorAll('.stack td:not([data-l])')){let i=0,p=c;while(p=p.previousElementSibling)i+=p.colSpan;c.dataset.l=c.closest('table').rows[0].cells[i]?.textContent||''}}).observe(document,{childList:true,subtree:true})</script>
 </head>
@@ -478,9 +483,10 @@ async function api(a,body){
 }
 const PH=new Map();let phBusy=false;
 async function loadPhotos(){
- if(phBusy)return;const ids=[...new Set([...document.querySelectorAll('[data-pid]')].map(e=>e.dataset.pid))].filter(id=>!PH.has(id)).slice(0,40);
+ if(phBusy)return;const ids=[...new Set([...document.querySelectorAll('[data-pid]')].map(e=>e.dataset.pid))].filter(id=>!PH.has(id)).slice(0,8);
  if(!ids.length)return;phBusy=true;
- try{const j=await api('photos',{ids});ids.forEach(id=>PH.set(id,j.photos[id]||''));document.querySelectorAll('[data-pid]').forEach(e=>{const u=PH.get(e.dataset.pid);if(u&&/^data:image\/jpeg;base64,/.test(u)){const im=document.createElement('img');im.className=e.className;im.src=u;im.alt='';e.replaceWith(im)}})}catch(_){}finally{phBusy=false}
+ try{const j=await api('photos',{ids});ids.forEach(id=>PH.set(id,j.photos[id]||''));document.querySelectorAll('[data-pid]').forEach(e=>{const u=PH.get(e.dataset.pid);if(u&&/^data:image\/jpeg;base64,/.test(u)){const im=document.createElement('img');im.className=e.className;im.src=u;im.alt='';e.replaceWith(im)}})}catch(_){ids.forEach(id=>PH.has(id)||PH.set(id,''))}finally{phBusy=false}
+ if(document.querySelector('[data-pid]'))setTimeout(loadPhotos,30)
 }
 
 const $=s=>document.querySelector(s);
@@ -488,6 +494,7 @@ const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&
 const safeImg=u=>typeof u==='string'&&/^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+/=]+$/.test(u)?u:'';
 const safeUrl=u=>typeof u==='string'&&/^https:\/\/[^\s"'<>]+$/.test(u)?u:'';
 const arr=v=>Array.isArray(v)?v:[];
+function shrinkPhoto(file){return new Promise((res,rej)=>{const u=URL.createObjectURL(file),im=new Image();im.onload=()=>{let m=1200,q=.9,out='';for(let i=0;i<10;i++){const k=Math.min(1,m/Math.max(im.naturalWidth,im.naturalHeight)),c=document.createElement('canvas');c.width=Math.round(im.naturalWidth*k);c.height=Math.round(im.naturalHeight*k);const x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,c.width,c.height);x.imageSmoothingQuality='high';x.drawImage(im,0,0,c.width,c.height);out=c.toDataURL('image/jpeg',q);if(out.length<185000)break;if(q>.8)q-=.04;else m=Math.round(m*.88)}URL.revokeObjectURL(u);res(out)};im.onerror=()=>{URL.revokeObjectURL(u);rej(new Error('Không đọc được ảnh này.'))};im.src=u})}
 const today=()=>new Date().toISOString().slice(0,10);
 const fmtD=s=>{if(!s)return'';const d=String(s).slice(0,10).split('-');return d.length===3?`${d[2]}/${d[1]}/${d[0]}`:esc(s)};
 
@@ -1055,7 +1062,7 @@ function openDrawer(id){
  const x=S.list.find(r=>r.id===id);if(!x)return;S.open=id;const w=true;
  const kv=(k,v)=>v&&String(v).trim()?`<dt>${k}</dt><dd>${esc(Array.isArray(v)?v.join(', '):v)}</dd>`:'';
  const zl=safeUrl(x.zaloGroup);
- $('#drawer').innerHTML=`<div class="dh">${ava(x)}<div style="flex:1"><h3>${esc(x.hoTen)} ${x.mau?'<span class="tag mau">Mẫu</span>':''}</h3><div class="mut">${[x.sdt,x.email].filter(Boolean).map(esc).join(' · ')||'<span class="warnTxt">Chưa có số điện thoại</span>'}</div><div style="margin-top:6px"><span class="st" style="--sc:${stColor(x.trangThai)}">${esc(x.trangThai||'Mới đăng ký')}</span> ${zl?`<a href="${esc(zl)}" target="_blank" rel="noopener">Nhóm Zalo ↗</a>`:''}</div></div><button class="btn ghost sm" id="closeD" aria-label="Đóng">Đóng</button></div>
+ $('#drawer').innerHTML=`<div class="dh"><div style="display:flex;flex-direction:column;align-items:center">${ava(x)}<label class="phbtn mini">${x.hasPhoto?'Đổi ảnh':'Thêm ảnh'}<input type="file" accept="image/*" id="phIn" hidden></label></div><div style="flex:1"><h3>${esc(x.hoTen)} ${x.mau?'<span class="tag mau">Mẫu</span>':''}</h3><div class="mut">${[x.sdt,x.email].filter(Boolean).map(esc).join(' · ')||'<span class="warnTxt">Chưa có số điện thoại</span>'}</div><div style="margin-top:6px"><span class="st" style="--sc:${stColor(x.trangThai)}">${esc(x.trangThai||'Mới đăng ký')}</span> ${zl?`<a href="${esc(zl)}" target="_blank" rel="noopener">Nhóm Zalo ↗</a>`:''}</div></div><button class="btn ghost sm" id="closeD" aria-label="Đóng">Đóng</button></div>
  <div class="dbody">
  <div class="panel"><h3>Thanh toán &amp; công nợ</h3>
   ${x.canhBao?`<p class="alertTxt" style="margin:0 0 10px">⚠ ${esc(x.canhBao)}</p>`:''}
@@ -1100,6 +1107,7 @@ function openDrawer(id){
  <div class="panel"><h3>Nhật ký chăm sóc</h3><p class="mut" style="margin:0 0 8px;font-size:14px">Đã nhắn Zalo gì, gửi tài liệu gì, ai gửi.</p>
   <ul class="tl">${arr(x.nhatKy).slice().reverse().map(n=>`<li style="--tc:#34d399"><b>${esc(n.noiDung)}</b><small>${fmtD(n.ngay)} · ${esc(n.nguoi||'')}</small></li>`).join('')||'<li><small>Chưa có ghi chép.</small></li>'}</ul>
   ${w?`<form class="bar" id="nkForm"><select class="inp" id="nkWho" aria-label="Người ghi">${S.staff.map(s=>`<option>${esc(s)}</option>`).join('')}</select><input class="inp" id="nkTxt" placeholder="Nội dung đã chăm sóc" style="flex:1 1 200px"><button class="btn sm">Ghi lại</button></form>`:''}</div>
+ ${x.phieuOffline?`<div class="panel"><h3>Thông tin điền tại Offline Hồ Chí Minh 24–25/10/2026</h3><p class="prewrap">${esc(x.phieuOffline)}</p></div>`:''}
  <div class="panel"><h3>Thông tin học viên điền</h3><dl class="kv">
   ${kv('Năm sinh',x.namSinh)}${kv('Khóa đã và đang học',x.khoaDaHoc)}${kv('Tỉnh / thành',x.thanhPho)}${kv('Công việc',x.congViec)}${kv('Vai trò',x.vaiTro)}${kv('Biết CMA qua',x.nguon)}
   ${kv('Lý do đăng ký',x.lyDo)}${kv('Cần thầy Tư hỗ trợ',x.vanDe)}${kv('Mong muốn, nhu cầu',x.mongMuon)}${kv('Kết quả mong đợi 6–12 tháng',x.ketQua)}${kv('Rào cản trước đây',x.ngaiNgai)}${kv('Muốn đóng gói',x.sanPhamRieng)}
@@ -1265,7 +1273,9 @@ document.addEventListener('change',async e=>{
  if(e.target.id==='cpt'){S.cf.pt=e.target.value;render()}
  if(e.target.id==='feKhoa'){$('#feKhacWrap').style.display=e.target.value==='__khac'?'':'none'}
 });
-document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeDrawer();document.body.classList.remove('menu-open')}if(e.key==='Enter'&&e.target.matches('tr[data-open]'))openDrawer(e.target.dataset.open)});
+document.addEventListener('click',e=>{const im=e.target.closest('.dh img');if(im){const lb=document.createElement('div');lb.className='lightbox';lb.innerHTML=`<img src="${im.src}" alt="Ảnh chân dung">`;lb.onclick=()=>lb.remove();document.body.appendChild(lb);return}});
+document.addEventListener('change',async e=>{if(e.target.id!=='phIn'||!S.open)return;const f=e.target.files[0];if(!f)return;const id=S.open;try{toast('Đang tải ảnh lên…');const u=await shrinkPhoto(f);await api('photo_save',{id,anh:u});PH.set(id,u);const r=S.real.find(r=>r.id===id);if(r)r.hasPhoto=true;mergeList();render();openDrawer(id);toast('Đã cập nhật ảnh chân dung')}catch(err){toast(err.message||'Chưa tải được ảnh.',true)}});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){document.querySelector('.lightbox')?.remove();closeDrawer();document.body.classList.remove('menu-open')}if(e.key==='Enter'&&e.target.matches('tr[data-open]'))openDrawer(e.target.dataset.open)});
 $('#scrim').addEventListener('click',closeDrawer);
 document.addEventListener('click',e=>{const td=e.target.closest('td.ed');if(EDITING&&!e.target.closest('td.editing')){saveEditor();return}if(td&&!td.classList.contains('editing')&&!e.target.closest('a'))openEditor(td)});
 document.addEventListener('keydown',e=>{if(!EDITING){if(e.key==='Enter'&&e.target.matches('td.ed'))openEditor(e.target);return}if(e.key==='Escape'){e.preventDefault();saveEditor(true)}else if(e.key==='Enter'&&!e.shiftKey&&e.target.matches('input.cellin,select.cellin')){e.preventDefault();saveEditor()}});

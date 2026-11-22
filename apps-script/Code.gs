@@ -10,7 +10,7 @@ const STAFF_DEFAULT = ['Kim Anh', 'Mỹ Linh', 'Oanh'];
 
 const COLS = {
   forms: ['id', 'slug', 'ten', 'khoa', 'nam', 'mau', 'moTa', 'mo', 'createdAt'],
-  records: ['id', 'formId', 'hoTen', 'sdt', 'email', 'trangThai', 'phuTrach', 'createdAt', 'updatedAt', 'data', 'anh', 'anh2', 'anh3', 'anh4'],
+  records: ['id', 'formId', 'hoTen', 'sdt', 'email', 'trangThai', 'phuTrach', 'createdAt', 'updatedAt', 'data', 'anh', 'anh2', 'anh3', 'anh4', 'coAnh'],
   settings: ['k', 'v'],
 };
 const ANSWER_KEYS = ['hoTen','namSinh','sdt','email','thanhPho','congViec','vaiTro','khoaDaHoc','lyDo','vanDe','mongMuon','ketQua','ngaiNgai','sanPhamRieng','thoiGian','aiLevel','aiTools','aiDaLam','aiMuon','dongY'];
@@ -24,7 +24,8 @@ const PAY_ST = ['Đã đóng đủ', 'Đặt cọc', 'Chưa đóng', 'Bảo lưu
 // Ảnh chân dung rõ nét: tối đa ~190.000 ký tự, chia vào 4 ô (mỗi ô Google Sheet giới hạn 50.000 ký tự).
 const PHOTO_MAX = 190000, PHOTO_CH = 48000, PHOTO_COLS = ['anh', 'anh2', 'anh3', 'anh4'];
 function photoOk_(a) { return typeof a === 'string' && a.length <= PHOTO_MAX && /^data:image\/jpeg;base64,[A-Za-z0-9+/=]+$/.test(a); }
-function setPhoto_(r, a) { PHOTO_COLS.forEach((k, i) => r[k] = a.slice(i * PHOTO_CH, (i + 1) * PHOTO_CH)); }
+function setPhoto_(r, a) { PHOTO_COLS.forEach((k, i) => r[k] = a.slice(i * PHOTO_CH, (i + 1) * PHOTO_CH)); r.coAnh = a ? 'v' + Date.now() : '-'; }
+const LITE = 10; // số cột đầu (id → data) đọc nhanh, không kéo theo ảnh
 function getPhoto_(r) { return PHOTO_COLS.map(k => r[k] || '').join(''); }
 function money_(v) { const n = Math.round(Number(v) || 0); return n > 0 && n < 1e11 ? n : 0; }
 const COURSE = {Diamond: 'CMA Diamond', Trainer: 'CMA Trainer'};
@@ -41,9 +42,20 @@ function sheet_(name) {
   }
   return s;
 }
-function rows_(name) {
+function rows_(name, full) {
   const s = sheet_(name), n = s.getLastRow(), cols = COLS[name];
   if (n < 2) return [];
+  if (name === 'records' && !full) {
+    // Đọc nhanh: bỏ qua 4 cột ảnh rất nặng; cột coAnh cho biết có ảnh hay không (và phiên bản ảnh).
+    const ci = cols.indexOf('coAnh') + 1, base = s.getRange(2, 1, n - 1, LITE).getValues(), flag = s.getRange(2, ci, n - 1, 1).getValues();
+    if (flag.some(f => String(f[0]) === '')) {
+      const k = s.getRange(2, LITE + 1, n - 1, 1).getValues();
+      flag.forEach((f, i) => { if (String(f[0]) === '') f[0] = String(k[i][0]) ? 'v1' : '-'; });
+      s.getRange(2, ci, n - 1, 1).setValues(flag);
+      s.getRange(1, 1, 1, cols.length).setValues([cols]).setFontWeight('bold');
+    }
+    return base.map((r, i) => { const o = {_row: i + 2, _lite: true}; cols.slice(0, LITE).forEach((c, j) => o[c] = String(r[j])); o.coAnh = String(flag[i][0]); return o; });
+  }
   return s.getRange(2, 1, n - 1, cols.length).getValues().map((r, i) => {
     const o = {_row: i + 2}; cols.forEach((c, j) => o[c] = String(r[j])); return o;
   });
@@ -52,6 +64,7 @@ function put_(name, o) {
   const cols = COLS[name], vals = cols.map(c => o[c] === undefined || o[c] === null ? '' : String(o[c]));
   const s = sheet_(name);
   if (s.getLastColumn() < cols.length) s.getRange(1, 1, 1, cols.length).setValues([cols]).setFontWeight('bold');
+  if (o._row && o._lite && o.anh === undefined) { s.getRange(o._row, 1, 1, LITE).setValues([vals.slice(0, LITE)]); return; } // không ghi đè ảnh
   if (o._row) s.getRange(o._row, 1, 1, cols.length).setValues([vals]);
   else { s.appendRow(vals); }
 }
@@ -99,7 +112,7 @@ function passOk_(pw) {
 function formOut_(f, count) { return {id: f.id, slug: f.slug, ten: f.ten, khoa: f.khoa, nam: f.nam, mau: f.mau, moTa: f.moTa, mo: f.mo === '1', createdAt: f.createdAt.slice(0, 10), soPhieu: count || 0}; }
 function recOut_(r) {
   let d = {}; try { d = JSON.parse(r.data || '{}'); } catch (e) {}
-  d.id = r.id; d.formId = r.formId; d.createdAt = r.createdAt.slice(0, 10); d.updatedAt = r.updatedAt; d.hasPhoto = !!r.anh;
+  d.id = r.id; d.formId = r.formId; d.createdAt = r.createdAt.slice(0, 10); d.updatedAt = r.updatedAt; d.hasPhoto = !!r.coAnh && r.coAnh !== '-'; d.phV = r.coAnh || '';
   return d;
 }
 function staff_() {
@@ -187,7 +200,7 @@ function route_(b) {
       }
       case 'photos': {
         const ids = list_(b.ids, 40, 40), map = {};
-        rows_('records').forEach(r => { if (ids.indexOf(r.id) >= 0 && r.anh) map[r.id] = getPhoto_(r); });
+        rows_('records', true).forEach(r => { if (ids.indexOf(r.id) >= 0 && r.anh) map[r.id] = getPhoto_(r); });
         return out_({ok: true, photos: map});
       }
       case 'form_save': {
@@ -270,7 +283,7 @@ function matchRecs_(sdt, hoTen) { return rows_('records').filter(r => phoneN_(r.
 function filled_(v) { return Array.isArray(v) ? v.length > 0 : typeof v === 'number' ? v > 0 : typeof v === 'boolean' ? v : String(v === null || v === undefined ? '' : v).trim() !== ''; }
 function have_(recs, keys) {
   const h = {};
-  recs.forEach(r => { let d = {}; try { d = JSON.parse(r.data || '{}'); } catch (e) {} keys.forEach(k => { if (k === 'anh' ? !!r.anh : filled_(d[k])) h[k] = 1; }); });
+  recs.forEach(r => { let d = {}; try { d = JSON.parse(r.data || '{}'); } catch (e) {} keys.forEach(k => { if (k === 'anh' ? (!!r.coAnh && r.coAnh !== '-') : filled_(d[k])) h[k] = 1; }); });
   return Object.keys(h);
 }
 function lookup_(b) {

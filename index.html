@@ -433,6 +433,11 @@ body.solo .app{grid-template-columns:1fr}body.solo aside,body.solo .top{display:
 @media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 @keyframes spin{to{transform:rotate(360deg)}}
 .orbit{transform-origin:260px 170px;animation:spin 60s linear infinite}
+.hvpay{display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center;margin-top:8px;font-size:13.5px}
+.alertTxt{color:#fca5a5;font-size:13.5px}
+.paysum{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:0 0 12px}.paysum div{background:#0b1638;border:1px solid #1c2a5c;border-radius:12px;padding:10px}.paysum b{display:block;font-size:18px}.paysum span{font-size:12.5px;color:var(--mut,#94a3b8)}
+.rpt td:not(:first-child),.rpt th:not(:first-child){text-align:right}
+@media(max-width:560px){.paysum{grid-template-columns:1fr 1fr}}
 </style>
 <script>new MutationObserver(()=>{for(const c of document.querySelectorAll('.stack td:not([data-l])')){let i=0,p=c;while(p=p.previousElementSibling)i+=p.colSpan;c.dataset.l=c.closest('table').rows[0].cells[i]?.textContent||''}}).observe(document,{childList:true,subtree:true})</script>
 </head>
@@ -524,9 +529,33 @@ const AI_TOOLS=['ChatGPT','Claude','Gemini','Copilot','Perplexity','NotebookLM',
 const MONTHS=['2026-12','2027-01','2027-02','2027-03','2027-04','2027-05'];
 const mName=m=>`Tháng ${+m.slice(5)}/${m.slice(0,4)}`;
 const DEFAULT_STAFF=['Kim Anh','Mỹ Linh','Oanh'];
+/* ---------- Thanh toán, công nợ, chương trình ---------- */
+const PAY_ST=[['Đã đóng đủ','#34d399','full'],['Đặt cọc','#fb923c','coc'],['Chưa đóng','#f87171','chua'],['Bảo lưu / chưa chốt','#94a3b8','baoluu']];
+const n0=v=>Math.max(0,Math.round(+v||0));
+const phaiThu=x=>Math.max(0,n0(x.hocPhi)-n0(x.khauTru));
+const congNo=x=>x.ttTT==='Bảo lưu / chưa chốt'?0:Math.max(0,phaiThu(x)-n0(x.daDong));
+const hasPay=x=>!!(x&&(x.chuongTrinh||n0(x.hocPhi)||n0(x.daDong)||x.ttTT));
+const payKey=x=>(PAY_ST.find(p=>p[0]===x.ttTT)||[])[2]||(congNo(x)?(n0(x.daDong)?'coc':'chua'):'full');
+const payName=k=>(PAY_ST.find(p=>p[2]===k)||PAY_ST[0])[0],payColor=k=>(PAY_ST.find(p=>p[2]===k)||PAY_ST[0])[1];
+const ttPill=k=>`<span class="st" style="--sc:${payColor(k)}">${esc(payName(k))}</span>`;
+const payPill=x=>ttPill(payKey(x));
+const prodName=x=>x.ttTT==='Bảo lưu / chưa chốt'?'Diamond · bảo lưu cọc / đăng ký sau':x.khoa==='Trainer'?'CMA Trainer':x.nhom==='Nhóm viết sách'?'Diamond · Nhóm viết sách':x.nhom==='Diamond Coaching'?'Diamond Coaching':'CMA Diamond';
+const parseMoney=v=>{const t=String(v??'').toLowerCase().replace(/\s|đ|vnđ|vnd/g,'');if(!t)return 0;const m=t.match(/^([\d.,]+)(tỷ|ty|tr|triệu|trieu|k)?$/);if(!m)return NaN;if(!m[2])return +m[1].replace(/[.,]/g,'');const f=parseFloat(m[1].replace(/\.(?=\d{3}(\D|$))/g,'').replace(',','.'));return Math.round(f*({'tỷ':1e9,ty:1e9,tr:1e6,'triệu':1e6,trieu:1e6,k:1e3}[m[2]]))};
+const hasReal=()=>S.real.some(hasPay);
+function realBuyers(){return S.real.filter(hasPay).map(x=>({id:'r:'+x.id,rid:x.id,real:true,x,hoTen:x.hoTen||'',sdt:x.sdt||'',email:x.email||'',congViec:x.congViec||'',thanhPho:x.thanhPho||'',sp:prodName(x),gia:n0(x.daDong)+congNo(x),daThu:n0(x.daDong),no:congNo(x),tt:payKey(x),hanTT:x.hanTT||'',phuTrach:arr(x.phuTrach),nhatKy:arr(x.nhatKy),camp:x.chuongTrinh||'Chưa ghi chương trình'}))}
+function realCamps(){
+ const m=new Map();realBuyers().forEach(b=>{if(!m.has(b.camp))m.set(b.camp,[]);m.get(b.camp).push(b)});
+ const ORDER=['CMA Diamond','Diamond · Nhóm viết sách','Diamond Coaching','CMA Trainer','Diamond · bảo lưu cọc / đăng ký sau'];
+ return [...m.entries()].map(([name,bl],i)=>{const sp=[...new Set(bl.map(b=>b.sp))].sort((a,b)=>ORDER.indexOf(a)-ORDER.indexOf(b));const tm=(name.match(/\d[\d–\-\/ ]*\/\d{4}/)||[''])[0];
+  return {id:'rc'+i,name,type:/offline/i.test(name)?'Chương trình offline':'Chương trình',time:tm,color:['#a855f7','#ea580c','#3b82f6','#16a34a'][i%4],prog:name,real:true,prods:sp.map(p=>[p,Math.max(0,...bl.filter(b=>b.sp===p).map(b=>n0(b.x.hocPhi)))]),buyers_list:bl.map(b=>({...b,camp:'rc'+i}))}});
+}
+const buyerWho=b=>b.real?`<button class="who linkbtn" data-open="${esc(b.rid)}">${ava(b.x,'ava tbimg')}<span><b>${esc(b.hoTen)}</b><br><small class="mut">${esc(clip(b.congViec,40))}</small></span></button>`:`<button class="who linkbtn" data-buyer="${b.id}"><img class="ava tbimg" src="${face(b.face)}" alt=""><span><b>${esc(b.hoTen)}</b><br><small class="mut">${esc(b.congViec)}</small></span></button>`;
+const buyerBtn=b=>b.real?`<button class="btn sm" data-open="${esc(b.rid)}">Hồ sơ</button>`:`<button class="btn sm" data-buyer="${b.id}">Xem</button>`;
+const lastNote=b=>{const lc=b.nhatKy[b.nhatKy.length-1];return lc?`${fmtD(lc.ngay)} · ${esc(lc.nguoi||'')}<br>${esc(clip(lc.noiDung,90))}`:'<span class="mut">Chưa có</span>'};
+const payLine=x=>hasPay(x)?`<div class="hvpay">${payPill(x)}<span>Đã thu <b>${TR(n0(x.daDong))}</b></span>${congNo(x)?`<span class="warnTxt">Công nợ <b>${TR(congNo(x))}</b></span>`:''}</div>`:'';
 
 const S={calM:'2026-12',camp:null,bf:{q:'',sp:'all',tt:'all',pt:'all',sort:'sp'},real:[],demo:(()=>{try{return localStorage.getItem('crm_demo')==='1'}catch(_){return false}})(),cf:{q:'',khoa:'all',st:'all',pt:'all'},view:(()=>{try{return localStorage.getItem('crm_view')||'card'}catch(_){return 'card'}})(),list:[],forms:[],staff:DEFAULT_STAFF.slice(),loaded:false,canWrite:true,tok:'',site:'',user:'',
- f:{fam:'F5',khoa:'Diamond',nam:'2026',nhom:'all',q:'',st:'all',pt:'all',form:'all'},open:null,phone:''};
+ f:{fam:'F5',khoa:'Diamond',nam:'2026',nhom:'all',q:'',st:'all',pt:'all',form:'all',tt:'all'},open:null,phone:''};
 
 /* ---------- UI helpers ---------- */
 let tt;
@@ -569,14 +598,14 @@ function vHome(){
   <div class="stat"><b>${c('Diamond')}</b><span>CMA Diamond</span></div>
   <div class="stat"><b>${c('Trainer')}</b><span>CMA Trainer</span></div>
   <div class="stat"><b style="color:${urgent?'var(--warn)':'inherit'}">${urgent}</b><span>Cần chăm sóc gấp · ${noOwner} chưa có người phụ trách</span></div>
- </div></div>`;
+ </div>${hasReal()?(()=>{const B=realBuyers(),pd=B.reduce((a,b)=>a+b.daThu,0),db=B.reduce((a,b)=>a+b.no,0);return `<a class="panel" href="#doanh-thu" style="display:flex;gap:18px;flex-wrap:wrap;align-items:center;margin-top:14px;text-decoration:none;color:inherit"><b>Doanh thu thật</b><span>Đã thu <b style="color:#34d399">${TR(pd)}</b></span><span>Công nợ cần thu <b style="color:var(--warn)">${TR(db)}</b></span><span class="mut">${B.length} lượt đăng ký · xem chi tiết →</span></a>`})():''}</div>`;
 }
 
 function filtered(){
  const f=S.f,q=f.q.trim().toLowerCase(),qd=q.replace(/\D/g,'');
  return S.list.filter(x=>(f.form==='all'||x.formId===f.form)&&x.khoa===f.khoa&&(f.nam==='all'||String(x.nam||'2026')===f.nam)
   &&(f.khoa!=='Diamond'||f.nhom==='all'||x.nhom===f.nhom)&&(f.st==='all'||x.trangThai===f.st)
-  &&(f.pt==='all'||(f.pt==='none'?!arr(x.phuTrach).length:arr(x.phuTrach).includes(f.pt)))
+  &&(f.pt==='all'||(f.pt==='none'?!arr(x.phuTrach).length:arr(x.phuTrach).includes(f.pt)))&&(f.tt==='all'||(hasPay(x)&&payKey(x)===f.tt))
   &&(!q||String(x.hoTen||'').toLowerCase().includes(q)||(qd.length>=3&&String(x.sdt||'').replace(/\D/g,'').includes(qd))||String(x.email||'').toLowerCase().includes(q)))
   .sort((a,b)=>String(b.createdAt||'').localeCompare(String(a.createdAt||'')));
 }
@@ -633,8 +662,8 @@ function demoData(){
  return DEMO_CACHE;
 }
 const isDemo=id=>String(id).startsWith('demo-');
-function demoBar(){return `<div class="demobar ${S.demo?'on':''}"><span>${S.demo?'Đang hiện <b>10 học viên mẫu</b> để xem thử (chỉ trên máy này, không lưu vào dữ liệu thật).':'Muốn xem giao diện khi đã có nhiều học viên?'}</span><button class="btn sm ${S.demo?'ghost':''}" data-demo="1">${S.demo?'Tắt dữ liệu mẫu':'Xem dữ liệu mẫu'}</button></div>`}
-function mergeList(){S.list=S.real.concat(S.demo?demoData():[])}
+function demoBar(){if(S.real.length)return '';return `<div class="demobar ${S.demo?'on':''}"><span>${S.demo?'Đang hiện <b>10 học viên mẫu</b> để xem thử (chỉ trên máy này, không lưu vào dữ liệu thật).':'Muốn xem giao diện khi đã có nhiều học viên?'}</span><button class="btn sm ${S.demo?'ghost':''}" data-demo="1">${S.demo?'Tắt dữ liệu mẫu':'Xem dữ liệu mẫu'}</button></div>`}
+function mergeList(){S.list=S.real.concat(S.demo&&!S.real.length?demoData():[])}
 
 /* ---------- Thẻ học viên (ảnh chân dung là trọng tâm) ---------- */
 function cardHV(x,extra){
@@ -645,7 +674,8 @@ function cardHV(x,extra){
    <b class="hvname">${esc(x.hoTen)}</b>
    <div class="mut sm">${[age(x),x.thanhPho].filter(Boolean).map(esc).join(' · ')}</div>
    <div class="sm hvjob">${esc(clip(x.congViec,70))}</div>
-   ${extra||`<div class="hvrow"><span class="chip">${esc(courseTxt(x))}</span><span class="chip">${esc(x.nam||'')}</span></div>`}
+   ${extra||`<div class="hvrow"><span class="chip">${esc(courseTxt(x))}</span><span class="chip">${esc(x.nam||'')}</span>${x.chuongTrinh?`<span class="chip" title="Chương trình / chiến dịch">${esc(x.chuongTrinh)}</span>`:''}</div>${payLine(x)}`}
+   ${x.canhBao?`<div class="alertTxt" style="margin-top:6px">⚠ ${esc(x.canhBao)}</div>`:''}
    <div class="hvgrid">
     <div><small>Trạng thái</small>${stSel(x)}</div>
     <div><small>Phụ trách</small><div>${ptTags(x)}</div></div>
@@ -660,8 +690,8 @@ function cardHV(x,extra){
 function listCards(rows){return `<div class="cards">${rows.map(x=>cardHV(x)).join('')}</div>`}
 
 /* ---------- Bảng đầy đủ, bấm vào ô để sửa ---------- */
-const EDIT={hoTen:'text',sdt:'text',namSinh:'text',email:'text',congViec:'text',thanhPho:'text',khoa:'course',nhom:'group',nam:'year',trangThai:'status',phuTrach:'staff',khoaDaHoc:'area',lyDo:'area',vanDe:'area',mongMuon:'area',ghiChu:'area',zaloGroup:'text'};
-const shown=(x,f)=>{const v=x[f];if(f==='phuTrach')return ptTags(x);if(f==='trangThai')return `<span class="st" style="--sc:${stColor(v)}">${esc(v||'Mới đăng ký')}</span>`;if(f==='khoa')return esc(courseTxt({khoa:v}));if(f==='nhom')return x.khoa==='Diamond'?esc(v||'Chưa xếp nhóm'):'<span class="mut">—</span>';if(f==='namSinh')return esc(v?v+' ('+age(x)+')':'');if(f==='zaloGroup')return safeUrl(v)?`<a class="mini" href="${esc(v)}" target="_blank" rel="noopener">Mở nhóm ↗</a>`:'';const t=Array.isArray(v)?v.join(', '):String(v??'');return esc(EDIT[f]==='area'?clip(t,140):t)};
+const EDIT={chuongTrinh:'text',ttTT:'pay',hocPhi:'money',khauTru:'money',daDong:'money',dongHanh:'text',lichHen:'text',canhBao:'text',cccd:'text',diaChi:'text',hoTen:'text',sdt:'text',namSinh:'text',email:'text',congViec:'text',thanhPho:'text',khoa:'course',nhom:'group',nam:'year',trangThai:'status',phuTrach:'staff',khoaDaHoc:'area',lyDo:'area',vanDe:'area',mongMuon:'area',ghiChu:'area',zaloGroup:'text'};
+const shown=(x,f)=>{const v=x[f];if(EDIT[f]==='money')return n0(v)?VND(n0(v)):'';if(f==='ttTT')return hasPay(x)?payPill(x):'';if(f==='canhBao'&&v)return `<span class="alertTxt">⚠ ${esc(v)}</span>`;if(f==='phuTrach')return ptTags(x);if(f==='trangThai')return `<span class="st" style="--sc:${stColor(v)}">${esc(v||'Mới đăng ký')}</span>`;if(f==='khoa')return esc(courseTxt({khoa:v}));if(f==='nhom')return x.khoa==='Diamond'?esc(v||'Chưa xếp nhóm'):'<span class="mut">—</span>';if(f==='namSinh')return esc(v?v+' ('+age(x)+')':'');if(f==='zaloGroup')return safeUrl(v)?`<a class="mini" href="${esc(v)}" target="_blank" rel="noopener">Mở nhóm ↗</a>`:'';const t=Array.isArray(v)?v.join(', '):String(v??'');return esc(EDIT[f]==='area'?clip(t,140):t)};
 const ec=(x,f,cls)=>`<td class="ed ${cls||''}" data-id="${esc(x.id)}" data-f="${f}" tabindex="0" title="Bấm để sửa">${shown(x,f)||'<span class="mut">+ Thêm</span>'}</td>`;
 function listProgress(rows){
  const MS=MONTHS,cls=t=>!t?'pe':/^chậm|^cham|^!/i.test(t)?'pl':/^xong|^đạt|^dat|^✓/i.test(t)?'pd':'po';
@@ -671,10 +701,10 @@ function listProgress(rows){
  <div class="widewrap"><table class="wide progtbl"><thead><tr><th>Học viên</th>${MS.map(m=>`<th>${mName(m)}</th>`).join('')}</tr></thead><tbody>${rows.map(x=>`<tr><td class="stick"><button class="who linkbtn" data-open="${esc(x.id)}">${ava(x,'ava tbimg')}<span><b>${esc(x.hoTen)}</b><br><small class="mut">${esc(courseTxt(x))}</small></span></button></td>${MS.map(m=>{const t=(x.tienDo||{})[m]||'';return `<td class="pg ${cls(t)}">${t?esc(t.replace(/^(Đạt|Chậm|Xong)\s*:\s*/i,'')):'<span class="mut">—</span>'}${t?`<small>${cls(t)==='pd'?'Đạt':cls(t)==='pl'?'Chậm':'Đang làm'}</small>`:''}</td>`}).join('')}</tr>`).join('')}</tbody></table></div>`;
 }
 function listTable(rows){
- const H=[['Học viên',''],['Điện thoại',''],['Năm sinh',''],['Email',''],['Công việc',''],['Tỉnh/thành',''],['Khóa',''],['Nhóm',''],['Năm',''],['Trạng thái',''],['Phụ trách',''],['Mức AI',''],['Đã và đang học',''],['Lý do đăng ký',''],['Cần thầy hỗ trợ',''],['Mong muốn',''],['Ghi chú nội bộ',''],['Nhóm Zalo',''],['Chăm sóc gần nhất',''],['Ngày vào','']];
+ const H=[['Học viên',''],['Điện thoại',''],['Năm sinh',''],['Email',''],['Công việc',''],['Tỉnh/thành',''],['Khóa',''],['Nhóm',''],['Năm',''],['Chương trình / chiến dịch',''],['Thanh toán',''],['Học phí',''],['Khấu trừ',''],['Đã thu',''],['Công nợ',''],['Lưu ý thanh toán',''],['Đồng hành',''],['Lịch hẹn',''],['Trạng thái',''],['Phụ trách',''],['Mức AI',''],['Đã và đang học',''],['Lý do đăng ký',''],['Cần thầy hỗ trợ',''],['Mong muốn',''],['Ghi chú nội bộ',''],['Nhóm Zalo',''],['Chăm sóc gần nhất',''],['Ngày vào','']];
  return `<p class="mut sm" style="margin:0 0 8px">Bấm vào ô bất kỳ để sửa. Nhấn Enter hoặc bấm ra ngoài để lưu, Esc để hủy.</p><div class="widewrap"><table class="wide"><thead><tr>${H.map(h=>`<th>${h[0]}</th>`).join('')}</tr></thead><tbody>${rows.map(x=>{const lc=lastCare(x);return `<tr>
   <td class="stick"><button class="who linkbtn" data-open="${esc(x.id)}">${ava(x,'ava tbimg')}<span><b>${esc(x.hoTen)}</b>${x.demo?' <span class="tag mau">Mẫu</span>':''}<br><small class="mut">Mở hồ sơ</small></span></button></td>
-  ${ec(x,'sdt','nw')}${ec(x,'namSinh','nw')}${ec(x,'email')}${ec(x,'congViec')}${ec(x,'thanhPho')}${ec(x,'khoa')}${ec(x,'nhom')}${ec(x,'nam','nw')}${ec(x,'trangThai')}${ec(x,'phuTrach')}
+  ${ec(x,'sdt','nw')}${ec(x,'namSinh','nw')}${ec(x,'email')}${ec(x,'congViec')}${ec(x,'thanhPho')}${ec(x,'khoa')}${ec(x,'nhom')}${ec(x,'nam','nw')}${ec(x,'chuongTrinh')}${ec(x,'ttTT')}${ec(x,'hocPhi','nw')}${ec(x,'khauTru','nw')}${ec(x,'daDong','nw')}<td class="nw">${hasPay(x)?(congNo(x)?`<b class="warnTxt">${VND(congNo(x))}</b>`:'<span class="mut">0</span>'):''}</td>${ec(x,'canhBao','tx')}${ec(x,'dongHanh')}${ec(x,'lichHen','tx')}${ec(x,'trangThai')}${ec(x,'phuTrach')}
   <td>${lvBar(+x.aiLevel||0)}<br><small class="mut">${esc(clip(arr(x.aiTools).join(', '),40))}</small></td>
   ${ec(x,'khoaDaHoc','tx')}${ec(x,'lyDo','tx')}${ec(x,'vanDe','tx')}${ec(x,'mongMuon','tx')}${ec(x,'ghiChu','tx')}${ec(x,'zaloGroup')}
   <td class="tx">${lc?`${fmtD(lc.ngay)} · ${esc(lc.nguoi||'')}<br>${esc(clip(lc.noiDung,80))}`:'<span class="mut">Chưa có</span>'}</td>
@@ -686,6 +716,8 @@ function openEditor(td){
  const v=x[f];let h='';
  if(type==='text')h=`<input class="cellin" value="${esc(Array.isArray(v)?v.join(', '):v||'')}">`;
  else if(type==='area')h=`<textarea class="cellin" rows="4">${esc(Array.isArray(v)?v.join(', '):v||'')}</textarea>`;
+ else if(type==='money')h=`<input class="cellin" inputmode="numeric" placeholder="vd: 240tr hoặc 240000000" value="${n0(v)||''}">`;
+ else if(type==='pay')h=`<select class="cellin"><option value="">Tự tính theo số tiền</option>${PAY_ST.map(p=>`<option ${v===p[0]?'selected':''}>${p[0]}</option>`).join('')}</select>`;
  else if(type==='status')h=`<select class="cellin">${STATUS.map(([o])=>`<option ${v===o?'selected':''}>${o}</option>`).join('')}</select>`;
  else if(type==='course')h=`<select class="cellin"><option value="Diamond" ${v==='Diamond'?'selected':''}>CMA Diamond</option><option value="Trainer" ${v==='Trainer'?'selected':''}>CMA Trainer</option></select>`;
  else if(type==='group')h=`<select class="cellin"><option value="">Chưa xếp nhóm</option>${GROUPS.map(g=>`<option ${v===g?'selected':''}>${g}</option>`).join('')}</select>`;
@@ -699,8 +731,9 @@ async function saveEditor(cancel){
  let val;
  if(type==='staff')val=[...td.querySelectorAll('input:checked')].map(i=>i.value);
  else{const el=td.querySelector('.cellin');val=el?el.value.trim():''}
+ if(type==='money'){val=parseMoney(val);if(isNaN(val)){toast('Số tiền chưa đúng. Ví dụ: 240tr hoặc 240000000',true);return}}
  const old=Array.isArray(x[f])?x[f].join(', '):String(x[f]??'');
- if((Array.isArray(val)?val.join(', '):val)===old){return saveEditor(true)}
+ if((Array.isArray(val)?val.join(', '):String(val))===(type==='money'?String(n0(x[f])):old)){return saveEditor(true)}
  if(f==='zaloGroup'&&val&&!safeUrl(val)){toast('Link Zalo phải bắt đầu bằng https://',true);return}
  if(f==='sdt'&&!/^\+?\d{9,12}$/.test(val.replace(/[\s.-]/g,''))){toast('Số điện thoại chưa đúng.',true);return}
  if(f==='hoTen'&&!val){toast('Họ tên không được trống.',true);return}
@@ -724,6 +757,7 @@ function vProducts(){
   <input class="inp" id="q" placeholder="Tìm tên, số điện thoại, email" value="${esc(f.q)}" style="flex:1 1 220px">
   <select class="inp" id="fst" aria-label="Trạng thái"><option value="all">Mọi trạng thái</option>${STATUS.map(([s])=>`<option ${f.st===s?'selected':''}>${s}</option>`).join('')}</select>
   <select class="inp" id="fpt" aria-label="Người phụ trách"><option value="all">Mọi người phụ trách</option><option value="none" ${f.pt==='none'?'selected':''}>Chưa có người phụ trách</option>${S.staff.map(s=>`<option ${f.pt===s?'selected':''}>${esc(s)}</option>`).join('')}</select>
+  <select class="inp" id="ftt" aria-label="Thanh toán"><option value="all">Mọi tình trạng thanh toán</option>${PAY_ST.map(p=>`<option value="${p[2]}" ${f.tt===p[2]?'selected':''}>${p[0]}</option>`).join('')}</select>
   <select class="inp" id="fform" aria-label="Form"><option value="all">Mọi form</option>${S.forms.map(x=>`<option value="${esc(x.id)}" ${f.form===x.id?'selected':''}>${esc(x.ten)}</option>`).join('')}</select><a class="btn ghost" href="#form" style="text-decoration:none;display:inline-flex;align-items:center">Lấy link form</a>
  </div>
  ${demoBar()}
@@ -745,10 +779,10 @@ function vCustomers(){
   &&(c.khoa==='all'||rs.some(r=>r.khoa===c.khoa))&&(c.st==='all'||rs.some(r=>r.trangThai===c.st))&&(c.pt==='all'||(c.pt==='none'?rs.every(r=>!arr(r.phuTrach).length):rs.some(r=>arr(r.phuTrach).includes(c.pt)))));
  const recs=list.flatMap(x=>x.rs);
  const multi=list.filter(x=>x.rs.length>1).length;
- const classChips=rs=>`<div class="hvrow">${rs.map(r=>`<button class="chip chipbtn" data-open="${esc(r.id)}" title="Mở hồ sơ lớp này"><i style="background:${stColor(r.trangThai)}"></i>${esc(courseTxt(r))} · ${esc(r.nam||'')}</button>`).join('')}</div>`;
+ const classChips=rs=>`<div class="hvrow">${rs.map(r=>`<button class="chip chipbtn" data-open="${esc(r.id)}" title="Mở hồ sơ lớp này"><i style="background:${stColor(r.trangThai)}"></i>${esc(courseTxt(r))} · ${esc(r.nam||'')}${hasPay(r)?' · '+esc(payName(payKey(r)).toLowerCase())+(congNo(r)?' · công nợ '+TR(congNo(r)):''):''}</button>`).join('')}</div>`;
  return `<div class="band"><h2>Ô 1 · Khách hàng</h2><p class="mut" style="margin:0 0 12px">Toàn bộ khách hàng trong CRM. Mỗi người một thẻ, hiện đủ các lớp đã và đang học. Bấm vào lớp để mở hồ sơ của lớp đó.</p>
  ${demoBar()}
- <div class="kpis"><div><b>${list.length}</b><span>Khách hàng</span></div><div><b>${recs.length}</b><span>Lượt đăng ký lớp</span></div><div><b>${multi}</b><span>Học từ 2 lớp trở lên</span></div><div><b>${list.filter(x=>x.rs.some(r=>r.trangThai==='Cần chăm sóc gấp')).length}</b><span>Cần chăm sóc gấp</span></div></div>
+ <div class="kpis"><div><b>${list.length}</b><span>Khách hàng</span></div><div><b>${recs.length}</b><span>Lượt đăng ký lớp</span></div><div><b>${multi}</b><span>Học từ 2 lớp trở lên</span></div><div><b>${list.filter(x=>x.rs.some(r=>r.trangThai==='Cần chăm sóc gấp')).length}</b><span>Cần chăm sóc gấp</span></div>${recs.some(hasPay)?`<div><b>${TR(recs.reduce((a,r)=>a+n0(r.daDong),0))}</b><span>Đã thu</span></div><div><b style="color:var(--warn)">${TR(recs.reduce((a,r)=>a+congNo(r),0))}</b><span>Công nợ cần thu</span></div>`:''}</div>
  <div class="bar">
   <input class="inp" id="cq" placeholder="Tìm tên, số điện thoại, công việc" value="${esc(c.q)}" style="flex:1 1 240px">
   <select class="inp" id="ckhoa" aria-label="Khóa"><option value="all">Mọi khóa</option><option value="Diamond" ${c.khoa==='Diamond'?'selected':''}>CMA Diamond</option><option value="Trainer" ${c.khoa==='Trainer'?'selected':''}>CMA Trainer</option></select>
@@ -756,7 +790,7 @@ function vCustomers(){
   <select class="inp" id="cpt" aria-label="Người phụ trách"><option value="all">Mọi người phụ trách</option><option value="none" ${c.pt==='none'?'selected':''}>Chưa có người phụ trách</option>${S.staff.map(x=>`<option ${c.pt===x?'selected':''}>${esc(x)}</option>`).join('')}</select>
  </div>
  <div class="viewbar"><span class="mut">${list.length} khách hàng</span><div class="seg" role="group" aria-label="Kiểu xem"><button class="${S.view==='card'?'on':''}" data-view="card">Thẻ khách hàng</button><button class="${S.view==='table'?'on':''}" data-view="table">Bảng đầy đủ</button></div></div>
- ${list.length?(S.view==='table'?listTable(recs):`<div class="cards">${list.map(({main,rs})=>cardHV(main,`<small class="mut" style="display:block;margin-top:6px">Lớp đã và đang học (${rs.length})</small>${classChips(rs)}`)).join('')}</div>`)
+ ${list.length?(S.view==='table'?listTable(recs):`<div class="cards">${list.map(({main,rs})=>cardHV(main,`<small class="mut" style="display:block;margin-top:6px">Lớp đã và đang học (${rs.length})</small>${classChips(rs)}${rs.some(hasPay)?`<div class="hvpay"><span>Đã thu <b>${TR(rs.reduce((a,r)=>a+n0(r.daDong),0))}</b></span>${rs.some(r=>congNo(r))?`<span class="warnTxt">Công nợ <b>${TR(rs.reduce((a,r)=>a+congNo(r),0))}</b></span>`:''}</div>`:''}`)).join('')}</div>`)
   :`<div class="panel empty">${S.list.length?'Không có khách hàng khớp bộ lọc.':'Chưa có khách hàng nào. Gửi link form cho học viên, hoặc bấm "Xem dữ liệu mẫu" để xem thử.'}</div>`}
  ${personaPanel()}
  <details class="morebox"><summary>Các nhánh khác của ô Khách hàng (đang xây dần)</summary>${subsHTML(MODS[0])}</details></div>`;
@@ -816,31 +850,31 @@ function campDemo(){
   c.buyers_list.push({id:'b'+k,face:k%10,hoTen:name,sdt:'09'+String(10000000+Math.floor(r()*89999999)).slice(0,8),email:'hv'+k+'@example.com',thanhPho:CITY[Math.floor(r()*CITY.length)],congViec:JOB[Math.floor(r()*JOB.length)],namSinh:String(1968+Math.floor(r()*22)),sp:pn,gia:price,daThu:paid,no:price-paid,tt:full?'full':'coc',hanTT:full?'':`2026-12-${String(5+Math.floor(r()*20)).padStart(2,'0')}`,phuTrach:[STAFF[k%3]],nhatKy:notes,camp:c.id})}})});
  CAMP_CACHE=C;return C;
 }
-function campTotals(c){const B=c.buyers_list;return {rev:B.reduce((a,b)=>a+b.gia,0),paid:B.reduce((a,b)=>a+b.daThu,0),debt:B.reduce((a,b)=>a+b.no,0),buyers:B.length,full:B.filter(b=>b.tt==='full').length,coc:B.filter(b=>b.tt==='coc').length}}
+function campTotals(c){const B=c.buyers_list;return {chua:B.filter(b=>b.tt==='chua').length,baoluu:B.filter(b=>b.tt==='baoluu').length,rev:B.reduce((a,b)=>a+b.gia,0),paid:B.reduce((a,b)=>a+b.daThu,0),debt:B.reduce((a,b)=>a+b.no,0),buyers:B.length,full:B.filter(b=>b.tt==='full').length,coc:B.filter(b=>b.tt==='coc').length}}
 const FACES=new Map();const face=i=>{if(!FACES.has(i))FACES.set(i,demoFace(i));return FACES.get(i)};
 function campDetail(c){
  const B=c.buyers_list,bf=S.bf,q=bf.q.trim().toLowerCase(),qd=q.replace(/\D/g,'');
- const prodRows=c.prods.map(([pn,price])=>{const xs=B.filter(b=>b.sp===pn);return [`<b>${esc(pn)}</b>`,TR(price),xs.length,xs.filter(b=>b.tt==='full').length,xs.filter(b=>b.tt==='coc').length,TR(xs.reduce((a,b)=>a+b.gia,0)),TR(xs.reduce((a,b)=>a+b.daThu,0)),`<span class="warnTxt">${TR(xs.reduce((a,b)=>a+b.no,0))}</span>`]});
+ const prodRows=c.prods.map(([pn,price])=>{const xs=B.filter(b=>b.sp===pn);return [`<b>${esc(pn)}</b>`,price?TR(price):'—',xs.length,xs.filter(b=>b.tt==='full').length,xs.filter(b=>b.tt==='coc').length,xs.filter(b=>b.tt==='chua'||b.tt==='baoluu').length,TR(xs.reduce((a,b)=>a+b.gia,0)),TR(xs.reduce((a,b)=>a+b.daThu,0)),`<span class="warnTxt">${TR(xs.reduce((a,b)=>a+b.no,0))}</span>`]});
  const list=B.filter(b=>(bf.sp==='all'||b.sp===bf.sp)&&(bf.tt==='all'||b.tt===bf.tt)&&(bf.pt==='all'||b.phuTrach.includes(bf.pt))&&(!q||b.hoTen.toLowerCase().includes(q)||(qd.length>=3&&b.sdt.includes(qd))||b.email.includes(q)))
   .sort((a,b)=>bf.sort==='no'?b.no-a.no:a.sp.localeCompare(b.sp));
  return `<section class="campd" style="--c:${c.color}">
- <header><div><span class="mut sm">${esc(c.type)} · ${esc(c.time)}</span><h3 style="margin:2px 0">${esc(c.name)}</h3><div class="sm">Chương trình: <b>${esc(c.prog)}</b></div></div><button class="btn ghost sm" data-camp="${c.id}">Đóng chi tiết</button></header>
- ${kpi([[c.prods.length+' sản phẩm','Bán trong chương trình'],[c.buyers,'Học viên mua'],[TR(c.rev),'Tổng doanh thu','#34d399'],[TR(c.paid),'Đã thu'],[TR(c.debt),'Công nợ còn lại','#fb923c'],[c.full,'Người đóng đủ'],[c.coc,'Người đặt cọc','#fb923c'],[Math.round(c.paid/c.rev*100)+'%','Tỷ lệ đã thu']])}
- <h3>Sản phẩm bán ra</h3>${tbl(['Sản phẩm','Giá','Học viên mua','Đóng đủ','Đặt cọc','Doanh thu','Đã thu','Công nợ'],prodRows.concat([['<b>Tổng</b>','',`<b>${c.buyers}</b>`,`<b>${c.full}</b>`,`<b>${c.coc}</b>`,`<b>${TR(c.rev)}</b>`,`<b>${TR(c.paid)}</b>`,`<b class="warnTxt">${TR(c.debt)}</b>`]]))}
+ <header><div><span class="mut sm">${esc(c.type)} · ${esc(c.time)}</span><h3 style="margin:2px 0">${esc(c.name)}</h3><div class="sm">Chương trình: <b>${esc(c.prog)}</b></div></div>${c.real?'':`<button class="btn ghost sm" data-camp="${c.id}">Đóng chi tiết</button>`}</header>
+ ${kpi([[c.prods.length+' sản phẩm','Bán trong chương trình'],[c.buyers,c.real?'Lượt đăng ký':'Học viên mua'],[TR(c.rev),c.real?'Tổng giá trị (đã thu + công nợ)':'Tổng doanh thu','#34d399'],[TR(c.paid),'Đã thu'],[TR(c.debt),'Công nợ cần thu','#fb923c'],[c.full,'Đóng đủ'],[c.coc,'Đặt cọc','#fb923c'],[c.real?(c.chua+c.baoluu):(c.rev?Math.round(c.paid/c.rev*100)+'%':'—'),c.real?'Chưa đóng / bảo lưu':'Tỷ lệ đã thu']])}
+ <h3>Sản phẩm bán ra</h3>${tbl(['Sản phẩm','Học phí','Lượt đăng ký','Đóng đủ','Đặt cọc','Chưa đóng / bảo lưu','Tổng giá trị','Đã thu','Công nợ'],prodRows.concat([['<b>Tổng</b>','',`<b>${c.buyers}</b>`,`<b>${c.full}</b>`,`<b>${c.coc}</b>`,`<b>${(c.chua||0)+(c.baoluu||0)}</b>`,`<b>${TR(c.rev)}</b>`,`<b>${TR(c.paid)}</b>`,`<b class="warnTxt">${TR(c.debt)}</b>`]]))}
  <h3 style="margin-top:18px">Danh sách học viên theo sản phẩm</h3>
  <div class="bar">
   <input class="inp" id="bq" placeholder="Tìm tên, số điện thoại, email" value="${esc(bf.q)}" style="flex:1 1 220px">
   <select class="inp" id="bsp" aria-label="Sản phẩm"><option value="all">Mọi sản phẩm</option>${c.prods.map(([pn])=>`<option ${bf.sp===pn?'selected':''}>${esc(pn)}</option>`).join('')}</select>
-  <select class="inp" id="btt" aria-label="Thanh toán"><option value="all">Mọi tình trạng thanh toán</option><option value="full" ${bf.tt==='full'?'selected':''}>Đã đóng đủ</option><option value="coc" ${bf.tt==='coc'?'selected':''}>Đặt cọc, còn công nợ</option></select>
-  <select class="inp" id="bpt" aria-label="Người phụ trách"><option value="all">Mọi người phụ trách</option>${['Kim Anh','Mỹ Linh','Oanh'].map(x=>`<option ${bf.pt===x?'selected':''}>${x}</option>`).join('')}</select>
+  <select class="inp" id="btt" aria-label="Thanh toán"><option value="all">Mọi tình trạng thanh toán</option><option value="full" ${bf.tt==='full'?'selected':''}>Đã đóng đủ</option><option value="coc" ${bf.tt==='coc'?'selected':''}>Đặt cọc, còn công nợ</option><option value="chua" ${bf.tt==='chua'?'selected':''}>Chưa đóng</option><option value="baoluu" ${bf.tt==='baoluu'?'selected':''}>Bảo lưu / chưa chốt</option></select>
+  <select class="inp" id="bpt" aria-label="Người phụ trách"><option value="all">Mọi người phụ trách</option>${S.staff.map(x=>`<option ${bf.pt===x?'selected':''}>${esc(x)}</option>`).join('')}</select>
   <select class="inp" id="bsort" aria-label="Sắp xếp"><option value="sp">Xếp theo sản phẩm</option><option value="no" ${bf.sort==='no'?'selected':''}>Công nợ nhiều nhất</option></select>
  </div>
  <p class="mut sm" style="margin:0 0 8px">${list.length} học viên · đã thu ${TR(list.reduce((a,b)=>a+b.daThu,0))} · công nợ ${TR(list.reduce((a,b)=>a+b.no,0))}</p>
- <div class="widewrap"><table class="wide"><thead><tr><th>Học viên</th><th>Điện thoại</th><th>Email</th><th>Sản phẩm</th><th>Giá</th><th>Thanh toán</th><th>Đã thu</th><th>Công nợ</th><th>Hạn đóng</th><th>Phụ trách</th><th>Ghi chú chăm sóc gần nhất</th><th>Hồ sơ</th></tr></thead><tbody>
- ${list.map(b=>{const lc=b.nhatKy[b.nhatKy.length-1];return `<tr><td class="stick"><button class="who linkbtn" data-buyer="${b.id}"><img class="ava tbimg" src="${face(b.face)}" alt=""><span><b>${esc(b.hoTen)}</b><br><small class="mut">${esc(b.congViec)}</small></span></button></td>
-  <td class="nw"><a class="mini" href="tel:${b.sdt}">${b.sdt}</a></td><td>${esc(b.email)}</td><td>${esc(b.sp)}</td><td class="nw">${TR(b.gia)}</td>
-  <td>${b.tt==='full'?pill('Đã đóng đủ','#34d399'):pill('Đặt cọc','#fb923c')}</td><td class="nw">${TR(b.daThu)}</td><td class="nw">${b.no?`<b class="warnTxt">${TR(b.no)}</b>`:'<span class="mut">0</span>'}</td><td class="nw">${b.hanTT?fmtD(b.hanTT):''}</td>
-  <td>${b.phuTrach.map(p=>`<span class="tag">${esc(p)}</span>`).join('')}</td><td class="tx">${fmtD(lc.ngay)} · ${esc(lc.nguoi)}<br>${esc(lc.noiDung)}</td><td><button class="btn sm" data-buyer="${b.id}">Xem</button></td></tr>`}).join('')||'<tr><td colspan="12" class="mut">Không có học viên khớp bộ lọc.</td></tr>'}
+ <div class="widewrap"><table class="wide"><thead><tr><th>Học viên</th><th>Điện thoại</th><th>Email</th><th>Sản phẩm</th><th>Giá</th><th>Thanh toán</th><th>Đã thu</th><th>Công nợ</th><th>Hạn đóng</th><th>Phụ trách</th><th>${c.real?'Lưu ý / lịch hẹn':'Ghi chú chăm sóc gần nhất'}</th><th>Hồ sơ</th></tr></thead><tbody>
+ ${list.map(b=>{return `<tr><td class="stick">${buyerWho(b)}</td>
+  <td class="nw">${b.sdt?`<a class="mini" href="tel:${esc(b.sdt)}">${esc(b.sdt)}</a>`:'<span class="warnTxt">Chưa có SĐT</span>'}</td><td>${esc(b.email)}</td><td>${esc(b.sp)}</td><td class="nw">${TR(b.gia)}</td>
+  <td>${ttPill(b.tt)}</td><td class="nw">${TR(b.daThu)}</td><td class="nw">${b.no?`<b class="warnTxt">${TR(b.no)}</b>`:'<span class="mut">0</span>'}</td><td class="nw">${b.hanTT?fmtD(b.hanTT):''}</td>
+  <td>${b.phuTrach.map(p=>`<span class="tag">${esc(p)}</span>`).join('')}</td><td class="tx">${b.real?[b.x.canhBao?`<span class="alertTxt">⚠ ${esc(b.x.canhBao)}</span>`:'',b.x.lichHen?esc(b.x.lichHen):'',b.x.dongHanh?'Đồng hành: '+esc(b.x.dongHanh):''].filter(Boolean).join('<br>')||'<span class="mut">—</span>':lastNote(b)}</td><td>${buyerBtn(b)}</td></tr>`}).join('')||'<tr><td colspan="12" class="mut">Không có học viên khớp bộ lọc.</td></tr>'}
  </tbody></table></div></section>`;
 }
 function openBuyer(id){
@@ -867,25 +901,43 @@ function gvDetail(g){
  <h3>Các chương trình, chiến dịch đã chạy</h3>${tbl(['Thời gian','Loại','Chương trình','Học viên','Doanh thu','Chi phí','Chia giảng viên','Lợi nhuận','Đánh giá'],g.ps.map(p=>[esc(p[0]),pill(p[1],p[1]==='Phễu'?'#38bdf8':'#f5c451'),`<b>${esc(p[2])}</b>`,p[3].toLocaleString('vi-VN'),p[4]?TR(p[4]):'<span class="mut">Miễn phí</span>',TR(p[5]),TR(p[4]*g.share),`<b>${TR(p[4]-p[5]-p[4]*g.share)}</b>`,'★ '+p[6]]).concat([['<b>Tổng</b>','','',`<b>${hv.toLocaleString('vi-VN')}</b>`,`<b>${TR(rv)}</b>`,`<b>${TR(cp)}</b>`,`<b>${TR(share)}</b>`,`<b>${TR(rv-cp-share)}</b>`,'']]))}
  <div class="grid2" style="margin-top:14px"><div class="panel"><h3>Doanh thu theo chương trình</h3>${hbars(g.ps.filter(p=>p[4]).map(p=>[p[2],p[4],g.c]),'#6366f1',TR)}</div><div class="panel"><h3>Nhận xét</h3><ul class="chk2"><li>Chương trình hiệu quả nhất: <b>${esc(g.ps.slice().sort((a,b)=>(b[4]-b[5])-(a[4]-a[5]))[0][2])}</b></li><li>Học viên đánh giá cao phần thực hành trực tiếp.</li><li>Đề xuất: mở thêm 1 chương trình phễu mỗi tháng để nuôi khách cho khóa chuyên sâu.</li></ul></div></div></section>`;
 }
+function staffBuyers(){return hasReal()?realBuyers():campDemo().flatMap(c=>c.buyers_list)}
 function staffReport(name){
- const B=campDemo().flatMap(c=>c.buyers_list).filter(b=>b.phuTrach.includes(name));
+ const real=hasReal(),B=staffBuyers().filter(b=>b.phuTrach.includes(name));
  const R=S.list.filter(x=>arr(x.phuTrach).includes(name));
  const cls={};B.forEach(b=>{(cls[b.sp]=cls[b.sp]||[]).push(b)});
  const rev=B.reduce((a,b)=>a+b.gia,0),paid=B.reduce((a,b)=>a+b.daThu,0),debt=B.reduce((a,b)=>a+b.no,0);
  const P={'Kim Anh':[180,52,34,'1 giờ 20 phút',94,4.8],'Mỹ Linh':[160,41,28,'2 giờ',91,4.7],'Oanh':[90,22,15,'3 giờ',88,4.6]}[name]||[0,0,0,'—',0,0];
  const sel=S.staffCls&&cls[S.staffCls]?S.staffCls:null;
- return `<section class="campd" style="--c:#22b062"><header><div><span class="mut sm">Báo cáo công việc</span><h3 style="margin:2px 0">${esc(name)}</h3><div class="sm">Đang chăm sóc ${Object.keys(cls).length} lớp · ${B.length} học viên (dữ liệu mẫu) · ${R.length} hồ sơ trong CRM</div></div><button class="btn ghost sm" data-staff="${esc(name)}">Đóng báo cáo</button></header>
- ${kpi([[B.length,'Học viên đang chăm sóc'],[TR(rev),'Doanh thu mang lại','#34d399'],[TR(paid),'Đã thu'],[TR(debt),'Công nợ đang phụ trách','#fb923c'],[P[1]+'/'+P[0],'Khách được giao → đã chốt'],[P[0]?Math.round(P[1]/P[0]*100)+'%':'—','Tỷ lệ chuyển đổi','#34d399'],[P[3],'Thời gian phản hồi TB'],[P[4]+'%','Học viên hài lòng · ★ '+P[5]]])}
- <div class="grid2" style="margin-bottom:14px"><div class="panel"><h3>Doanh thu theo lớp</h3>${hbars(Object.entries(cls).map(([k,v])=>[k,v.reduce((a,b)=>a+b.gia,0),'#22b062']),'#22b062',TR)}</div>
- <div class="panel"><h3>Tiến độ công việc tuần này</h3>${hbars([['Cuộc gọi chăm sóc',P[2],'#3b82f6'],['Tin nhắn Zalo đã trả lời',P[2]*4,'#0ea5e9'],['Nhắc đóng học phí',Math.round(B.filter(b=>b.no).length*.8),'#fb923c'],['Ghi nhật ký chăm sóc',Math.round(P[2]*.9),'#34d399']],'#6366f1',v=>v)}</div></div>
+ return `<section class="campd" style="--c:#22b062"><header><div><span class="mut sm">Báo cáo công việc</span><h3 style="margin:2px 0">${esc(name)}</h3><div class="sm">Đang chăm sóc ${Object.keys(cls).length} lớp · ${B.length} ${real?'lượt đăng ký':'học viên (dữ liệu mẫu)'} · ${R.length} hồ sơ trong CRM</div></div><button class="btn ghost sm" data-staff="${esc(name)}">Đóng báo cáo</button></header>
+ ${real?kpi([[B.length,'Lượt đăng ký phụ trách'],[TR(rev),'Tổng giá trị đăng ký','#34d399'],[TR(paid),'Đã thu'],[TR(debt),'Công nợ đang phụ trách','#fb923c'],[B.filter(b=>b.tt==='full').length,'Đóng đủ','#34d399'],[B.filter(b=>b.tt==='coc').length,'Đặt cọc','#fb923c'],[B.filter(b=>b.tt==='chua'||b.tt==='baoluu').length,'Chưa đóng / bảo lưu'],[rev?Math.round(paid/rev*100)+'%':'—','Tỷ lệ đã thu']])
+ :kpi([[B.length,'Học viên đang chăm sóc'],[TR(rev),'Doanh thu mang lại','#34d399'],[TR(paid),'Đã thu'],[TR(debt),'Công nợ đang phụ trách','#fb923c'],[P[1]+'/'+P[0],'Khách được giao → đã chốt'],[P[0]?Math.round(P[1]/P[0]*100)+'%':'—','Tỷ lệ chuyển đổi','#34d399'],[P[3],'Thời gian phản hồi TB'],[P[4]+'%','Học viên hài lòng · ★ '+P[5]]])}
+ <div class="grid2" style="margin-bottom:14px"><div class="panel"><h3>${real?'Đã thu và công nợ theo lớp':'Doanh thu theo lớp'}</h3>${real?hbars(Object.entries(cls).flatMap(([k,v])=>[[k.replace(/^Diamond · /,'')+' · đã thu',v.reduce((a,b)=>a+b.daThu,0),'#22b062'],[k.replace(/^Diamond · /,'')+' · công nợ',v.reduce((a,b)=>a+b.no,0),'#fb923c']]),'#22b062',TR):hbars(Object.entries(cls).map(([k,v])=>[k,v.reduce((a,b)=>a+b.gia,0),'#22b062']),'#22b062',TR)}</div>
+ <div class="panel"><h3>${real?'Việc cần làm':'Tiến độ công việc tuần này'}</h3>${real?(()=>{const todo=[...B.filter(b=>b.x.canhBao).map(b=>`<li><span class="alertTxt">⚠ ${esc(b.hoTen)}: ${esc(b.x.canhBao)}</span></li>`),...B.filter(b=>b.x.lichHen).map(b=>`<li><b>${esc(b.hoTen)}</b>: ${esc(b.x.lichHen)}</li>`),...B.filter(b=>b.no).sort((a,b)=>b.no-a.no).map(b=>`<li>Nhắc công nợ <b class="warnTxt">${TR(b.no)}</b> · ${esc(b.hoTen)} (${esc(b.sp)})</li>`),...B.filter(b=>!b.sdt).map(b=>`<li><span class="warnTxt">Bổ sung số điện thoại</span> · ${esc(b.hoTen)}</li>`)];return todo.length?`<ul class="chk2">${todo.join('')}</ul>`:'<p class="mut">Không có việc tồn.</p>'})():hbars([['Cuộc gọi chăm sóc',P[2],'#3b82f6'],['Tin nhắn Zalo đã trả lời',P[2]*4,'#0ea5e9'],['Nhắc đóng học phí',Math.round(B.filter(b=>b.no).length*.8),'#fb923c'],['Ghi nhật ký chăm sóc',Math.round(P[2]*.9),'#34d399']],'#6366f1',v=>v)}</div></div>
  <h3>Các lớp đang chăm sóc <span class="mut sm" style="font-weight:400">· bấm vào lớp để xem danh sách</span></h3>
- <div class="camps">${Object.entries(cls).map(([k,v])=>{const r=v.reduce((a,b)=>a+b.gia,0),d=v.reduce((a,b)=>a+b.no,0),pd=v.reduce((a,b)=>a+b.daThu,0);return `<button class="camp ${sel===k?'on':''}" data-scls="${esc(k)}" style="--c:#22b062"><b>${esc(k)}</b><div class="campn"><span><b>${v.length}</b> học viên</span><span><b>${TR(r)}</b> doanh thu</span><span class="warnTxt">Công nợ ${TR(d)}</span></div><i style="width:${(pd/r*100).toFixed(0)}%"></i></button>`}).join('')}</div>
+ <div class="camps">${Object.entries(cls).map(([k,v])=>{const r=v.reduce((a,b)=>a+b.gia,0),d=v.reduce((a,b)=>a+b.no,0),pd=v.reduce((a,b)=>a+b.daThu,0);return `<button class="camp ${sel===k?'on':''}" data-scls="${esc(k)}" style="--c:#22b062"><b>${esc(k)}</b><div class="campn"><span><b>${v.length}</b> học viên</span><span><b>${TR(real?pd:r)}</b> ${real?'đã thu':'doanh thu'}</span><span class="warnTxt">Công nợ ${TR(d)}</span></div><i style="width:${r?(pd/r*100).toFixed(0):0}%"></i></button>`}).join('')}</div>
  ${sel?(()=>{const v=cls[sel],r=v.reduce((a,b)=>a+b.gia,0),pd=v.reduce((a,b)=>a+b.daThu,0),d=v.reduce((a,b)=>a+b.no,0);
   return `<div class="panel" style="margin-top:14px"><h3>${esc(sel)} · ${esc(name)} phụ trách</h3>
-  ${kpi([[v.length,'Học viên'],[TR(r),'Doanh thu','#34d399'],[TR(pd),'Đã thu'],[TR(d),'Công nợ','#fb923c'],[v.filter(b=>b.tt==='full').length,'Đóng đủ'],[v.filter(b=>b.tt==='coc').length,'Đặt cọc','#fb923c'],[Math.round(pd/r*100)+'%','Tỷ lệ đã thu'],[v.filter(b=>b.nhatKy.length>1).length,'Đã chăm sóc từ 2 lần']])}
+  ${kpi([[v.length,'Học viên'],[TR(r),'Doanh thu','#34d399'],[TR(pd),'Đã thu'],[TR(d),'Công nợ','#fb923c'],[v.filter(b=>b.tt==='full').length,'Đóng đủ'],[v.filter(b=>b.tt==='coc').length,'Đặt cọc','#fb923c'],[r?Math.round(pd/r*100)+'%':'—','Tỷ lệ đã thu'],real?[v.filter(b=>b.tt==='chua'||b.tt==='baoluu').length,'Chưa đóng / bảo lưu']:[v.filter(b=>b.nhatKy.length>1).length,'Đã chăm sóc từ 2 lần']])}
   <div class="widewrap"><table class="wide"><thead><tr><th>Học viên</th><th>Điện thoại</th><th>Email</th><th>Thanh toán</th><th>Đã thu</th><th>Công nợ</th><th>Hạn đóng</th><th>Ghi chú chăm sóc gần nhất</th><th>Hồ sơ</th></tr></thead><tbody>
-  ${v.slice().sort((a,b)=>b.no-a.no).map(b=>{const lc=b.nhatKy[b.nhatKy.length-1];return `<tr><td class="stick"><button class="who linkbtn" data-buyer="${b.id}"><img class="ava tbimg" src="${face(b.face)}" alt=""><span><b>${esc(b.hoTen)}</b><br><small class="mut">${esc(b.congViec)}</small></span></button></td><td class="nw"><a class="mini" href="tel:${b.sdt}">${b.sdt}</a></td><td>${esc(b.email)}</td><td>${b.tt==='full'?pill('Đã đóng đủ','#34d399'):pill('Đặt cọc','#fb923c')}</td><td class="nw">${TR(b.daThu)}</td><td class="nw">${b.no?`<b class="warnTxt">${TR(b.no)}</b>`:'0'}</td><td class="nw">${b.hanTT?fmtD(b.hanTT):''}</td><td class="tx">${fmtD(lc.ngay)} · ${esc(lc.noiDung)}</td><td><button class="btn sm" data-buyer="${b.id}">Xem</button></td></tr>`}).join('')}</tbody></table></div></div>`})():''}
+  ${v.slice().sort((a,b)=>b.no-a.no).map(b=>{const lc=b.nhatKy[b.nhatKy.length-1]||{ngay:'',noiDung:''};return `<tr><td class="stick">${buyerWho(b)}</td><td class="nw">${b.sdt?`<a class="mini" href="tel:${esc(b.sdt)}">${esc(b.sdt)}</a>`:'<span class="warnTxt">Chưa có</span>'}</td><td>${esc(b.email)}</td><td>${ttPill(b.tt)}</td><td class="nw">${TR(b.daThu)}</td><td class="nw">${b.no?`<b class="warnTxt">${TR(b.no)}</b>`:'0'}</td><td class="nw">${b.hanTT?fmtD(b.hanTT):''}</td><td class="tx">${fmtD(lc.ngay)} · ${esc(lc.noiDung)}</td><td>${buyerBtn(b)}</td></tr>`}).join('')}</tbody></table></div></div>`})():''}
  </section>`;
+}
+function realRevenue(){
+ const cs=realCamps().map(c=>({...c,...campTotals(c)})),B=cs.flatMap(c=>c.buyers_list);
+ const paid=B.reduce((a,b)=>a+b.daThu,0),debt=B.reduce((a,b)=>a+b.no,0);
+ const sel=cs.find(c=>c.id===S.camp)||(cs.length===1?cs[0]:null);
+ const ORD=['full','coc','chua','baoluu'],grp=[];
+ cs.forEach(c=>c.prods.forEach(([pn])=>ORD.forEach(k=>{const xs=c.buyers_list.filter(b=>b.sp===pn&&b.tt===k);if(xs.length)grp.push([`${esc(pn)} · ${esc(payName(k).toLowerCase())}${cs.length>1?'<br><small class="mut">'+esc(c.name)+'</small>':''}`,xs.length,xs.reduce((a,b)=>a+b.daThu,0),xs.reduce((a,b)=>a+b.no,0)])})));
+ const byStaff=S.staff.map(n=>{const xs=B.filter(b=>b.phuTrach.includes(n));return [n,xs.reduce((a,b)=>a+b.daThu,0),xs.reduce((a,b)=>a+b.no,0),xs.length]}).filter(r=>r[3]);
+ return `<p class="mut" style="margin:0 0 10px">Số liệu thật từ hồ sơ học viên trong CRM. Mỗi hồ sơ ghi rõ <b>chương trình / chiến dịch</b> mang lại doanh thu. Sửa học phí, số tiền đã đóng ngay trong hồ sơ hoặc ở Bảng đầy đủ.</p>
+ ${kpi([[TR(paid),'Đã thu','#34d399'],[TR(debt),'Công nợ cần thu','#fb923c'],[TR(paid+debt),'Tổng giá trị đăng ký'],[B.length,'Lượt đăng ký'],[new Set(B.map(b=>b.sdt||b.hoTen)).size,'Học viên'],[cs.length,'Chương trình có doanh thu']])}
+ <div class="panel" style="margin-bottom:16px"><h3>Báo cáo theo khóa học đăng ký</h3>${tbl(['Khóa học đăng ký','Số lượng','Đã thu','Công nợ cần thu'],grp.map(r=>[`<b>${r[0]}</b>`,r[1],TR(r[2]),r[3]?`<span class="warnTxt">${TR(r[3])}</span>`:'0']).concat([['<b>Tổng cộng</b>',`<b>${B.length}</b>`,`<b>${TR(paid)}</b>`,`<b class="warnTxt">${TR(debt)}</b>`]])).replace('class="wide simple"','class="wide simple rpt"')}</div>
+ <h3>Theo chương trình / chiến dịch ${cs.length>1?'<span class="mut sm" style="font-weight:400">· bấm để xem chi tiết</span>':''}</h3>
+ <div class="camps">${cs.map(c=>`<button class="camp ${sel&&sel.id===c.id?'on':''}" data-camp="${c.id}" style="--c:${c.color}"><span class="mut sm">${esc(c.type)}${c.time?' · '+esc(c.time):''}</span><b>${esc(c.name)}</b><div class="campn"><span><b>${TR(c.paid)}</b> đã thu</span><span><b>${c.buyers}</b> lượt đăng ký</span><span class="warnTxt">Công nợ ${TR(c.debt)}</span></div><i style="width:${c.rev?(c.paid/c.rev*100).toFixed(0):0}%"></i></button>`).join('')}</div>
+ ${sel?campDetail(sel):`<div class="panel empty" style="margin-top:12px">Bấm vào một chương trình ở trên để xem sản phẩm bán ra, công nợ và danh sách học viên.</div>`}
+ <div class="grid2" style="margin-top:18px"><div class="panel"><h3>Đã thu theo sản phẩm</h3>${hbars([...new Set(B.map(b=>b.sp))].map(p=>[p,B.filter(b=>b.sp===p).reduce((a,b)=>a+b.daThu,0),'#c026d3']),'#6366f1',TR)}</div>
+ <div class="panel"><h3>Theo người phụ trách</h3>${tbl(['Nhân sự','Lượt','Đã thu','Công nợ'],byStaff.map(r=>[`<b>${esc(r[0])}</b>`,r[3],TR(r[1]),`<span class="warnTxt">${TR(r[2])}</span>`]))}</div></div>`;
 }
 const MOD_DEMO={
 'marketing':()=>{
@@ -915,6 +967,7 @@ const MOD_DEMO={
  return `<p class="mut">Mỗi quy trình là các bước nối tiếp, ghi rõ ai làm. Bước có dấu ✓ là đã xong trong đợt hiện tại.</p><div class="grid2">${P.map(([t,c,st])=>`<div class="panel" style="border-top:4px solid ${c}"><h3>${esc(t)}</h3><div class="mut sm" style="margin-bottom:8px">${st.filter(x=>x[2]).length}/${st.length} bước đã xong</div>${steps(st)}</div>`).join('')}</div>`;
 },
 'doanh-thu':()=>{
+ if(hasReal())return realRevenue();
  const months=[['T12',1.85e9],['T1',0.95e9],['T2',1.6e9],['T3',3.4e9,1],['T4',1.7e9],['T5',2.1e9],['T6',3.9e9,1],['T7',1.5e9],['T8',1.8e9],['T9',2.4e9],['T10',4.6e9,1],['T11',2.3e9]];
  const total=months.reduce((a,b)=>a+b[1],0),C=campDemo();
  const cs=C.map(c=>{const t=campTotals(c);return {...c,...t}});
@@ -977,14 +1030,14 @@ function personaPanel(){
  ${kpi([[avg?avg+' tuổi':'—','Tuổi trung bình'],[ages.length?Math.round(over40/ages.length*100)+'%':'—','Từ 40 tuổi trở lên'],[L.filter(x=>+x.aiLevel<=2).length,'Mới làm quen AI (cấp 1–2)','#fb923c'],[Object.keys(city).length,'Tỉnh/thành']])}
  <div class="grid2"><div class="panel"><h3>Mức độ dùng AI</h3>${hbars(ai,'#6366f1',v=>v+' người')}</div><div class="panel"><h3>Vai trò công việc</h3>${hbars(Object.entries(role).sort((a,b)=>b[1]-a[1]).slice(0,6).map(([k,v])=>[k,v,'#3b82f6']),'#3b82f6',v=>v+' người')}</div></div>`;
 }
-function vModule(m){const d=MOD_DEMO[m.id];return `<div class="band"><h2>Ô ${m.n} · ${m.name}</h2>${d?sampleNote+d():''}<details class="morebox"><summary>Các nhánh của ô này (theo buổi họp 21/11)</summary>${subsHTML(m)}</details></div>`}
+function vModule(m){const d=MOD_DEMO[m.id],rl=m.id==='doanh-thu'&&hasReal();return `<div class="band"><h2>Ô ${m.n} · ${m.name}</h2>${d?(rl?'':sampleNote)+d():''}<details class="morebox"><summary>Các nhánh của ô này (theo buổi họp 21/11)</summary>${subsHTML(m)}</details></div>`}
 
 function vStaff(){
  return `<div class="band"><h2>Ô 6 · Nhân sự</h2><p class="mut" style="margin:0 0 14px">Danh sách người phụ trách chăm sóc học viên. Ai có trong danh sách này sẽ hiện để tích chọn trong hồ sơ.</p>
  <div class="panel" style="max-width:560px">${S.staff.map((s,i)=>{const n=S.list.filter(x=>arr(x.phuTrach).includes(s)).length;return `<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid #1c2a5c"><b style="flex:1">${esc(s)}</b><span class="mut" style="font-size:14px">${n} học viên</span>${S.canWrite?`<button class="btn ghost sm" data-delstaff="${i}">Bỏ</button>`:''}</div>`}).join('')}
  ${S.canWrite?`<form id="staffForm" class="bar" style="margin-top:12px"><input class="inp" id="newStaff" placeholder="Tên nhân sự mới" style="flex:1"><button class="btn">Thêm</button></form>`:''}</div>
- <h3 style="margin-top:22px">Báo cáo theo nhân sự <span class="mut sm" style="font-weight:400">· bấm vào người để xem báo cáo</span></h3>${sampleNote}
- <div class="camps">${S.staff.map(n=>{const B=campDemo().flatMap(c=>c.buyers_list).filter(b=>b.phuTrach.includes(n)),r=B.reduce((a,b)=>a+b.gia,0),d=B.reduce((a,b)=>a+b.no,0),role={'Kim Anh':'Chăm sóc khách hàng','Mỹ Linh':'Chăm sóc khách hàng','Oanh':'Vận hành, admin CRM'}[n]||'Nhân sự';return `<button class="camp ${S.staffSel===n?'on':''}" data-staff="${esc(n)}" style="--c:#22b062"><span class="mut sm">${role}</span><b>${esc(n)}</b><div class="campn"><span><b>${B.length}</b> học viên</span><span><b>${TR(r)}</b> doanh thu</span><span class="warnTxt">Công nợ ${TR(d)}</span></div><i style="width:${r?((r-d)/r*100).toFixed(0):0}%"></i></button>`}).join('')}</div>
+ <h3 style="margin-top:22px">Báo cáo theo nhân sự <span class="mut sm" style="font-weight:400">· bấm vào người để xem báo cáo</span></h3>${hasReal()?'':sampleNote}
+ <div class="camps">${S.staff.map(n=>{const B=staffBuyers().filter(b=>b.phuTrach.includes(n)),r=B.reduce((a,b)=>a+b.gia,0),d=B.reduce((a,b)=>a+b.no,0),role={'Kim Anh':'Chăm sóc khách hàng','Mỹ Linh':'Chăm sóc khách hàng','Oanh':'Vận hành, admin CRM'}[n]||'Nhân sự';return `<button class="camp ${S.staffSel===n?'on':''}" data-staff="${esc(n)}" style="--c:#22b062"><span class="mut sm">${role}</span><b>${esc(n)}</b><div class="campn"><span><b>${B.length}</b> ${hasReal()?'lượt đăng ký':'học viên'}</span><span><b>${TR(r-d)}</b> đã thu</span><span class="warnTxt">Công nợ ${TR(d)}</span></div><i style="width:${r?((r-d)/r*100).toFixed(0):0}%"></i></button>`}).join('')}</div>
  ${S.staffSel?staffReport(S.staffSel):''}
  <h3 style="margin-top:18px">Đào tạo nhân sự mới</h3><div class="panel" style="max-width:640px">${steps([['Đọc quy trình chăm sóc học viên Diamond','Ngày 1',1],['Xem 3 buổi Zoom gần nhất','Ngày 1–2',1],['Thực hành CRM: lọc, sửa trạng thái, ghi nhật ký','Ngày 2',0],['Gọi thử 5 học viên cùng trưởng nhóm','Ngày 3',0],['Tự phụ trách 10 học viên','Tuần 2',0]])}</div>
  <details class="morebox"><summary>Các nhánh khác (đang xây dần)</summary>${subsHTML({cc:'#22b062',subs:[['Phân quyền','Phần nào nhân sự được xem, phần nào không.']]})}</details></div>`;
@@ -1002,8 +1055,29 @@ function openDrawer(id){
  const x=S.list.find(r=>r.id===id);if(!x)return;S.open=id;const w=true;
  const kv=(k,v)=>v&&String(v).trim()?`<dt>${k}</dt><dd>${esc(Array.isArray(v)?v.join(', '):v)}</dd>`:'';
  const zl=safeUrl(x.zaloGroup);
- $('#drawer').innerHTML=`<div class="dh">${ava(x)}<div style="flex:1"><h3>${esc(x.hoTen)} ${x.mau?'<span class="tag mau">Mẫu</span>':''}</h3><div class="mut">${esc(x.sdt)} · ${esc(x.email||'')}</div><div style="margin-top:6px"><span class="st" style="--sc:${stColor(x.trangThai)}">${esc(x.trangThai||'Mới đăng ký')}</span> ${zl?`<a href="${esc(zl)}" target="_blank" rel="noopener">Nhóm Zalo ↗</a>`:''}</div></div><button class="btn ghost sm" id="closeD" aria-label="Đóng">Đóng</button></div>
+ $('#drawer').innerHTML=`<div class="dh">${ava(x)}<div style="flex:1"><h3>${esc(x.hoTen)} ${x.mau?'<span class="tag mau">Mẫu</span>':''}</h3><div class="mut">${[x.sdt,x.email].filter(Boolean).map(esc).join(' · ')||'<span class="warnTxt">Chưa có số điện thoại</span>'}</div><div style="margin-top:6px"><span class="st" style="--sc:${stColor(x.trangThai)}">${esc(x.trangThai||'Mới đăng ký')}</span> ${zl?`<a href="${esc(zl)}" target="_blank" rel="noopener">Nhóm Zalo ↗</a>`:''}</div></div><button class="btn ghost sm" id="closeD" aria-label="Đóng">Đóng</button></div>
  <div class="dbody">
+ <div class="panel"><h3>Thanh toán &amp; công nợ</h3>
+  ${x.canhBao?`<p class="alertTxt" style="margin:0 0 10px">⚠ ${esc(x.canhBao)}</p>`:''}
+  <div class="paysum"><div><b>${TR(phaiThu(x))}</b><span>Phải thu (học phí − khấu trừ)</span></div><div><b style="color:#34d399">${TR(n0(x.daDong))}</b><span>Đã thu</span></div><div><b style="color:var(--warn)">${TR(congNo(x))}</b><span>Công nợ</span></div></div>
+  <div class="grid2">
+   <div style="grid-column:1/-1"><label class="mut" for="pCt">Chương trình / chiến dịch mang lại doanh thu</label><input class="inp" id="pCt" style="width:100%" placeholder="Ví dụ: Offline CMA Trainer 12–15/11/2026" value="${esc(x.chuongTrinh||'')}"></div>
+   <div><label class="mut" for="pTT">Tình trạng thanh toán</label><select class="inp" id="pTT" style="width:100%"><option value="">Tự tính theo số tiền</option>${PAY_ST.map(p=>`<option ${x.ttTT===p[0]?'selected':''}>${p[0]}</option>`).join('')}</select></div>
+   <div><label class="mut" for="pHan">Hạn đóng nốt</label><input class="inp" type="date" id="pHan" style="width:100%" value="${esc(x.hanTT||'')}"></div>
+   <div><label class="mut" for="pHP">Học phí</label><input class="inp" id="pHP" style="width:100%" inputmode="numeric" placeholder="vd: 300tr" value="${n0(x.hocPhi)?VND(n0(x.hocPhi)):''}"></div>
+   <div><label class="mut" for="pKT">Khấu trừ (đã đóng khóa trước…)</label><input class="inp" id="pKT" style="width:100%" inputmode="numeric" placeholder="vd: 60tr" value="${n0(x.khauTru)?VND(n0(x.khauTru)):''}"></div>
+   <div><label class="mut" for="pDD">Đã thu</label><input class="inp" id="pDD" style="width:100%" inputmode="numeric" placeholder="vd: 10tr" value="${n0(x.daDong)?VND(n0(x.daDong)):''}"></div>
+   <div><label class="mut" for="pDH">Diamond đồng hành</label><input class="inp" id="pDH" style="width:100%" value="${esc(x.dongHanh||'')}"></div>
+   <div style="grid-column:1/-1"><label class="mut" for="pLH">Lịch hẹn (Zoom với BTC…)</label><input class="inp" id="pLH" style="width:100%" value="${esc(x.lichHen||'')}"></div>
+   <div style="grid-column:1/-1"><label class="mut" for="pCB">Lưu ý thanh toán (hoàn tiền, chuyển nhầm tài khoản…)</label><input class="inp" id="pCB" style="width:100%" value="${esc(x.canhBao||'')}"></div>
+   <div style="grid-column:1/-1"><label class="mut" for="pNote">Ghi chú thanh toán</label><textarea class="inp" id="pNote">${esc(x.ghiChuTT||'')}</textarea></div>
+  </div>
+  <button class="btn sm" id="pSave" style="margin-top:10px">Lưu thanh toán</button>
+  <h3 style="margin-top:16px">Lịch sử đóng tiền</h3>
+  <ul class="tl">${arr(x.lichSuTT).slice().reverse().map(p=>`<li style="--tc:#34d399"><b>${VND(n0(p.soTien))}</b> · ${esc(p.noiDung)}<small>${fmtD(p.ngay)}</small></li>`).join('')||'<li><small>Chưa ghi khoản nào.</small></li>'}</ul>
+  <form class="bar" id="payForm"><input class="inp" type="date" id="payDate" value="${today()}" aria-label="Ngày đóng"><input class="inp" id="payAmt" placeholder="Số tiền, vd: 20tr" inputmode="numeric" style="width:150px"><input class="inp" id="payTxt" placeholder="Nội dung chuyển khoản" style="flex:1 1 160px"><button class="btn sm">Ghi khoản đóng</button></form>
+  <p class="mut sm" style="margin:6px 0 0">Ghi khoản đóng sẽ tự cộng vào "Đã thu" và tự chuyển sang "Đã đóng đủ" khi hết công nợ.</p>
+ </div>
  <div class="panel"><h3>Chăm sóc</h3>
   <div class="fld"><label class="mut" for="dSt">Trạng thái</label><select class="inp" id="dSt" ${w?'':'disabled'} style="width:100%">${STATUS.map(([s])=>`<option ${x.trangThai===s?'selected':''}>${s}</option>`).join('')}</select></div>
   <div style="margin:12px 0 6px" class="mut">Người phụ trách (tích chọn được nhiều người)</div>
@@ -1013,6 +1087,8 @@ function openDrawer(id){
    <div><label class="mut" for="dNam">Năm</label><select class="inp" id="dNam" style="width:100%" ${w?'':'disabled'}>${YEARS.map(y=>`<option ${String(x.nam||'2026')===y?'selected':''}>${y}</option>`).join('')}</select></div>
    <div><label class="mut" for="dNhom">Nhóm (Diamond)</label><select class="inp" id="dNhom" style="width:100%" ${w?'':'disabled'}><option value="">Chưa xếp nhóm</option>${GROUPS.map(g=>`<option ${x.nhom===g?'selected':''}>${g}</option>`).join('')}</select></div>
    <div><label class="mut" for="dZalo">Link nhóm Zalo</label><input class="inp" id="dZalo" style="width:100%" placeholder="https://zalo.me/g/..." value="${esc(x.zaloGroup||'')}" ${w?'':'disabled'}></div>
+   <div><label class="mut" for="dCccd">Số CCCD</label><input class="inp" id="dCccd" style="width:100%" value="${esc(x.cccd||'')}"></div>
+   <div><label class="mut" for="dDc">Địa chỉ</label><input class="inp" id="dDc" style="width:100%" value="${esc(x.diaChi||'')}"></div>
   </div>
   <div style="margin-top:12px"><label class="mut" for="dNote">Ghi chú nội bộ</label><textarea class="inp" id="dNote" ${w?'':'disabled'}>${esc(x.ghiChu||'')}</textarea></div>
   ${w?'<div style="margin-top:12px;display:flex;gap:10px;flex-wrap:wrap"><button class="btn" id="dSave">Lưu thay đổi</button></div>':''}
@@ -1151,9 +1227,11 @@ document.addEventListener('click',async e=>{
  if(t.dataset.delstaff!==undefined){await saveStaff(S.staff.filter((_,i)=>i!==+t.dataset.delstaff));return}
  const id=S.open;if(!id)return;const x=S.list.find(r=>r.id===id);if(!x)return;
  if(t.id==='dSave'){const z=$('#dZalo').value.trim();if(z&&!safeUrl(z))return toast('Link Zalo phải bắt đầu bằng https://',true);
-  const p={trangThai:$('#dSt').value,phuTrach:[...document.querySelectorAll('#dPt input:checked')].map(i=>i.value),khoa:$('#dKhoa').value,nam:$('#dNam').value,nhom:$('#dKhoa').value==='Diamond'?$('#dNhom').value:'',zaloGroup:z,ghiChu:$('#dNote').value.trim()};
+  const p={trangThai:$('#dSt').value,phuTrach:[...document.querySelectorAll('#dPt input:checked')].map(i=>i.value),khoa:$('#dKhoa').value,nam:$('#dNam').value,nhom:$('#dKhoa').value==='Diamond'?$('#dNhom').value:'',zaloGroup:z,ghiChu:$('#dNote').value.trim(),cccd:$('#dCccd').value.trim(),diaChi:$('#dDc').value.trim()};
   if(p.trangThai!==x.trangThai)p.hanhTrinh=[...arr(x.hanhTrinh),{ngay:today(),noiDung:'Chuyển trạng thái: '+p.trangThai}];
   await patch(id,p,'Đã lưu hồ sơ');openDrawer(id);return}
+ if(t.id==='pSave'){const m={};for(const [k,el] of [['hocPhi','#pHP'],['khauTru','#pKT'],['daDong','#pDD']]){const v=parseMoney($(el).value);if(isNaN(v))return toast('Số tiền chưa đúng. Ví dụ: 240tr hoặc 240000000',true);m[k]=v}
+  await patch(id,{...m,chuongTrinh:$('#pCt').value.trim(),ttTT:$('#pTT').value,hanTT:$('#pHan').value,dongHanh:$('#pDH').value.trim(),lichHen:$('#pLH').value.trim(),canhBao:$('#pCB').value.trim(),ghiChuTT:$('#pNote').value.trim()},'Đã lưu thanh toán');openDrawer(id);return}
  if(t.id==='tdSave'){const td={};document.querySelectorAll('[data-m]').forEach(a=>{if(a.value.trim())td[a.dataset.m]=a.value.trim()});await patch(id,{tienDo:td},'Đã lưu tiến độ');openDrawer(id);return}
  if(t.id==='dDel'){if(t.dataset.sure){try{if(!isDemo(id))await api('record_delete',{id});S.real=S.real.filter(r=>r.id!==id);if(isDemo(id))DEMO_CACHE=DEMO_CACHE.filter(r=>r.id!==id);mergeList();closeDrawer();render();toast('Đã xóa hồ sơ')}catch(err){toast(err.message,true)}}else{t.dataset.sure=1;t.textContent='Bấm lần nữa để xóa hẳn'}return}
 });
@@ -1165,6 +1243,7 @@ document.addEventListener('submit',async e=>{
   try{await api('form_save',body);closeDrawer();await reload();toast('Đã lưu form. Bấm "Sao chép link" để gửi học viên.')}catch(err){toast(err.message,true)}return}
  if(f.id==='staffForm'){const n=$('#newStaff').value.trim();if(!n||S.staff.includes(n))return;await saveStaff([...S.staff,n]);return}
  const id=S.open,x=S.list.find(r=>r.id===id);if(!x)return;
+ if(f.id==='payForm'){const amt=parseMoney($('#payAmt').value);if(!amt||isNaN(amt))return toast('Nhập số tiền, ví dụ 20tr',true);const nx={...x,daDong:n0(x.daDong)+amt};const p={daDong:nx.daDong,lichSuTT:[...arr(x.lichSuTT),{ngay:$('#payDate').value||today(),soTien:String(amt),noiDung:$('#payTxt').value.trim()||'Đóng học phí'}]};if(x.ttTT!=='Bảo lưu / chưa chốt')p.ttTT=phaiThu(x)&&congNo(nx)===0?'Đã đóng đủ':'Đặt cọc';await patch(id,p,'Đã ghi khoản đóng '+TR(amt));openDrawer(id);return}
  if(f.id==='jForm'){const tx=$('#jTxt').value.trim();if(!tx)return;await patch(id,{hanhTrinh:[...arr(x.hanhTrinh),{ngay:$('#jDate').value||today(),noiDung:tx}]},'Đã thêm mốc hành trình');openDrawer(id)}
  if(f.id==='nkForm'){const tx=$('#nkTxt').value.trim();if(!tx)return;await patch(id,{nhatKy:[...arr(x.nhatKy),{ngay:today(),nguoi:$('#nkWho').value,noiDung:tx}]},'Đã ghi nhật ký');openDrawer(id)}
 });
@@ -1178,6 +1257,7 @@ document.addEventListener('change',async e=>{
  if(e.target.id==='fst'){S.f.st=e.target.value;render()}
  if(e.target.id==='fpt'){S.f.pt=e.target.value;render()}
  if(e.target.id==='fform'){S.f.form=e.target.value;render()}
+ if(e.target.id==='ftt'){S.f.tt=e.target.value;render()}
  if(e.target.id==='calSel'){S.calM=e.target.value;render()}
  if(['bsp','btt','bpt','bsort'].includes(e.target.id)){S.bf[{bsp:'sp',btt:'tt',bpt:'pt',bsort:'sort'}[e.target.id]]=e.target.value;render()}
  if(e.target.id==='ckhoa'){S.cf.khoa=e.target.value;render()}

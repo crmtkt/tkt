@@ -10,7 +10,7 @@ const STAFF_DEFAULT = ['Kim Anh', 'Mỹ Linh', 'Oanh'];
 
 const COLS = {
   forms: ['id', 'slug', 'ten', 'khoa', 'nam', 'mau', 'moTa', 'mo', 'createdAt'],
-  records: ['id', 'formId', 'hoTen', 'sdt', 'email', 'trangThai', 'phuTrach', 'createdAt', 'updatedAt', 'data', 'anh'],
+  records: ['id', 'formId', 'hoTen', 'sdt', 'email', 'trangThai', 'phuTrach', 'createdAt', 'updatedAt', 'data', 'anh', 'anh2', 'anh3', 'anh4'],
   settings: ['k', 'v'],
 };
 const ANSWER_KEYS = ['hoTen','namSinh','sdt','email','thanhPho','congViec','vaiTro','khoaDaHoc','lyDo','vanDe','mongMuon','ketQua','ngaiNgai','sanPhamRieng','thoiGian','aiLevel','aiTools','aiDaLam','aiMuon','dongY'];
@@ -21,6 +21,11 @@ const REQUIRED = {
 const LABELS = {hoTen:'họ tên',namSinh:'năm sinh',sdt:'số điện thoại',email:'email',congViec:'công việc',khoaDaHoc:'các khóa đã và đang học',lyDo:'lý do đăng ký',vanDe:'vấn đề cần hỗ trợ',mongMuon:'mong muốn',aiLevel:'mức độ AI',dongY:'ô đồng ý'};
 const STATUSES = ['Mới đăng ký','Đã liên hệ','Đã vào nhóm Zalo','Đang học','Cần chăm sóc gấp','Tạm dừng','Hoàn thành'];
 const PAY_ST = ['Đã đóng đủ', 'Đặt cọc', 'Chưa đóng', 'Bảo lưu / chưa chốt'];
+// Ảnh chân dung rõ nét: tối đa ~190.000 ký tự, chia vào 4 ô (mỗi ô Google Sheet giới hạn 50.000 ký tự).
+const PHOTO_MAX = 190000, PHOTO_CH = 48000, PHOTO_COLS = ['anh', 'anh2', 'anh3', 'anh4'];
+function photoOk_(a) { return typeof a === 'string' && a.length <= PHOTO_MAX && /^data:image\/jpeg;base64,[A-Za-z0-9+/=]+$/.test(a); }
+function setPhoto_(r, a) { PHOTO_COLS.forEach((k, i) => r[k] = a.slice(i * PHOTO_CH, (i + 1) * PHOTO_CH)); }
+function getPhoto_(r) { return PHOTO_COLS.map(k => r[k] || '').join(''); }
 function money_(v) { const n = Math.round(Number(v) || 0); return n > 0 && n < 1e11 ? n : 0; }
 const COURSE = {Diamond: 'CMA Diamond', Trainer: 'CMA Trainer'};
 
@@ -46,6 +51,7 @@ function rows_(name) {
 function put_(name, o) {
   const cols = COLS[name], vals = cols.map(c => o[c] === undefined || o[c] === null ? '' : String(o[c]));
   const s = sheet_(name);
+  if (s.getLastColumn() < cols.length) s.getRange(1, 1, 1, cols.length).setValues([cols]).setFontWeight('bold');
   if (o._row) s.getRange(o._row, 1, 1, cols.length).setValues([vals]);
   else { s.appendRow(vals); }
 }
@@ -127,6 +133,7 @@ function crm_(p) {
   if ('hanhTrinh' in p) o.hanhTrinh = entries_(p.hanhTrinh, ['ngay', 'noiDung']);
   if ('nhatKy' in p) o.nhatKy = entries_(p.nhatKy, ['ngay', 'nguoi', 'noiDung']);
   ['chuongTrinh', 'dongHanh', 'lichHen', 'canhBao', 'cccd', 'diaChi', 'ghiChuTT'].forEach(k => { if (k in p) o[k] = str_(p[k], 2000); });
+  if ('phieuOffline' in p) o.phieuOffline = str_(p.phieuOffline, 12000);
   if ('ttTT' in p) o.ttTT = PAY_ST.indexOf(p.ttTT) >= 0 ? p.ttTT : '';
   if ('hanTT' in p) o.hanTT = /^\d{4}-\d{2}-\d{2}$/.test(String(p.hanTT)) ? String(p.hanTT) : '';
   ['hocPhi', 'khauTru', 'daDong'].forEach(k => { if (k in p) o[k] = money_(p[k]); });
@@ -179,7 +186,7 @@ function route_(b) {
       }
       case 'photos': {
         const ids = list_(b.ids, 40, 40), map = {};
-        rows_('records').forEach(r => { if (ids.indexOf(r.id) >= 0 && r.anh) map[r.id] = r.anh; });
+        rows_('records').forEach(r => { if (ids.indexOf(r.id) >= 0 && r.anh) map[r.id] = getPhoto_(r); });
         return out_({ok: true, photos: map});
       }
       case 'form_save': {
@@ -218,17 +225,23 @@ function route_(b) {
         if (sd && !/^\+?\d{9,12}$/.test(sd)) return fail_('Số điện thoại chưa đúng.');
         if (A.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(A.email)) return fail_('Email chưa đúng.');
         const anh = typeof b.anh === 'string' ? b.anh : '';
-        if (anh && (!/^data:image\/jpeg;base64,[A-Za-z0-9+/=]+$/.test(anh) || anh.length > 49000)) return fail_('Ảnh chưa hợp lệ.');
+        if (anh && !photoOk_(anh)) return fail_('Ảnh chưa hợp lệ.');
         const C = crm_(P), key = d => [phone_(d.sdt) || String(d.hoTen || '').toLowerCase(), d.khoa || '', d.nhom || '', d.chuongTrinh || ''].join('|');
         const nd = Object.assign({khoa: 'Diamond', nam: '2026', nhom: '', trangThai: 'Mới đăng ký', phuTrach: [], hanhTrinh: [], nhatKy: [], tienDo: {}}, A, C);
         nd.sdt = sd;
         const fid = str_(b.formId, 32);
         let r = rows_('records').filter(x => { let d = {}; try { d = JSON.parse(x.data || '{}'); } catch (e) {} return key(d) === key(nd); })[0];
-        if (r) { let d = {}; try { d = JSON.parse(r.data || '{}'); } catch (e) {} nd.hanhTrinh = C.hanhTrinh || d.hanhTrinh || []; r.data = JSON.stringify(Object.assign(d, nd)); if (anh) r.anh = anh; }
-        else r = {id: uid_(), formId: fid, createdAt: now_(), anh: anh, data: JSON.stringify(nd)};
+        if (r) { let d = {}; try { d = JSON.parse(r.data || '{}'); } catch (e) {} nd.hanhTrinh = C.hanhTrinh || d.hanhTrinh || []; r.data = JSON.stringify(Object.assign(d, nd)); if (anh) setPhoto_(r, anh); }
+        else { r = {id: uid_(), formId: fid, createdAt: now_(), data: JSON.stringify(nd)}; setPhoto_(r, anh); }
         const d = JSON.parse(r.data);
         Object.assign(r, {hoTen: d.hoTen, sdt: phone_(d.sdt), email: d.email || '', trangThai: d.trangThai || '', phuTrach: (d.phuTrach || []).join(', '), updatedAt: now_()});
         put_('records', r); return out_({ok: true, record: recOut_(r)});
+      }
+      case 'photo_save': {
+        const r = rows_('records').filter(x => x.id === str_(b.id, 32))[0]; if (!r) return fail_('Không tìm thấy hồ sơ.', 404);
+        if (!photoOk_(b.anh)) return fail_('Ảnh chưa hợp lệ hoặc quá lớn.');
+        setPhoto_(r, b.anh); r.updatedAt = now_(); put_('records', r);
+        return out_({ok: true});
       }
       case 'record_delete': {
         const r = rows_('records').filter(x => x.id === str_(b.id, 32))[0]; if (r) sheet_('records').deleteRow(r._row);
@@ -256,7 +269,7 @@ function submit_(b) {
     const v = ans[k]; if (v === undefined || v === '' || v === false || v === 0) return fail_('Vui lòng điền ' + (LABELS[k] || k) + '.');
   }
   if (f.mau === 'hocvien' && !anh) return fail_('Vui lòng chọn ảnh chân dung.');
-  if (anh && (!/^data:image\/jpeg;base64,[A-Za-z0-9+/=]+$/.test(anh) || anh.length > 49000)) return fail_('Ảnh chưa hợp lệ, vui lòng chọn ảnh khác.');
+  if (anh && !photoOk_(anh)) return fail_('Ảnh chưa hợp lệ, vui lòng chọn ảnh khác.');
   if (!/^\+?\d{9,12}$/.test(String(ans.sdt || '').replace(/[\s.\-]/g, ''))) return fail_('Số điện thoại chưa đúng.');
   if (ans.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(ans.email)) return fail_('Email chưa đúng.');
   ans.guiLuc = now_();
@@ -269,10 +282,10 @@ function submit_(b) {
       try { d = JSON.parse(old.data || '{}'); } catch (e) { d = {}; }
       Object.assign(d, ans);
       d.hanhTrinh = (d.hanhTrinh || []).concat([{ngay: today_(), noiDung: 'Cập nhật lại phiếu: ' + f.ten}]);
-      r = old; if (anh) r.anh = anh;
+      r = old; if (anh) setPhoto_(r, anh);
     } else {
       d = Object.assign(ans, {khoa: f.khoa, nam: f.nam, nhom: '', trangThai: 'Mới đăng ký', phuTrach: [], hanhTrinh: [{ngay: today_(), noiDung: 'Điền ' + f.ten}], nhatKy: [], tienDo: {}});
-      r = {id: uid_(), formId: f.id, createdAt: now_(), anh: anh};
+      r = {id: uid_(), formId: f.id, createdAt: now_()}; setPhoto_(r, anh);
     }
     Object.assign(r, {hoTen: d.hoTen, sdt: sdt, email: d.email || '', trangThai: d.trangThai, phuTrach: (d.phuTrach || []).join(', '), updatedAt: now_(), data: JSON.stringify(d)});
     put_('records', r);

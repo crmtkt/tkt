@@ -167,6 +167,7 @@ function doPost(e) {
 function route_(b) {
   const a = b.a;
   if (a === 'submit') return submit_(b);
+  if (a === 'lookup') return lookup_(b);
   if (a === 'login') {
     const c = CacheService.getScriptCache(), n = Number(c.get('fail') || 0);
     if (n >= 10) return fail_('Sai quá nhiều lần. Vui lòng thử lại sau 15 phút.', 429);
@@ -257,6 +258,35 @@ function route_(b) {
   } finally { lock.releaseLock(); }
 }
 
+/* ---------- tra cứu học viên cũ: form chỉ hỏi những câu còn thiếu ---------- */
+const FORM_KEYS = {
+  hocvien: ['anh', 'namSinh', 'email', 'thanhPho', 'congViec', 'vaiTro', 'khoaDaHoc', 'lyDo', 'vanDe', 'mongMuon', 'ketQua', 'ngaiNgai', 'sanPhamRieng', 'thoiGian', 'aiLevel', 'aiTools', 'aiDaLam', 'aiMuon'],
+  nhanh: ['anh', 'email', 'congViec', 'mongMuon'],
+};
+function phoneN_(s) { let p = phone_(s); if (/^84\d{9,10}$/.test(p)) p = '0' + p.slice(2); return p; }
+function nameKey_(s) { return String(s || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/đ/g, 'd').replace(/[^a-z0-9 ]+/g, ' ').trim().split(/\s+/).filter(String); }
+function sameName_(a, b) { const x = nameKey_(a), y = nameKey_(b); return x.length > 0 && y.length > 0 && x[x.length - 1] === y[y.length - 1]; }
+function matchRecs_(sdt, hoTen) { return rows_('records').filter(r => phoneN_(r.sdt) === sdt && sameName_(r.hoTen, hoTen)); }
+function filled_(v) { return Array.isArray(v) ? v.length > 0 : typeof v === 'number' ? v > 0 : typeof v === 'boolean' ? v : String(v === null || v === undefined ? '' : v).trim() !== ''; }
+function have_(recs, keys) {
+  const h = {};
+  recs.forEach(r => { let d = {}; try { d = JSON.parse(r.data || '{}'); } catch (e) {} keys.forEach(k => { if (k === 'anh' ? !!r.anh : filled_(d[k])) h[k] = 1; }); });
+  return Object.keys(h);
+}
+function lookup_(b) {
+  // Chỉ trả về TÊN các câu đã có (không trả nội dung) để form ẩn đi; phải khớp cả SĐT lẫn tên.
+  const c = CacheService.getScriptCache(), n = Number(c.get('lk') || 0);
+  if (n > 400) return fail_('Hệ thống đang bận, anh/chị thử lại sau ít phút.', 429);
+  c.put('lk', String(n + 1), 600);
+  seed_();
+  const f = rows_('forms').filter(x => x.slug === str_(b.s, 80))[0];
+  if (!f) return fail_('Không tìm thấy form.', 404);
+  const sdt = phoneN_(b.sdt), ten = str_(b.hoTen, 200);
+  if (sdt.length < 9 || !ten) return fail_('Vui lòng nhập họ tên và số điện thoại.');
+  const recs = matchRecs_(sdt, ten);
+  return out_({ok: true, found: recs.length > 0, have: recs.length ? have_(recs, FORM_KEYS[f.mau] || FORM_KEYS.nhanh) : []});
+}
+
 function submit_(b) {
   if (str_(b.web, 100)) return out_({ok: true}); // bẫy bot
   seed_();
@@ -265,18 +295,35 @@ function submit_(b) {
   if (f.mo !== '1') return fail_('Form này đã đóng, vui lòng liên hệ Ban tổ chức.', 403);
   const ans = answers_(b.data && typeof b.data === 'object' ? b.data : {});
   const anh = typeof b.anh === 'string' ? b.anh : '';
+  if (!ans.hoTen) return fail_('Vui lòng điền họ tên.');
+  if (!/^\+?\d{9,12}$/.test(String(ans.sdt || '').replace(/[\s.\-]/g, ''))) return fail_('Số điện thoại chưa đúng.');
+  const sdt = phoneN_(ans.sdt);
+  const known = matchRecs_(sdt, ans.hoTen), have = known.length ? have_(known, FORM_KEYS[f.mau] || FORM_KEYS.nhanh) : [];
   for (const k of (REQUIRED[f.mau] || REQUIRED.nhanh)) {
+    if (have.indexOf(k) >= 0) continue;
     const v = ans[k]; if (v === undefined || v === '' || v === false || v === 0) return fail_('Vui lòng điền ' + (LABELS[k] || k) + '.');
   }
-  if (f.mau === 'hocvien' && !anh) return fail_('Vui lòng chọn ảnh chân dung.');
+  if (f.mau === 'hocvien' && !anh && have.indexOf('anh') < 0) return fail_('Vui lòng chọn ảnh chân dung.');
   if (anh && !photoOk_(anh)) return fail_('Ảnh chưa hợp lệ, vui lòng chọn ảnh khác.');
-  if (!/^\+?\d{9,12}$/.test(String(ans.sdt || '').replace(/[\s.\-]/g, ''))) return fail_('Số điện thoại chưa đúng.');
   if (ans.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(ans.email)) return fail_('Email chưa đúng.');
   ans.guiLuc = now_();
   const lock = LockService.getScriptLock(); lock.waitLock(20000);
   try {
-    const sdt = phone_(ans.sdt);
-    const old = rows_('records').filter(r => r.formId === f.id && phone_(r.sdt) === sdt)[0];
+    if (known.length) {
+      // Học viên đã có: chỉ bổ sung câu trả lời mới, không xóa thông tin cũ; cập nhật mọi lớp của người này.
+      const add = {};
+      Object.keys(ans).forEach(k => { if (k !== 'hoTen' && k !== 'sdt' && filled_(ans[k])) add[k] = ans[k]; });
+      known.forEach(r => {
+        let d = {}; try { d = JSON.parse(r.data || '{}'); } catch (e) {}
+        Object.assign(d, add);
+        d.hanhTrinh = (d.hanhTrinh || []).concat([{ngay: today_(), noiDung: 'Bổ sung thông tin qua phiếu: ' + f.ten}]);
+        if (anh) setPhoto_(r, anh);
+        Object.assign(r, {email: d.email || '', updatedAt: now_(), data: JSON.stringify(d)});
+        put_('records', r);
+      });
+      return out_({ok: true, updated: known.length});
+    }
+    const old = rows_('records').filter(r => r.formId === f.id && phoneN_(r.sdt) === sdt)[0];
     let d, r;
     if (old) {
       try { d = JSON.parse(old.data || '{}'); } catch (e) { d = {}; }
@@ -287,7 +334,7 @@ function submit_(b) {
       d = Object.assign(ans, {khoa: f.khoa, nam: f.nam, nhom: '', trangThai: 'Mới đăng ký', phuTrach: [], hanhTrinh: [{ngay: today_(), noiDung: 'Điền ' + f.ten}], nhatKy: [], tienDo: {}});
       r = {id: uid_(), formId: f.id, createdAt: now_()}; setPhoto_(r, anh);
     }
-    Object.assign(r, {hoTen: d.hoTen, sdt: sdt, email: d.email || '', trangThai: d.trangThai, phuTrach: (d.phuTrach || []).join(', '), updatedAt: now_(), data: JSON.stringify(d)});
+    Object.assign(r, {hoTen: d.hoTen, sdt: phone_(d.sdt), email: d.email || '', trangThai: d.trangThai, phuTrach: (d.phuTrach || []).join(', '), updatedAt: now_(), data: JSON.stringify(d)});
     put_('records', r);
   } finally { lock.releaseLock(); }
   return out_({ok: true});

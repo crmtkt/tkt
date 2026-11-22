@@ -55,6 +55,12 @@ textarea.inp{min-height:110px;resize:vertical}
 .pbtn small{display:block;color:var(--mut);font-size:13.5px;margin-top:6px}
 .btn2{display:inline-flex;align-items:center;min-height:46px;padding:8px 18px;border-radius:12px;border:1.5px solid var(--ac);color:var(--dk);font-weight:600;cursor:pointer;background:#fff}
 .vh{position:absolute;width:1px;height:1px;opacity:0;overflow:hidden}
+.had{display:none!important}
+.known{background:var(--soft);border:1px solid color-mix(in srgb,var(--ac) 30%,transparent);border-radius:16px;padding:16px 18px;margin:0 0 18px;line-height:1.55}
+.known b{color:var(--dk)}
+.known .acts{display:flex;flex-wrap:wrap;gap:8px 16px;margin-top:10px}
+.linkb{all:unset;cursor:pointer;color:var(--ac);font-weight:600;text-decoration:underline;text-underline-offset:3px}
+.gnote{margin:4px 0 16px;font-size:14px;opacity:.85}
 .photo:focus-within .btn2{outline:3px solid var(--a2);outline-offset:2px}
 .secure{background:var(--soft);border:1px solid color-mix(in srgb,var(--ac) 25%,#fff);border-radius:14px;padding:16px 18px;font-size:15px;margin-bottom:16px}
 .secure ul{margin:6px 0 0;padding-left:20px}.secure li{margin:3px 0}
@@ -116,6 +122,28 @@ const secure=n=>`<div class="sec"><h2><em>${n}</em>Cam kết bảo mật</h2>
  <button class="send" id="sendBtn">Gửi thông tin cho thầy và Ban tổ chức</button></div>`;
 const basics=()=>`${Q('hoTen',LB('hoTen','Họ và tên',1),`<input class="inp" id="hoTen" autocomplete="name">`,'Vui lòng nhập họ tên.')}`;
 
+let WHO=null,HAVE=[],FOUND=false;
+function gate(){
+ return `<form class="paper" id="gForm" novalidate><div class="sec"><h2><em>1</em>Bắt đầu</h2><p>Anh/chị nhập họ tên và số điện thoại trước. Nếu anh/chị đã từng gửi thông tin cho CMA | SKT, phiếu sẽ <b>chỉ hỏi những câu còn thiếu</b>.</p>
+  ${Q('gTen',LB('gTen','Họ và tên',1),`<input class="inp" id="gTen" autocomplete="name">`,'Vui lòng nhập họ tên.')}
+  ${Q('gSdt',LB('gSdt','Số điện thoại (Zalo)',1),`<input class="inp" id="gSdt" type="tel" inputmode="tel" autocomplete="tel">`,'Số điện thoại chưa đúng.')}
+  <button class="send" id="gBtn">Tiếp tục</button></div></form>`;
+}
+const fieldKey=el=>{if(el.querySelector('#dongY'))return 'dongY';const i=el.querySelector('textarea[id],input.inp[id],input[type=file][id],input[name]');if(!i)return '';const k=i.id||i.name;return k==='photo'?'anh':k};
+function applyHave(){
+ $('#hoTen').value=WHO.hoTen;$('#sdt').value=WHO.sdt;
+ const skip=new Set(['hoTen','sdt',...HAVE]);
+ document.querySelectorAll('#sForm .fld').forEach(el=>{const k=fieldKey(el);el.classList.toggle('had',!!k&&k!=='dongY'&&skip.has(k))});
+ document.querySelectorAll('#sForm .sec').forEach(sec=>sec.classList.toggle('had',!sec.querySelector('.fld:not(.had)')));
+ let n=0;document.querySelectorAll('#sForm .sec:not(.had) h2 em').forEach(e=>e.textContent=++n);
+ const left=[...document.querySelectorAll('#sForm .fld:not(.had)')].filter(el=>fieldKey(el)!=='dongY').length;
+ const name=esc(WHO.hoTen.trim().split(/\s+/).slice(-1)[0]);
+ const box=document.createElement('div');box.className='known';box.id='known';
+ box.innerHTML=(FOUND?`<b>Chào anh/chị ${name}!</b> Hệ thống đã có thông tin anh/chị cung cấp trước đây${HAVE.includes('anh')?', gồm cả ảnh chân dung':''}. ${left?`Anh/chị chỉ cần điền thêm <b>${left} câu còn thiếu</b> bên dưới.`:'Thông tin đã đầy đủ, anh/chị chỉ cần tích đồng ý và bấm gửi để xác nhận.'}`
+  :`<b>Chào anh/chị ${name}!</b> Đây là lần đầu anh/chị điền phiếu, anh/chị vui lòng trả lời các câu bên dưới.`)
+  +`<div class="acts"><span>${esc(WHO.hoTen)} · ${esc(WHO.sdt)}</span><button type="button" class="linkb" id="reGate">Đổi họ tên / số điện thoại</button>${FOUND&&HAVE.length?'<button type="button" class="linkb" id="showAll">Tôi muốn trả lời lại tất cả câu hỏi</button>':''}</div>`;
+ $('#sForm').prepend(box);
+}
 function formHocVien(){
  return `<form class="paper" id="sForm" novalidate>
  <div class="sec"><h2><em>1</em>Về anh/chị</h2><p>Để đội chăm sóc nhận ra và liên hệ đúng người.</p>
@@ -159,9 +187,11 @@ function formNhanh(){
  </div>${secure(2)}</form>`;
 }
 function render(){
+ if(CFG&&CFG.mo&&!WHO){$('#app').innerHTML=hero()+gate()+`<p class="foot">CMA | SKT · Công nghệ · Quản trị · Tăng trưởng</p>`;return}
  if(!CFG){$('#app').innerHTML=`<div class="tcard"><h1>Không tìm thấy form</h1><p class="lead">Đường link có thể bị gõ sai. Anh/chị vui lòng liên hệ Ban tổ chức để nhận lại link.</p></div>`;return}
  if(!CFG.mo){$('#app').innerHTML=hero()+`<div class="tcard"><h1>Form đã đóng</h1><p class="lead">Form này hiện không nhận thêm phiếu. Anh/chị vui lòng liên hệ Ban tổ chức qua Zalo.</p></div>`;return}
  $('#app').innerHTML=hero()+(CFG.mau==='nhanh'?formNhanh():formHocVien())+`<p class="foot">CMA | SKT · Công nghệ · Quản trị · Tăng trưởng</p>`;
+ if(WHO)applyHave();
 }
 const THEMES={Diamond:['#7c2bd6','#c026d3','#8b2fd9','#3d0f6e','#f3e8ff','#2b0a52','#150630'],Trainer:['#b45309','#e0a526','#c27a0e','#5a3300','#fff4dc','#3a2205','#1c1104']};
 function theme(k){const t=THEMES[k]||['#1d4ed8','#0891b2','#1d4ed8','#0f2a66','#e6efff','#0b2150','#06122e'];['a1','a2','ac','dk','soft','b1','b2'].forEach((n,i)=>document.documentElement.style.setProperty('--'+n,t[i]))}
@@ -186,6 +216,7 @@ function validate(d){
  const full=CFG.mau==='hocvien';
  const bad={hoTen:!d.hoTen,sdt:!/^\+?\d{9,12}$/.test(d.sdt.replace(/[\s.-]/g,'')),email:(full||d.email)&&!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(d.email),dongY:!d.dongY};
  if(full)Object.assign(bad,{anh:!photoData,namSinh:!/^(19|20)\d\d$/.test(d.namSinh),congViec:!d.congViec,khoaDaHoc:!d.khoaDaHoc,lyDo:!d.lyDo,vanDe:!d.vanDe,mongMuon:!d.mongMuon,aiLevel:!d.aiLevel});
+ HAVE.forEach(k=>delete bad[k]);
  let first=null;document.querySelectorAll('.fld[data-k]').forEach(el=>{const b=!!bad[el.dataset.k];el.classList.toggle('bad',b);if(b&&!first)first=el});
  if(first)first.scrollIntoView({behavior:'smooth',block:'center'});return !first;
 }
@@ -198,7 +229,17 @@ function thanks(d){
  scrollTo(0,0);
 }
 document.addEventListener('submit',async e=>{
- e.preventDefault();const d=readForm();
+ e.preventDefault();
+ if(e.target.id==='gForm'){
+  const ten=$('#gTen').value.trim(),sdt=$('#gSdt').value.trim(),badT=!ten,badS=!/^\+?\d{9,12}$/.test(sdt.replace(/[\s.-]/g,''));
+  $('#gTen').closest('.fld').classList.toggle('bad',badT);$('#gSdt').closest('.fld').classList.toggle('bad',badS);
+  if(badT||badS)return;
+  const b=$('#gBtn');b.disabled=true;b.textContent='Đang kiểm tra thông tin…';
+  try{const r=await fetch(API,{method:'POST',body:JSON.stringify({a:'lookup',s:CFG.s,hoTen:ten,sdt})});const j=await r.json();if(!j.ok)throw new Error(j.error);FOUND=!!j.found;HAVE=Array.isArray(j.have)?j.have:[]}
+  catch(_){FOUND=false;HAVE=[]}
+  WHO={hoTen:ten,sdt};render();scrollTo(0,0);return;
+ }
+ const d=readForm();
  if(!validate(d))return toast('Còn vài mục chưa điền, đã đánh dấu đỏ.');
  const b=$('#sendBtn');b.disabled=true;b.textContent='Đang gửi…';
  try{
@@ -210,6 +251,10 @@ document.addEventListener('submit',async e=>{
 });
 document.addEventListener('change',async e=>{
  if(e.target.id==='photo'){const fl=e.target.files[0];if(!fl)return;try{photoData=await compress(fl);$('#pv').innerHTML=`<img src="${photoData}" alt="Ảnh chân dung">`;e.target.closest('.fld').classList.remove('bad')}catch(_){toast('Không đọc được ảnh này, thử ảnh khác.')}}
+});
+document.addEventListener('click',e=>{
+ if(e.target.id==='reGate'){const w=WHO;WHO=null;HAVE=[];FOUND=false;photoData='';render();$('#gTen').value=w.hoTen;$('#gSdt').value=w.sdt;$('#gTen').focus()}
+ if(e.target.id==='showAll'){HAVE=[];FOUND=false;document.querySelectorAll('#sForm .had').forEach(x=>x.classList.remove('had'));$('#hoTen').closest('.fld').classList.add('had');$('#sdt').closest('.fld').classList.add('had');let n=0;document.querySelectorAll('#sForm .sec h2 em').forEach(x=>x.textContent=++n);e.target.remove()}
 });
 document.addEventListener('input',e=>{const f=e.target.closest('.fld.bad');if(f)f.classList.remove('bad')});
 }

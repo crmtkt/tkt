@@ -453,6 +453,24 @@ table.rp tbody tr:not(.tot):hover td{background:#fffbea!important}
 .rpnote{font-size:13px;color:#555;margin:8px 2px 0}
 .rpwrap .ava{border:1px solid #ddd}
 @media(max-width:700px){.rpwrap{padding:12px;border-radius:10px}.rpco img{height:34px!important}.rpco b{font-size:15px!important}.rpco span{font-size:12px!important}table.rp{font-size:13.5px}}
+.fbar{background:rgba(16,28,70,.55);border:1px solid #1b2a5c;border-radius:16px;margin:0 0 14px;padding:12px 12px 8px}
+.fbar .bar{margin:0}
+.fhint{font-size:13px;color:var(--mut);margin:6px 2px 0}.fhint b{color:#fff}
+.widewrap{max-height:max(380px,calc(100vh - 140px));overflow:auto}
+table.wide th{z-index:2}table.wide th:first-child{z-index:3}
+.rpscroll.stk{max-height:max(360px,calc(100vh - 290px));overflow:auto;border:1px solid #9e9e9e}
+.rpscroll.stk table.rp{border-style:hidden}
+.rpscroll.stk thead tr:nth-child(2) th{position:sticky;top:0;z-index:2;box-shadow:inset 0 -1px #9e9e9e}
+.rpscroll.stk tbody td:first-child,.rpscroll.stk thead tr:nth-child(2) th:first-child{position:sticky;left:0;z-index:1;box-shadow:inset -1px 0 #9e9e9e}
+.rpscroll.stk thead tr:nth-child(2) th:first-child{z-index:3}
+.rpscroll.stk tr.tot td{position:sticky;bottom:0;z-index:2;box-shadow:inset 0 1px #9e9e9e}
+.rpscroll.stk tr.tot td:first-child{z-index:3}
+.rpchips{display:flex;gap:10px;overflow-x:auto;padding:0 0 8px;scrollbar-width:thin}
+.rpchip{all:unset;cursor:pointer;flex:0 0 auto;max-width:330px;display:flex;flex-direction:column;gap:3px;padding:9px 14px;border-radius:12px;background:var(--card);border:1px solid var(--line);border-top:3px solid #FF9900}
+.rpchip b{font-size:14.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.rpchip span{font-size:12.5px;color:var(--mut);white-space:nowrap}
+.rpchip.on{background:#FF9900;border-color:#FF9900;color:#111}.rpchip.on span{color:#3d2600}
+.rpchip:focus-visible{outline:2px solid #fff}
+@media(max-width:860px){.fbar{position:static;background:none;backdrop-filter:none;padding:0;margin:0 0 10px;border:0}.widewrap,.rpscroll.stk{max-height:72vh}}
 </style>
 <script>new MutationObserver(()=>{for(const c of document.querySelectorAll('.stack td:not([data-l])')){let i=0,p=c;while(p=p.previousElementSibling)i+=p.colSpan;c.dataset.l=c.closest('table').rows[0].cells[i]?.textContent||''}}).observe(document,{childList:true,subtree:true})</script>
 </head>
@@ -586,8 +604,8 @@ const buyerBtn=b=>b.real?`<button class="btn sm" data-open="${esc(b.rid)}">Hồ 
 const lastNote=b=>{const lc=b.nhatKy[b.nhatKy.length-1];return lc?`${fmtD(lc.ngay)} · ${esc(lc.nguoi||'')}<br>${esc(clip(lc.noiDung,90))}`:'<span class="mut">Chưa có</span>'};
 const payLine=x=>hasPay(x)?`<div class="hvpay">${payPill(x)}<span>Đã thu <b>${TR(n0(x.daDong))}</b></span>${congNo(x)?`<span class="warnTxt">Công nợ <b>${TR(congNo(x))}</b></span>`:''}</div>`:'';
 
-const S={calM:'2026-12',camp:null,bf:{q:'',sp:'all',tt:'all',pt:'all',sort:'sp'},real:[],demo:(()=>{try{return localStorage.getItem('crm_demo')==='1'}catch(_){return false}})(),cf:{q:'',khoa:'all',st:'all',pt:'all'},view:(()=>{try{return localStorage.getItem('crm_view')||'card'}catch(_){return 'card'}})(),list:[],forms:[],staff:DEFAULT_STAFF.slice(),loaded:false,canWrite:true,tok:'',site:'',user:'',
- f:{fam:'F5',khoa:'Diamond',nam:'2026',nhom:'all',q:'',st:'all',pt:'all',form:'all',tt:'all'},open:null,phone:''};
+const S={rf:{camp:'all',sp:'all',tt:'all',pt:'all',q:'',sort:'no'},calM:'2026-12',camp:null,bf:{q:'',sp:'all',tt:'all',pt:'all',sort:'sp'},real:[],demo:(()=>{try{return localStorage.getItem('crm_demo')==='1'}catch(_){return false}})(),cf:{q:'',khoa:'all',st:'all',pt:'all',ct:'all'},view:(()=>{try{return localStorage.getItem('crm_view')||'card'}catch(_){return 'card'}})(),list:[],forms:[],staff:DEFAULT_STAFF.slice(),loaded:false,canWrite:true,tok:'',site:'',user:'',
+ f:{fam:'F5',khoa:'Diamond',nam:'2026',nhom:'all',q:'',st:'all',pt:'all',form:'all',tt:'all',ct:'all'},open:null,phone:''};
 
 /* ---------- UI helpers ---------- */
 let tt;
@@ -637,7 +655,7 @@ function filtered(){
  const f=S.f,q=f.q.trim().toLowerCase(),qd=q.replace(/\D/g,'');
  return S.list.filter(x=>(f.form==='all'||x.formId===f.form)&&x.khoa===f.khoa&&(f.nam==='all'||String(x.nam||'2026')===f.nam)
   &&(f.khoa!=='Diamond'||f.nhom==='all'||x.nhom===f.nhom)&&(f.st==='all'||x.trangThai===f.st)
-  &&(f.pt==='all'||(f.pt==='none'?!arr(x.phuTrach).length:arr(x.phuTrach).includes(f.pt)))&&(f.tt==='all'||(hasPay(x)&&payKey(x)===f.tt))
+  &&(f.pt==='all'||(f.pt==='none'?!arr(x.phuTrach).length:arr(x.phuTrach).includes(f.pt)))&&(f.tt==='all'||(hasPay(x)&&payKey(x)===f.tt))&&(f.ct==='all'||(f.ct==='none'?!x.chuongTrinh:x.chuongTrinh===f.ct))
   &&(!q||String(x.hoTen||'').toLowerCase().includes(q)||(qd.length>=3&&String(x.sdt||'').replace(/\D/g,'').includes(qd))||String(x.email||'').toLowerCase().includes(q)))
   .sort((a,b)=>String(b.createdAt||'').localeCompare(String(a.createdAt||'')));
 }
@@ -733,10 +751,10 @@ function listProgress(rows){
  <div class="widewrap"><table class="wide progtbl"><thead><tr><th>Học viên</th>${MS.map(m=>`<th>${mName(m)}</th>`).join('')}</tr></thead><tbody>${rows.map(x=>`<tr><td class="stick"><button class="who linkbtn" data-open="${esc(x.id)}">${ava(x,'ava tbimg')}<span><b>${esc(x.hoTen)}</b><br><small class="mut">${esc(courseTxt(x))}</small></span></button></td>${MS.map(m=>{const t=(x.tienDo||{})[m]||'';return `<td class="pg ${cls(t)}">${t?esc(t.replace(/^(Đạt|Chậm|Xong)\s*:\s*/i,'')):'<span class="mut">—</span>'}${t?`<small>${cls(t)==='pd'?'Đạt':cls(t)==='pl'?'Chậm':'Đang làm'}</small>`:''}</td>`}).join('')}</tr>`).join('')}</tbody></table></div>`;
 }
 function listTable(rows){
- const H=[['Học viên',''],['Điện thoại',''],['Năm sinh',''],['Email',''],['Công việc',''],['Tỉnh/thành',''],['Khóa',''],['Nhóm',''],['Năm',''],['Chương trình / chiến dịch',''],['Thanh toán',''],['Học phí',''],['Khấu trừ',''],['Đã thu',''],['Công nợ',''],['Lưu ý thanh toán',''],['Đồng hành',''],['Lịch hẹn',''],['Trạng thái',''],['Phụ trách',''],['Mức AI',''],['Đã và đang học',''],['Lý do đăng ký',''],['Cần thầy hỗ trợ',''],['Mong muốn',''],['Ghi chú nội bộ',''],['Nhóm Zalo',''],['Chăm sóc gần nhất',''],['Ngày vào','']];
- return `<p class="mut sm" style="margin:0 0 8px">Bấm vào ô bất kỳ để sửa. Nhấn Enter hoặc bấm ra ngoài để lưu, Esc để hủy.</p><div class="widewrap"><table class="wide"><thead><tr>${H.map(h=>`<th>${h[0]}</th>`).join('')}</tr></thead><tbody>${rows.map(x=>{const lc=lastCare(x);return `<tr>
+ const H=[['Học viên',''],['Điện thoại',''],['Thanh toán',''],['Đã thu',''],['Công nợ',''],['Học phí',''],['Khấu trừ',''],['Chương trình / chiến dịch',''],['Trạng thái',''],['Phụ trách',''],['Lưu ý thanh toán',''],['Đồng hành',''],['Lịch hẹn',''],['Năm sinh',''],['Email',''],['Công việc',''],['Tỉnh/thành',''],['Khóa',''],['Nhóm',''],['Năm',''],['Mức AI',''],['Đã và đang học',''],['Lý do đăng ký',''],['Cần thầy hỗ trợ',''],['Mong muốn',''],['Ghi chú nội bộ',''],['Nhóm Zalo',''],['Chăm sóc gần nhất',''],['Ngày vào','']];
+ return `<p class="mut sm" style="margin:0 0 8px">Bấm vào ô bất kỳ để sửa (Enter hoặc bấm ra ngoài để lưu, Esc để hủy). Kéo trong bảng: tên học viên và hàng tiêu đề luôn đứng yên; cột tiền nằm ngay sau số điện thoại.</p><div class="widewrap"><table class="wide"><thead><tr>${H.map(h=>`<th>${h[0]}</th>`).join('')}</tr></thead><tbody>${rows.map(x=>{const lc=lastCare(x);return `<tr>
   <td class="stick"><button class="who linkbtn" data-open="${esc(x.id)}">${ava(x,'ava tbimg')}<span><b>${esc(x.hoTen)}</b>${x.demo?' <span class="tag mau">Mẫu</span>':''}<br><small class="mut">Mở hồ sơ</small></span></button></td>
-  ${ec(x,'sdt','nw')}${ec(x,'namSinh','nw')}${ec(x,'email')}${ec(x,'congViec')}${ec(x,'thanhPho')}${ec(x,'khoa')}${ec(x,'nhom')}${ec(x,'nam','nw')}${ec(x,'chuongTrinh')}${ec(x,'ttTT')}${ec(x,'hocPhi','nw')}${ec(x,'khauTru','nw')}${ec(x,'daDong','nw')}<td class="nw">${hasPay(x)?(congNo(x)?`<b class="warnTxt">${VND(congNo(x))}</b>`:'<span class="mut">0</span>'):''}</td>${ec(x,'canhBao','tx')}${ec(x,'dongHanh')}${ec(x,'lichHen','tx')}${ec(x,'trangThai')}${ec(x,'phuTrach')}
+  ${ec(x,'sdt','nw')}${ec(x,'ttTT')}${ec(x,'daDong','nw')}<td class="nw">${hasPay(x)?(congNo(x)?`<b class="warnTxt">${VND(congNo(x))}</b>`:'<span class="mut">0</span>'):''}</td>${ec(x,'hocPhi','nw')}${ec(x,'khauTru','nw')}${ec(x,'chuongTrinh')}${ec(x,'trangThai')}${ec(x,'phuTrach')}${ec(x,'canhBao','tx')}${ec(x,'dongHanh')}${ec(x,'lichHen','tx')}${ec(x,'namSinh','nw')}${ec(x,'email')}${ec(x,'congViec')}${ec(x,'thanhPho')}${ec(x,'khoa')}${ec(x,'nhom')}${ec(x,'nam','nw')}
   <td>${lvBar(+x.aiLevel||0)}<br><small class="mut">${esc(clip(arr(x.aiTools).join(', '),40))}</small></td>
   ${ec(x,'khoaDaHoc','tx')}${ec(x,'lyDo','tx')}${ec(x,'vanDe','tx')}${ec(x,'mongMuon','tx')}${ec(x,'ghiChu','tx')}${ec(x,'zaloGroup')}
   <td class="tx">${lc?`${fmtD(lc.ngay)} · ${esc(lc.nguoi||'')}<br>${esc(clip(lc.noiDung,80))}`:'<span class="mut">Chưa có</span>'}</td>
@@ -785,13 +803,14 @@ function vProducts(){
  <div class="courses">${Object.entries(COURSES).map(([k,c])=>`<button class="course ${f.khoa===k?'on':''}" data-course="${k}" style="--c1:${c.c1};--c2:${c.c2}"><small>${c.sub}</small><b>${c.name}</b><span class="n">${cnt(k)} học viên</span></button>`).join('')}</div>
  <div class="tabs" role="group" aria-label="Năm">${['2026','2025','2024','all'].map(y=>`<button class="tab ${f.nam===y?'on':''}" data-nam="${y}">${y==='all'?'Tất cả các năm':'Năm '+y}</button>`).join('')}</div>
  ${f.khoa==='Diamond'?`<div class="tabs" role="group" aria-label="Nhóm">${['all',...GROUPS].map(g=>`<button class="tab ${f.nhom===g?'on':''}" data-nhom="${esc(g)}">${g==='all'?'Tất cả nhóm':esc(g)}<span class="c">${g==='all'?base.length:base.filter(x=>x.nhom===g).length}</span></button>`).join('')}</div>`:''}
- <div class="bar">
+ <div class="fbar"><div class="bar">
   <input class="inp" id="q" placeholder="Tìm tên, số điện thoại, email" value="${esc(f.q)}" style="flex:1 1 220px">
+  ${ctSelect('fct',f.ct)}
   <select class="inp" id="fst" aria-label="Trạng thái"><option value="all">Mọi trạng thái</option>${STATUS.map(([s])=>`<option ${f.st===s?'selected':''}>${s}</option>`).join('')}</select>
   <select class="inp" id="fpt" aria-label="Người phụ trách"><option value="all">Mọi người phụ trách</option><option value="none" ${f.pt==='none'?'selected':''}>Chưa có người phụ trách</option>${S.staff.map(s=>`<option ${f.pt===s?'selected':''}>${esc(s)}</option>`).join('')}</select>
   <select class="inp" id="ftt" aria-label="Thanh toán"><option value="all">Mọi tình trạng thanh toán</option>${PAY_ST.map(p=>`<option value="${p[2]}" ${f.tt===p[2]?'selected':''}>${p[0]}</option>`).join('')}</select>
   <select class="inp" id="fform" aria-label="Form"><option value="all">Mọi form</option>${S.forms.map(x=>`<option value="${esc(x.id)}" ${f.form===x.id?'selected':''}>${esc(x.ten)}</option>`).join('')}</select><a class="btn ghost" href="#form" style="text-decoration:none;display:inline-flex;align-items:center">Lấy link form</a>
- </div>
+ </div></div>
  ${demoBar()}
  <div class="viewbar"><span class="mut">${rows.length} học viên</span><div class="seg" role="group" aria-label="Kiểu xem"><button class="${S.view==='card'?'on':''}" data-view="card">Thẻ học viên</button><button class="${S.view==='table'?'on':''}" data-view="table">Bảng đầy đủ</button><button class="${S.view==='prog'?'on':''}" data-view="prog">Tiến độ tháng</button></div></div>
  ${rows.length?(S.view==='table'?listTable(rows):S.view==='prog'?listProgress(rows):listCards(rows))
@@ -805,22 +824,24 @@ function customers(){
  S.list.forEach(r=>{const k=String(r.sdt||'').replace(/\D/g,'')||r.id;if(!map.has(k))map.set(k,[]);map.get(k).push(r)});
  return [...map.values()].map(rs=>{rs.sort((a,b)=>String(b.createdAt||'').localeCompare(String(a.createdAt||'')));return {main:rs[0],rs}});
 }
+function ctSelect(id,v){const cts=[...new Set(S.list.map(x=>x.chuongTrinh).filter(Boolean))].sort();return `<select class="inp" id="${id}" aria-label="Chương trình"><option value="all">Mọi chương trình</option>${cts.map(c=>`<option ${v===c?'selected':''}>${esc(c)}</option>`).join('')}<option value="none" ${v==='none'?'selected':''}>Chưa ghi chương trình</option></select>`}
 function vCustomers(){
  const c=S.cf,q=c.q.trim().toLowerCase(),qd=q.replace(/\D/g,'');
  let list=customers().filter(({main,rs})=>(!q||String(main.hoTen||'').toLowerCase().includes(q)||(qd.length>=3&&String(main.sdt||'').replace(/\D/g,'').includes(qd))||String(main.congViec||'').toLowerCase().includes(q))
-  &&(c.khoa==='all'||rs.some(r=>r.khoa===c.khoa))&&(c.st==='all'||rs.some(r=>r.trangThai===c.st))&&(c.pt==='all'||(c.pt==='none'?rs.every(r=>!arr(r.phuTrach).length):rs.some(r=>arr(r.phuTrach).includes(c.pt)))));
+  &&(c.khoa==='all'||rs.some(r=>r.khoa===c.khoa))&&(c.st==='all'||rs.some(r=>r.trangThai===c.st))&&(c.pt==='all'||(c.pt==='none'?rs.every(r=>!arr(r.phuTrach).length):rs.some(r=>arr(r.phuTrach).includes(c.pt))))&&(c.ct==='all'||(c.ct==='none'?rs.every(r=>!r.chuongTrinh):rs.some(r=>r.chuongTrinh===c.ct))));
  const recs=list.flatMap(x=>x.rs);
  const multi=list.filter(x=>x.rs.length>1).length;
  const classChips=rs=>`<div class="hvrow">${rs.map(r=>`<button class="chip chipbtn" data-open="${esc(r.id)}" title="Mở hồ sơ lớp này"><i style="background:${stColor(r.trangThai)}"></i>${esc(courseTxt(r))} · ${esc(r.nam||'')}${hasPay(r)?' · '+esc(payName(payKey(r)).toLowerCase())+(congNo(r)?' · công nợ '+TR(congNo(r)):''):''}</button>`).join('')}</div>`;
  return `<div class="band"><h2>Ô 1 · Khách hàng</h2><p class="mut" style="margin:0 0 12px">Toàn bộ khách hàng trong CRM. Mỗi người một thẻ, hiện đủ các lớp đã và đang học. Bấm vào lớp để mở hồ sơ của lớp đó.</p>
  ${demoBar()}
  <div class="kpis"><div><b>${list.length}</b><span>Khách hàng</span></div><div><b>${recs.length}</b><span>Lượt đăng ký lớp</span></div><div><b>${multi}</b><span>Học từ 2 lớp trở lên</span></div><div><b>${list.filter(x=>x.rs.some(r=>r.trangThai==='Cần chăm sóc gấp')).length}</b><span>Cần chăm sóc gấp</span></div>${recs.some(hasPay)?`<div><b>${TR(recs.reduce((a,r)=>a+n0(r.daDong),0))}</b><span>Đã thu</span></div><div><b style="color:var(--warn)">${TR(recs.reduce((a,r)=>a+congNo(r),0))}</b><span>Công nợ cần thu</span></div>`:''}</div>
- <div class="bar">
+ <div class="fbar"><div class="bar">
   <input class="inp" id="cq" placeholder="Tìm tên, số điện thoại, công việc" value="${esc(c.q)}" style="flex:1 1 240px">
+  ${ctSelect('cct',c.ct)}
   <select class="inp" id="ckhoa" aria-label="Khóa"><option value="all">Mọi khóa</option><option value="Diamond" ${c.khoa==='Diamond'?'selected':''}>CMA Diamond</option><option value="Trainer" ${c.khoa==='Trainer'?'selected':''}>CMA Trainer</option></select>
   <select class="inp" id="cst" aria-label="Trạng thái"><option value="all">Mọi trạng thái</option>${STATUS.map(([x])=>`<option ${c.st===x?'selected':''}>${x}</option>`).join('')}</select>
   <select class="inp" id="cpt" aria-label="Người phụ trách"><option value="all">Mọi người phụ trách</option><option value="none" ${c.pt==='none'?'selected':''}>Chưa có người phụ trách</option>${S.staff.map(x=>`<option ${c.pt===x?'selected':''}>${esc(x)}</option>`).join('')}</select>
- </div>
+ </div></div>
  <div class="viewbar"><span class="mut">${list.length} khách hàng</span><div class="seg" role="group" aria-label="Kiểu xem"><button class="${S.view==='card'?'on':''}" data-view="card">Thẻ khách hàng</button><button class="${S.view==='table'?'on':''}" data-view="table">Bảng đầy đủ</button></div></div>
  ${list.length?(S.view==='table'?listTable(recs):`<div class="cards">${list.map(({main,rs})=>cardHV(main,`<small class="mut" style="display:block;margin-top:6px">Lớp đã và đang học (${rs.length})</small>${classChips(rs)}${rs.some(hasPay)?`<div class="hvpay"><span>Đã thu <b>${TR(rs.reduce((a,r)=>a+n0(r.daDong),0))}</b></span>${rs.some(r=>congNo(r))?`<span class="warnTxt">Công nợ <b>${TR(rs.reduce((a,r)=>a+congNo(r),0))}</b></span>`:''}</div>`:''}`)).join('')}</div>`)
   :`<div class="panel empty">${S.list.length?'Không có khách hàng khớp bộ lọc.':'Chưa có khách hàng nào. Gửi link form cho học viên, hoặc bấm "Xem dữ liệu mẫu" để xem thử.'}</div>`}
@@ -960,22 +981,43 @@ function staffReport(name){
  </section>`;
 }
 function realRevenue(){
- const cs=realCamps().map(c=>({...c,...campTotals(c)})),B=cs.flatMap(c=>c.buyers_list);
- const paid=B.reduce((a,b)=>a+b.daThu,0),debt=B.reduce((a,b)=>a+b.no,0);
- const sel=cs.find(c=>c.id===S.camp)||(cs.length===1?cs[0]:null);
- const ORD=['full','coc','chua','baoluu'],grp=[];
- cs.forEach(c=>c.prods.forEach(([pn])=>ORD.forEach(k=>{const xs=c.buyers_list.filter(b=>b.sp===pn&&b.tt===k);if(xs.length)grp.push([`${esc(pn)} · ${esc(payName(k).toLowerCase())}${cs.length>1?'<br><small class="mut">'+esc(c.name)+'</small>':''}`,xs.length,xs.reduce((a,b)=>a+b.daThu,0),xs.reduce((a,b)=>a+b.no,0)])})));
- const byStaff=S.staff.map(n=>{const xs=B.filter(b=>b.phuTrach.includes(n));return [n,xs.reduce((a,b)=>a+b.daThu,0),xs.reduce((a,b)=>a+b.no,0),xs.length]}).filter(r=>r[3]);
- return `<p class="mut" style="margin:0 0 12px">Báo cáo theo mẫu của công ty, số liệu lấy trực tiếp từ hồ sơ học viên. Mỗi bảng có nút <b>Tải Excel</b> và <b>In / lưu PDF</b>.</p>
- ${kpi([[TR(paid),'Doanh thu (đã thu)','#34d399'],[TR(debt),'Công nợ cần thu','#fb923c'],[TR(paid+debt),'Tổng giá trị đăng ký'],[B.length,'Lượt đăng ký'],[new Set(B.map(b=>b.sdt||b.hoTen)).size,'Học viên'],[cs.length,'Chương trình có doanh thu']])}
- ${cs.length>1?rpCourse(B,'Báo cáo tổng hợp doanh thu các chương trình','tong',true):''}
- ${cs.map(c=>rpCourse(c.buyers_list,'Báo cáo chương trình '+c.name,'ct-'+c.id,true)).join('')}
- ${rpStaff(B,'Báo cáo doanh thu theo nhân sự phụ trách','ns')}
- <h3>Theo chương trình / chiến dịch ${cs.length>1?'<span class="mut sm" style="font-weight:400">· bấm để xem chi tiết</span>':''}</h3>
- <div class="camps">${cs.map(c=>`<button class="camp ${sel&&sel.id===c.id?'on':''}" data-camp="${c.id}" style="--c:${c.color}"><span class="mut sm">${esc(c.type)}${c.time?' · '+esc(c.time):''}</span><b>${esc(c.name)}</b><div class="campn"><span><b>${TR(c.paid)}</b> đã thu</span><span><b>${c.buyers}</b> lượt đăng ký</span><span class="warnTxt">Công nợ ${TR(c.debt)}</span></div><i style="width:${c.rev?(c.paid/c.rev*100).toFixed(0):0}%"></i></button>`).join('')}</div>
- ${sel?campDetail(sel):`<div class="panel empty" style="margin-top:12px">Bấm vào một chương trình ở trên để xem sản phẩm bán ra, công nợ và danh sách học viên.</div>`}
+ const cs=realCamps().map(c=>({...c,...campTotals(c)})),ALL=cs.flatMap(c=>c.buyers_list),f=S.rf;
+ if(f.camp!=='all'&&!cs.some(c=>c.name===f.camp))f.camp='all';
+ const C=f.camp==='all'?null:cs.find(c=>c.name===f.camp),base=C?C.buyers_list:ALL,multi=cs.length>1;
+ const q=f.q.trim().toLowerCase(),qd=q.replace(/\D/g,'');
+ const keep=b=>(f.sp==='all'||b.sp===f.sp)&&(f.tt==='all'||(f.tt==='coc'?(b.tt==='coc'||b.tt==='chua'):b.tt===f.tt))&&(f.pt==='all'||(f.pt==='none'?!b.phuTrach.length:b.phuTrach.includes(f.pt)))&&(!q||b.hoTen.toLowerCase().includes(q)||(qd.length>=3&&b.sdt.includes(qd))||b.email.toLowerCase().includes(q));
+ const last=n=>n.trim().split(/\s+/).pop();
+ const B=base.filter(keep).sort((a,b)=>f.sort==='thu'?b.daThu-a.daThu:f.sort==='ten'?last(a.hoTen).localeCompare(last(b.hoTen),'vi'):f.sort==='khoa'?(RP_ORDER.indexOf(a.sp)-RP_ORDER.indexOf(b.sp))||b.no-a.no:b.no-a.no);
+ const sps=[...new Set(ALL.map(b=>b.sp))].sort((a,b)=>RP_ORDER.indexOf(a)-RP_ORDER.indexOf(b));
+ const spLabel=sp=>/bảo lưu/.test(sp)?'Bảo lưu cọc DM':rpShort(sp).replace(/^./,m=>m.toUpperCase());
+ const loc=[f.sp!=='all'?'khóa '+spLabel(f.sp):'',f.tt!=='all'?({full:'FULL',coc:'Cọc',chua:'chưa chuyển khoản',baoluu:'bảo lưu cọc'})[f.tt]:'',f.pt!=='all'?(f.pt==='none'?'chưa phân công':'phụ trách '+f.pt):'',q?'tìm "'+f.q.trim()+'"':''].filter(Boolean);
+ const scope=C?C.name:(multi?'Tất cả chương trình':(cs[0]?cs[0].name:'')),sfx=loc.length?' (đã lọc)':'';
+ const chip=(val,name,xs)=>`<button class="rpchip ${f.camp===val||(!multi&&val!=='all')?'on':''}" data-rcamp="${esc(multi?val:'all')}" title="${esc(name)}"><b>${esc(name)}</b><span>${xs.length} lượt · ${TR(sumBy(xs,'daThu'))} · công nợ ${TR(sumBy(xs,'no'))}</span></button>`;
+ return `<div class="fbar">
+ <div class="rpchips" role="group" aria-label="Chọn chương trình">${multi?chip('all','Tất cả chương trình',ALL):''}${cs.map(c=>chip(c.name,c.name,c.buyers_list)).join('')}</div>
+ <div class="bar">
+  <input class="inp" id="rfQ" placeholder="Tìm tên, số điện thoại, email" value="${esc(f.q)}" style="flex:1 1 200px">
+  <select class="inp" id="rfSp" aria-label="Khóa học"><option value="all">Mọi khóa học</option>${sps.map(sp=>`<option value="${esc(sp)}" ${f.sp===sp?'selected':''}>${esc(spLabel(sp))}</option>`).join('')}</select>
+  <select class="inp" id="rfTt" aria-label="Thanh toán"><option value="all">Mọi tình trạng thanh toán</option>${[['full','FULL (đóng đủ)'],['coc','Cọc (chưa đóng đủ)'],['chua','Cọc · chưa chuyển khoản'],['baoluu','Bảo lưu cọc']].map(([v,l])=>`<option value="${v}" ${f.tt===v?'selected':''}>${l}</option>`).join('')}</select>
+  <select class="inp" id="rfPt" aria-label="Người phụ trách"><option value="all">Mọi người phụ trách</option>${S.staff.map(x=>`<option ${f.pt===x?'selected':''}>${esc(x)}</option>`).join('')}<option value="none" ${f.pt==='none'?'selected':''}>Chưa phân công</option></select>
+  <select class="inp" id="rfSort" aria-label="Sắp xếp danh sách"><option value="no">Công nợ nhiều nhất</option><option value="thu" ${f.sort==='thu'?'selected':''}>Doanh thu nhiều nhất</option><option value="khoa" ${f.sort==='khoa'?'selected':''}>Theo khóa học</option><option value="ten" ${f.sort==='ten'?'selected':''}>Theo tên A → Z</option></select>
+  ${loc.length?'<button class="btn ghost sm" id="rfReset">Bỏ lọc</button>':''}
+ </div>
+ <p class="fhint">Đang xem: <b>${esc(scope)}</b>${loc.length?' · lọc theo '+esc(loc.join(', ')):''} · <b>${B.length}</b> lượt · doanh thu <b>${TR(sumBy(B,'daThu'))}</b> · công nợ <b style="color:#fdba74">${TR(sumBy(B,'no'))}</b></p>
+ </div>
+ ${kpi([[TR(sumBy(B,'daThu')),'Doanh thu (đã thu)','#34d399'],[TR(sumBy(B,'no')),'Công nợ cần thu','#fb923c'],[TR(sumBy(B,'gia')),'Tổng giá trị đăng ký'],[B.length,'Lượt đăng ký'],[new Set(B.map(b=>b.sdt||b.hoTen)).size,'Học viên'],[sumBy(B,'gia')?Math.round(sumBy(B,'daThu')/sumBy(B,'gia')*100)+'%':'—','Tỷ lệ đã thu']])}
+ ${!C&&multi?rpTable({id:'tonghop',title:'Báo cáo tổng hợp các chương trình'+sfx,cols:[['Chương trình','l'],['Thời gian','c'],['Số lượng','c'],['Doanh thu','n'],['Công nợ cần thu','n'],['Chi tiết','c']],
+   rows:cs.map(c=>{const xs=c.buyers_list.filter(keep);return [esc(c.name),esc(c.time||''),xs.length,VND(sumBy(xs,'daThu')),VND(sumBy(xs,'no')),`<button class="btn sm" data-rcamp="${esc(c.name)}">Xem riêng</button>`]}),
+   total:['Tổng cộng','',B.length,VND(sumBy(B,'daThu')),VND(sumBy(B,'no')),''],note:'Bấm "Xem riêng" hoặc chọn chương trình ở thanh phía trên để xem báo cáo của từng chương trình.'}):''}
+ ${rpCourse(B,(C||!multi?'Báo cáo chương trình '+scope:'Báo cáo doanh thu theo khóa học · tất cả chương trình')+sfx,'khoa')}
+ ${rpStaff(B,'Báo cáo doanh thu theo nhân sự phụ trách · '+scope+sfx,'ns')}
+ ${C||!multi?rpTable({id:'sp',title:'Sản phẩm bán ra · '+scope+sfx,cols:[['Sản phẩm','l'],['Học phí','n'],['Số lượng','c'],['FULL','c'],['Cọc','c'],['Bảo lưu','c'],['Doanh thu','n'],['Công nợ cần thu','n']],
+   rows:sps.map(sp=>[sp,B.filter(b=>b.sp===sp)]).filter(r=>r[1].length).map(([sp,xs])=>{const hp=Math.max(0,...xs.map(b=>n0(b.x.hocPhi)));return [esc(sp),hp?VND(hp):'—',xs.length,xs.filter(b=>b.tt==='full').length,xs.filter(b=>b.tt==='coc'||b.tt==='chua').length,xs.filter(b=>b.tt==='baoluu').length,VND(sumBy(xs,'daThu')),VND(sumBy(xs,'no'))]}),
+   total:['Tổng cộng','',B.length,B.filter(b=>b.tt==='full').length,B.filter(b=>b.tt==='coc'||b.tt==='chua').length,B.filter(b=>b.tt==='baoluu').length,VND(sumBy(B,'daThu')),VND(sumBy(B,'no'))]}):''}
+ <h3 id="rfList" style="margin:6px 0 10px">Danh sách học viên <span class="mut sm" style="font-weight:400">· kéo trong bảng: tên học viên và hàng tiêu đề luôn đứng yên, dòng Tổng cộng luôn hiện ở dưới</span></h3>
+ ${rpBuyers(B,'Danh sách học viên · '+scope+sfx,'hv',f.sp==='all',!C&&multi)}
  <div class="grid2" style="margin-top:18px"><div class="panel"><h3>Doanh thu theo khóa</h3>${hbars(rpGroups(B).map(([k,xs])=>[k,sumBy(xs,'daThu'),'#FF9900']),'#FF9900',TR)}</div>
- <div class="panel"><h3>Công nợ cần thu theo nhân sự</h3>${hbars(byStaff.map(r=>[r[0],r[2],'#fb923c']),'#fb923c',TR)}</div></div>`;
+ <div class="panel"><h3>Công nợ cần thu theo nhân sự</h3>${hbars(S.staff.map(n=>[n,sumBy(B.filter(b=>b.phuTrach.includes(n)),'no'),'#fb923c']).filter(r=>r[1]),'#fb923c',TR)}</div></div>`;
 }
 /* ---------- Mẫu báo cáo SKT (giống file Excel của công ty) ---------- */
 const SKT_LOGO='data:image/png;base64,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';
@@ -985,12 +1027,12 @@ const RPS={cap:'background:#FF9900;color:#111;font-weight:700;font-size:17px;tex
  td:'padding:7px 10px;border:1px solid #9e9e9e;background:#fff;color:#111;vertical-align:middle',
  tot:'padding:7px 10px;border:1px solid #9e9e9e;background:#FFFF00;color:#111;font-weight:700'};
 // cols: [[tên cột, 'l'|'c'|'n']]; rows: mảng ô (HTML); total: mảng ô dòng Tổng cộng
-function rpTable({id,title,cols,rows,total,brand=true,note,tools=true,minw}){ // mọi báo cáo đều có logo + thông tin công ty
+function rpTable({id,title,cols,rows,total,brand=true,note,tools=true,minw,stick}){ // mọi báo cáo đều có logo + thông tin công ty
  const al=a=>a==='n'?'text-align:right;white-space:nowrap':a==='c'?'text-align:center':'text-align:left';
  return `<div class="rpwrap" data-rpid="${esc(id||'')}" data-rptitle="${esc(title)}">
  ${tools?`<div class="rptools"><button class="rpbtn" data-rpx="xls">⬇ Tải Excel</button><button class="rpbtn" data-rpx="print">🖨 In / lưu PDF</button></div>`:''}
  <div class="rpbody">${brand?`<table class="rpco" style="width:100%;border-collapse:collapse;margin:0 0 12px"><tr><td style="border:0;padding:0;vertical-align:middle"><img src="${SKT_LOGO}" alt="SKT" style="height:46px;display:block"></td><td style="border:0;padding:0;text-align:right;vertical-align:middle"><b style="display:block;font-size:20px;color:#111">${SKT_CO.ten}</b><span style="font-size:14px;color:#222">${SKT_CO.dc}</span></td></tr></table>`:''}
- <div class="rpscroll"><table class="rp"${minw?` style="min-width:${minw}px"`:''}><thead><tr><th colspan="${cols.length}" style="${RPS.cap}">${esc(title)}</th></tr><tr>${cols.map(c=>`<th style="${RPS.th}">${esc(c[0])}</th>`).join('')}</tr></thead>
+ <div class="rpscroll${stick?' stk':''}"><table class="rp"${minw?` style="min-width:${minw}px"`:''}><thead><tr><th colspan="${cols.length}" style="${RPS.cap}">${esc(title)}</th></tr><tr>${cols.map(c=>`<th style="${RPS.th}">${esc(c[0])}</th>`).join('')}</tr></thead>
  <tbody>${rows.map(r=>`<tr>${r.map((v,i)=>`<td style="${RPS.td};${al(cols[i][1])}">${v}</td>`).join('')}</tr>`).join('')||`<tr><td colspan="${cols.length}" style="${RPS.td};text-align:center;color:#666">Chưa có dữ liệu</td></tr>`}
  ${total?`<tr class="tot">${total.map((v,i)=>`<td style="${RPS.tot};${al(cols[i][1])}">${v}</td>`).join('')}</tr>`:''}</tbody></table></div>
  ${note?`<p class="rpnote">${note}</p>`:''}</div></div>`;
@@ -1031,13 +1073,13 @@ function rpStaff(B,title,id){
   rows:rows.map(([n,xs])=>{const r=sumBy(xs,'gia');return [esc(n),xs.length,VND(sumBy(xs,'daThu')),VND(sumBy(xs,'no')),r?Math.round(sumBy(xs,'daThu')/r*100)+'%':'—']}),
   total:['Tổng cộng',B.length,VND(sumBy(B,'daThu')),VND(sumBy(B,'no')),sumBy(B,'gia')?Math.round(sumBy(B,'daThu')/sumBy(B,'gia')*100)+'%':'—']});
 }
-function rpBuyers(list,title,id,showSp){
- const cols=[['Học viên','l'],['Điện thoại','c']].concat(showSp?[['Khóa học','l']]:[]).concat([['Thanh toán','c'],['Học phí phải thu','n'],['Doanh thu','n'],['Công nợ cần thu','n'],['Phụ trách','c'],['Lưu ý / lịch hẹn','l'],['Hồ sơ','c']]);
- return rpTable({id,title,cols,minw:1250,rows:list.map(b=>[`<span style="display:flex;align-items:center;gap:8px;white-space:nowrap">${b.real?ava(b.x,'ava tbimg'):''}<b>${esc(b.hoTen)}</b></span>`,b.sdt?`<a class="mini" href="tel:${esc(b.sdt)}">${esc(b.sdt)}</a>`:'<span style="color:#c2410c">Chưa có SĐT</span>'].concat(showSp?[`<span style="white-space:nowrap">${esc(/bảo lưu/.test(b.sp)?'Bảo lưu cọc DM':rpShort(b.sp).replace(/^./,m=>m.toUpperCase()))}</span>`]:[]).concat([
+function rpBuyers(list,title,id,showSp,showCamp){
+ const cols=[['Học viên','l'],['Điện thoại','c']].concat(showCamp?[['Chương trình','l']]:[]).concat(showSp?[['Khóa học','l']]:[]).concat([['Thanh toán','c'],['Học phí phải thu','n'],['Doanh thu','n'],['Công nợ cần thu','n'],['Phụ trách','c'],['Lưu ý / lịch hẹn','l'],['Hồ sơ','c']]);
+ return rpTable({id,title,cols,stick:true,minw:showCamp?1600:1400,rows:list.map(b=>[`<span style="display:flex;align-items:center;gap:8px;white-space:nowrap">${b.real?ava(b.x,'ava tbimg'):''}<b>${esc(b.hoTen)}</b></span>`,b.sdt?`<a class="mini" href="tel:${esc(b.sdt)}">${esc(b.sdt)}</a>`:'<span style="color:#c2410c">Chưa có SĐT</span>'].concat(showCamp?[`<span style="white-space:nowrap">${esc(b.x?b.x.chuongTrinh||'':'')}</span>`]:[]).concat(showSp?[`<span style="white-space:nowrap">${esc(/bảo lưu/.test(b.sp)?'Bảo lưu cọc DM':rpShort(b.sp).replace(/^./,m=>m.toUpperCase()))}</span>`]:[]).concat([
    `<span style="white-space:nowrap">${({full:'FULL',coc:'Cọc',chua:'Cọc · chưa CK',baoluu:'Bảo lưu cọc'})[b.tt]||''}</span>`,VND(b.gia),VND(b.daThu),b.no?`<b style="color:#c2410c">${VND(b.no)}</b>`:'0 đ',esc(b.phuTrach.join(', ')),
-   b.real?[b.x.canhBao?`<b style="color:#b91c1c">⚠ ${esc(b.x.canhBao)}</b>`:'',b.x.lichHen?esc(b.x.lichHen):'',b.x.dongHanh?'Đồng hành: '+esc(b.x.dongHanh):''].filter(Boolean).join('<br>'):'',
+   b.real?`<span style="display:block;min-width:300px">${[b.x.canhBao?`<b style="color:#b91c1c">⚠ ${esc(b.x.canhBao)}</b>`:'',b.x.lichHen?esc(b.x.lichHen):'',b.x.dongHanh?'Đồng hành: '+esc(b.x.dongHanh):''].filter(Boolean).join('<br>')}</span>`:'',
    b.real?`<button class="btn sm" data-open="${esc(b.rid)}">Mở</button>`:`<button class="btn sm" data-buyer="${b.id}">Xem</button>`])),
-  total:['Tổng cộng',list.length+' người'].concat(showSp?['']:[]).concat(['',VND(sumBy(list,'gia')),VND(sumBy(list,'daThu')),VND(sumBy(list,'no')),'','',''])});
+  total:['Tổng cộng',list.length+' người'].concat(showCamp?['']:[]).concat(showSp?['']:[]).concat(['',VND(sumBy(list,'gia')),VND(sumBy(list,'daThu')),VND(sumBy(list,'no')),'','',''])});
 }
 const MOD_DEMO={
 'marketing':()=>{
@@ -1309,6 +1351,8 @@ document.addEventListener('click',async e=>{
  if(t.dataset.cellsave){await saveEditor();return}
  if(t.dataset.kh){S.kh=t.dataset.kh;render();return}
  if(t.dataset.cal){const [y,m]=S.calM.split('-').map(Number),d=new Date(y,m-1+(+t.dataset.cal),1);S.calM=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;render();return}
+ {const rc=t.closest('[data-rcamp]');if(rc){S.rf.camp=rc.dataset.rcamp;render();setTimeout(()=>document.querySelector('.fbar')?.scrollIntoView({block:'start'}),30);return}}
+ if(t.id==='rfReset'){Object.assign(S.rf,{sp:'all',tt:'all',pt:'all',q:''});render();return}
  if(t.dataset.camp){S.camp=S.camp===t.dataset.camp?null:t.dataset.camp;S.bf={q:'',sp:'all',tt:'all',pt:'all',sort:'sp'};render();if(S.camp)setTimeout(()=>document.querySelector('.campd')?.scrollIntoView({behavior:'smooth',block:'start'}),60);return}
  if(t.dataset.buyer){openBuyer(t.dataset.buyer);return}
  if(t.dataset.gv){S.gv=S.gv===t.dataset.gv?null:t.dataset.gv;render();if(S.gv)setTimeout(()=>document.querySelector('.campd')?.scrollIntoView({behavior:'smooth'}),60);return}
@@ -1351,6 +1395,7 @@ document.addEventListener('submit',async e=>{
 document.addEventListener('input',e=>{
  if(e.target.id==='q'){S.f.q=e.target.value;const pos=e.target.selectionStart;render();const q=$('#q');q.focus();q.setSelectionRange(pos,pos)}
  if(e.target.id==='bq'){S.bf.q=e.target.value;const pos=e.target.selectionStart;render();const q=$('#bq');q.focus();q.setSelectionRange(pos,pos)}
+ if(e.target.id==='rfQ'){S.rf.q=e.target.value;const pos=e.target.selectionStart;render();const q=$('#rfQ');q.focus();q.setSelectionRange(pos,pos)}
  if(e.target.id==='cq'){S.cf.q=e.target.value;const pos=e.target.selectionStart;render();const q=$('#cq');q.focus();q.setSelectionRange(pos,pos)}
 });
 document.addEventListener('change',async e=>{
@@ -1362,6 +1407,9 @@ document.addEventListener('change',async e=>{
  if(e.target.id==='calSel'){S.calM=e.target.value;render()}
  if(['bsp','btt','bpt','bsort'].includes(e.target.id)){S.bf[{bsp:'sp',btt:'tt',bpt:'pt',bsort:'sort'}[e.target.id]]=e.target.value;render()}
  if(e.target.id==='ckhoa'){S.cf.khoa=e.target.value;render()}
+ if(['rfSp','rfTt','rfPt','rfSort'].includes(e.target.id)){S.rf[{rfSp:'sp',rfTt:'tt',rfPt:'pt',rfSort:'sort'}[e.target.id]]=e.target.value;render()}
+ if(e.target.id==='cct'){S.cf.ct=e.target.value;render()}
+ if(e.target.id==='fct'){S.f.ct=e.target.value;render()}
  if(e.target.id==='cst'){S.cf.st=e.target.value;render()}
  if(e.target.id==='cpt'){S.cf.pt=e.target.value;render()}
  if(e.target.id==='feKhoa'){$('#feKhacWrap').style.display=e.target.value==='__khac'?'':'none'}

@@ -1580,7 +1580,7 @@ function ktMatch(tx){
  // cú pháp chiến dịch + mã khóa
  let syn=null;
  for(const c of S.camps){if(!c.ma||!(c.ma.length<=3?txt.includes(' '+c.ma+' '):cmp.includes(c.ma)))continue;const sp=arr(c.sp);const p=sp.find(p=>cmp.includes(c.ma+p.ma)||txt.includes(' '+p.ma+' '))||(sp.length===1?sp[0]:null);syn={c,p};if(p)break}
- if(syn&&syn.p&&cands.length){const nar=cands.filter(r=>r.chuongTrinh===syn.c.ten&&(prodOf(r)||{}).ma===syn.p.ma);if(nar.length)cands=nar}
+ if(syn&&syn.p&&cands.length){const nar=cands.filter(r=>r.chuongTrinh===syn.c.ten&&(prodOf(r)||{}).ma===syn.p.ma);if(nar.length)cands=nar;else{const o=cands[0];return {c:'moi',cands:[],why:`${o.hoTen} đã có trong CRM (${prodName(o)}) nhưng chưa đăng ký ${syn.p.ten} – tạo đăng ký mới`,syn,nw:{hoTen:o.hoTen,sdt:phoneN(o.sdt)||phones[0]||''}}}}
  if(!cands.length){
   if(phones.length){const g=guessName(tx,phones[0],syn);return {c:'moi',cands:[],why:`Có SĐT ${phones[0]} nhưng chưa có học viên này trong CRM${syn?` · nhận ra chiến dịch ${syn.c.ma}${syn.p?' – '+syn.p.ten:' (chưa rõ khóa)'}`:' · chưa nhận ra chiến dịch'}`,syn,nw:{hoTen:g,sdt:phones[0]}}}
   const odd=(String(tx.noiDung||'').match(/(?:^|\D)(0\d{7,8}|0\d{10,11})(?!\d)/)||[])[1];

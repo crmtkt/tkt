@@ -370,7 +370,7 @@ function campIn_(c) {
     hocPhi: money_(p && p.hocPhi), uuDai: money_(p && p.uuDai), coc: money_(p && p.coc),
     dot: (Array.isArray(p && p.dot) ? p.dot : []).slice(0, 12).map(d => ({soTien: money_(d && d.soTien), han: day_(d && d.han)})).filter(d => d.soTien),
   })).filter(p => p.ma && p.ten);
-  return {ma: code_(c.ma, 10), ten: str_(c.ten, 160), tu: day_(c.tu), den: day_(c.den), phuTrach: list_(c.phuTrach, 20, 80), ghiChu: str_(c.ghiChu, 2000),
+  return {ma: code_(c.ma, 10), mau: str_(c.mau, 60), ten: str_(c.ten, 160), tu: day_(c.tu), den: day_(c.den), phuTrach: list_(c.phuTrach, 20, 80), ghiChu: str_(c.ghiChu, 2000),
     taiKhoan: {bin: /^\d{6}$/.test(String(tk.bin || '')) ? String(tk.bin) : '', nganHang: str_(tk.nganHang, 80), soTK: String(tk.soTK || '').replace(/[^0-9A-Za-z]/g, '').slice(0, 30), chuTK: code_(tk.chuTK, 60) ? str_(tk.chuTK, 80).toUpperCase() : ''},
     sp: sp};
 }
@@ -462,6 +462,30 @@ const KT_ = {
     if (tx.trangThai === 'da') return fail_('Giao dịch đã xác nhận, hãy hoàn tác trước.');
     Object.assign(tx, {trangThai: 'bo', ghiChu: str_(b.ghiChu, 500) || 'Không phải học phí', xacNhanLuc: now_()}); put_('txns', tx);
     return out_({ok: true, txn: txnOut_(tx)});
+  },
+  txn_newrecs: b => {
+    // Tạo hồ sơ học viên mới từ giao dịch sao kê (chưa có trong CRM) rồi ghi tiền luôn. Cùng SĐT + khóa + nhóm + chương trình thì dùng chung hồ sơ.
+    const items = (Array.isArray(b.items) ? b.items : []).slice(0, 300), recs = rows_('records'), txs = rows_('txns'), changed = {}, outTx = [];
+    const keyOf = d => [phone_(d.sdt) || String(d.hoTen || '').toLowerCase(), d.khoa || '', d.nhom || '', d.chuongTrinh || ''].join('|');
+    let made = 0, bad = 0;
+    items.forEach(it => {
+      const tx = txs.filter(x => x.id === str_(it && it.id, 32))[0], R = (it && it.rec) || {};
+      const hoTen = str_(R.hoTen, 120), sd = String(R.sdt || '').replace(/[\s.\-]/g, '');
+      if (!tx || tx.trangThai !== 'cho' || !hoTen || (sd && !/^\+?\d{9,12}$/.test(sd))) { bad++; return; }
+      const so = Number(tx.soTien) || 0, dot = str_(it.dot, 60) || 'Đợt 1';
+      const pay = {ngay: tx.ngay, soTien: String(so), noiDung: dot + ' · Chuyển khoản: ' + (tx.noiDung || '').slice(0, 300) + ' (kế toán đối soát)', gd: tx.id};
+      const nd = {hoTen: hoTen, sdt: sd, khoa: str_(R.khoa, 60) || 'Diamond', nhom: str_(R.nhom, 80), chuongTrinh: str_(R.chuongTrinh, 160), hocPhi: money_(R.hocPhi), khauTru: 0, daDong: 0, nam: '2026', trangThai: 'Mới đăng ký', phuTrach: list_(R.phuTrach, 10, 80), hanhTrinh: [{ngay: tx.ngay, noiDung: 'Tạo hồ sơ từ sao kê ngân hàng (kế toán đối soát)'}], nhatKy: [], tienDo: {}, lichSuTT: []};
+      let r = recs.filter(x => keyOf(recData_(x)) === keyOf(nd))[0];
+      if (r) { const d = recData_(r); d.daDong = (Number(d.daDong) || 0) + so; d.lichSuTT = (d.lichSuTT || []).concat([pay]); d.ttTT = payState_(d); recSet_(r, d); }
+      else {
+        nd.daDong = so; nd.lichSuTT = [pay]; nd.ttTT = payState_(nd);
+        r = {id: uid_(), formId: '', createdAt: now_(), data: JSON.stringify(nd), hoTen: hoTen, sdt: phone_(sd), email: '', trangThai: 'Mới đăng ký', phuTrach: nd.phuTrach.join(', '), updatedAt: now_()};
+        setPhoto_(r, ''); put_('records', r); r._row = sheet_('records').getLastRow(); recs.push(r); made++;
+      }
+      changed[r.id] = r;
+      Object.assign(tx, {trangThai: 'da', alloc: JSON.stringify([{recId: r.id, soTien: so, dot: dot, hoTen: hoTen}]), ghiChu: 'Tạo hồ sơ mới từ sao kê', xacNhanLuc: now_()}); put_('txns', tx); outTx.push(txnOut_(tx));
+    });
+    return out_({ok: true, made: made, bad: bad, txns: outTx, records: Object.keys(changed).map(k => recOut_(changed[k]))});
   },
   txn_delete: b => {
     const tx = rows_('txns').filter(x => x.id === str_(b.id, 32))[0]; if (!tx) return out_({ok: true});

@@ -515,6 +515,7 @@ tr.kcrow td{background:color-mix(in srgb,var(--kc) 9%,transparent)}tr.kcrow td:f
 @media (max-width:760px){.grid3{grid-template-columns:1fr 1fr}.kpis.sm3{grid-template-columns:repeat(3,minmax(0,1fr))}}
 .ovbox{display:flex;flex-direction:column;gap:6px}.ovbox.ed{outline:1px dashed var(--gold);outline-offset:4px;border-radius:8px}.ovrow{display:flex;gap:6px;align-items:flex-end}.ovrow .inp{min-height:38px;padding:6px 8px;font-size:14px}.edtag{align-self:flex-start;font-size:12px;font-weight:700;color:var(--gold2)}
 .ktact2{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}.ktact2 .btn{min-height:36px}
+.autotag{font-size:12.5px;color:#4ade80}.misstag{font-size:12.5px;color:#fb923c;font-weight:600}.inp.need{border-color:#f97316;box-shadow:0 0 0 1px #f9731655}
 </style>
 <script>new MutationObserver(()=>{for(const c of document.querySelectorAll('.stack td:not([data-l])')){let i=0,p=c;while(p=p.previousElementSibling)i+=p.colSpan;c.dataset.l=c.closest('table').rows[0].cells[i]?.textContent||''}}).observe(document,{childList:true,subtree:true})</script>
 </head>
@@ -1559,17 +1560,53 @@ function splitPh(raw){
 }
 const NOISE=/\b(C ?H ?U ?Y ?E ?N ?T ?I ?E ?N|C ?H ?U ?Y ?E ?N ?K ?H ?O ?A ?N( NHANH)?( QUA ZALO)?|THANH ?TOAN|HOC ?PHI|KHOA ?HOC|DONG ?TIEN|NOP ?TIEN|QUA ZALO|M ?A GD|CONG TY( TNHH)?)\b/g;
 const tcase=s=>s.toLowerCase().replace(/(^|\s)\S/g,m=>m.toUpperCase());
+/* ---------- Họ tên không dấu → có dấu (từ điển tên người Việt + học từ tên đã có trong CRM) ---------- */
+const VN_D=s=>Object.fromEntries(s.split(',').map(x=>x.split(':')));
+const VN_HO=VN_D('NGUYEN:Nguyễn,TRAN:Trần,LE:Lê,PHAM:Phạm,HOANG:Hoàng,HUYNH:Huỳnh,PHAN:Phan,VU:Vũ,VO:Võ,DANG:Đặng,BUI:Bùi,DO:Đỗ,HO:Hồ,NGO:Ngô,DUONG:Dương,LY:Lý,DAO:Đào,DOAN:Đoàn,VUONG:Vương,TRINH:Trịnh,TRUONG:Trương,LAM:Lâm,PHUNG:Phùng,MAI:Mai,TO:Tô,HA:Hà,TA:Tạ,LUONG:Lương,LUU:Lưu,CAO:Cao,DINH:Đinh,CHAU:Châu,QUACH:Quách,THAI:Thái,TU:Từ,LA:La,KIEU:Kiều,MAC:Mạc,TANG:Tăng,HUA:Hứa,LUC:Lục,DIEP:Diệp,TRIEU:Triệu,DAM:Đàm,KHUC:Khúc,THAN:Thân,ONG:Ông,NGHIEM:Nghiêm,AU:Âu,GIANG:Giang,HAN:Hàn,NINH:Ninh,QUAN:Quan,TONG:Tống,VI:Vi,VIEN:Viên,CHU:Chu,NONG:Nông,LO:Lò,CU:Cù,KHONG:Khổng,LAC:Lạc,BACH:Bạch,HAU:Hầu,DAU:Đậu,DONG:Đồng,CAN:Cấn,MAN:Mẫn,CAM:Cam,KHA:Kha,LAI:Lại,TIEU:Tiêu,UNG:Ưng,YEN:Yên,DIEU:Diêu,LANG:Lăng,THACH:Thạch,TIET:Tiết,VAN:Văn,CHE:Chế,DU:Du,KIM:Kim,LUYEN:Luyện,NHAN:Nhan,PHI:Phí,QUANG:Quang,SON:Sơn,THIEU:Thiều,TRAC:Trác,TRIEU:Triệu,VINH:Vĩnh');
+const VN_DEM=VN_D('VAN:Văn,THI:Thị,HUU:Hữu,DUC:Đức,DINH:Đình,CONG:Công,QUOC:Quốc,XUAN:Xuân,NGOC:Ngọc,THANH:Thanh,MINH:Minh,KIM:Kim,BAO:Bảo,GIA:Gia,HOANG:Hoàng,TRUNG:Trung,ANH:Anh,HONG:Hồng,THU:Thu,MY:Mỹ,PHUONG:Phương,BICH:Bích,DIEU:Diệu,TUYET:Tuyết,THUY:Thùy,HA:Hà,HAI:Hải,MANH:Mạnh,TIEN:Tiến,THE:Thế,TRONG:Trọng,QUANG:Quang,NHU:Như,KHANH:Khánh,PHUC:Phúc,NHAT:Nhật,THAI:Thái,TAN:Tấn,TUAN:Tuấn,VIET:Việt,HOAI:Hoài,CAM:Cẩm,DIEM:Diễm,HUONG:Hương,LAN:Lan,MAI:Mai,NGAN:Ngân,QUYNH:Quỳnh,TRA:Trà,TU:Tú,UYEN:Uyên,KHAC:Khắc,BA:Bá,CHI:Chí,DANG:Đăng,DUY:Duy,HUY:Huy,LONG:Long,NAM:Nam,PHU:Phú,SI:Sĩ,SY:Sỹ,TAT:Tất,TRI:Trí,TRUONG:Trường,VINH:Vĩnh,XUAN:Xuân,CAT:Cát,DUONG:Dương,HIEN:Hiền,HUE:Huệ,KIEU:Kiều,LE:Lệ,LINH:Linh,NGUYET:Nguyệt,OANH:Oanh,PHI:Phi,THAO:Thảo,THIEN:Thiên,TRUC:Trúc,TUONG:Tường,YEN:Yến,BINH:Bình,DAI:Đại,HOANG:Hoàng,HUNG:Hùng,KHAI:Khải,KHOI:Khôi,LAM:Lâm,LOC:Lộc,NGHIA:Nghĩa,NGUYEN:Nguyên,QUY:Quý,SON:Sơn,TAI:Tài,THANG:Thắng,THINH:Thịnh,TOAN:Toàn,TRAN:Trần,VU:Vũ,HO:Hồ');
+const VN_TEN=VN_D('AN:An,ANH:Anh,BAO:Bảo,BINH:Bình,CHAU:Châu,CHI:Chi,CHINH:Chính,CHUONG:Chương,CONG:Công,CUONG:Cường,DAI:Đại,DANH:Danh,DAT:Đạt,DIEP:Diệp,DIEM:Diễm,DONG:Đông,DUC:Đức,DUNG:Dũng,DUONG:Dương,DUY:Duy,DUYEN:Duyên,GIANG:Giang,HA:Hà,HAI:Hải,HANH:Hạnh,HANG:Hằng,HAO:Hào,HAU:Hậu,HIEN:Hiền,HIEP:Hiệp,HIEU:Hiếu,HOA:Hoa,HOAI:Hoài,HOAN:Hoàn,HOANG:Hoàng,HOI:Hội,HONG:Hồng,HUE:Huệ,HUNG:Hùng,HUONG:Hương,HUY:Huy,HUYEN:Huyền,KHA:Kha,KHAI:Khải,KHANG:Khang,KHANH:Khánh,KHIEM:Khiêm,KHOA:Khoa,KHOI:Khôi,KHUE:Khuê,KIEN:Kiên,KIET:Kiệt,KIEU:Kiều,LAM:Lâm,LAN:Lan,LE:Lệ,LIEN:Liên,LIEU:Liễu,LINH:Linh,LOAN:Loan,LOC:Lộc,LOI:Lợi,LONG:Long,LUAN:Luân,LY:Ly,MAI:Mai,MANH:Mạnh,MINH:Minh,MY:My,NAM:Nam,NGA:Nga,NGAN:Ngân,NGHIA:Nghĩa,NGOC:Ngọc,NGUYEN:Nguyên,NGUYET:Nguyệt,NHAN:Nhân,NHAT:Nhật,NHI:Nhi,NHU:Như,NHUNG:Nhung,NINH:Ninh,OANH:Oanh,PHAT:Phát,PHI:Phi,PHONG:Phong,PHU:Phú,PHUC:Phúc,PHUNG:Phụng,PHUONG:Phương,QUAN:Quân,QUANG:Quang,QUOC:Quốc,QUY:Quý,QUYEN:Quyên,QUYNH:Quỳnh,SANG:Sang,SON:Sơn,SUONG:Sương,TAI:Tài,TAM:Tâm,TAN:Tân,THAI:Thái,THAM:Thắm,THANG:Thắng,THANH:Thanh,THAO:Thảo,THIEN:Thiện,THINH:Thịnh,THO:Thơ,THOA:Thoa,THONG:Thông,THU:Thu,THUAN:Thuận,THUONG:Thương,THUY:Thủy,THUC:Thục,TIEN:Tiến,TIN:Tín,TINH:Tình,TOAN:Toàn,TRAM:Trâm,TRANG:Trang,TRI:Trí,TRIEU:Triều,TRINH:Trinh,TRONG:Trọng,TRUC:Trúc,TRUNG:Trung,TRUONG:Trường,TU:Tú,TUAN:Tuấn,TUNG:Tùng,TUYEN:Tuyến,TUYET:Tuyết,UYEN:Uyên,VAN:Vân,VI:Vi,VIET:Việt,VINH:Vinh,VU:Vũ,VUONG:Vương,VY:Vy,XUAN:Xuân,YEN:Yến,CHUNG:Chung,DAO:Đào,DIEU:Diệu,DOAN:Đoan,GIAO:Giao,HIEN:Hiền,HUAN:Huấn,KHUONG:Khương,LAP:Lập,LUC:Lực,LUONG:Lương,MAO:Mão,MIEN:Miên,NGOAN:Ngoan,NHA:Nhã,PHIEN:Phiến,QUE:Quế,SAM:Sâm,SINH:Sinh,TAO:Tạo,THAN:Thân,THE:Thế,THI:Thi,THIET:Thiết,TOAI:Toại,TRIET:Triết,TRUYEN:Truyền,TUE:Tuệ,UY:Uy,VO:Võ,XUYEN:Xuyến,BICH:Bích,CAM:Cầm,DIEN:Điền,DIN:Đìn,HAN:Hân,HONGNHUNG:Hồng Nhung');
+const VN_NU=VN_D('DUNG:Dung,TIEN:Tiên,HUNG:Hưng,TRINH:Trinh,MY:My,THUY:Thủy,LE:Lệ,TAM:Tâm,VAN:Vân,THU:Thu,HA:Hà,NGUYEN:Nguyên,CAM:Cẩm,KIM:Kim');
+const hasVowel=w=>/[AEIOUY]/.test(w);
+function viName(words){
+ if(!words||!words.length)return '';
+ const w=[];for(const x of words){if(w.length&&!hasVowel(w[w.length-1]))w[w.length-1]+=x;else w.push(x)}
+ const L={s:{},m:{},g:{},a:{}};S.real.forEach(r=>{const p=String(r.hoTen||'').trim().split(/\s+/);p.forEach((t,i)=>{const k=nrm(t);if(!k)return;const pos=i===0?'s':i===p.length-1?'g':'m';L[pos][k]=L[pos][k]||t;L.a[k]=L.a[k]||t})});
+ const nu=w.includes('THI'),n=w.length;
+ return w.map((k,i)=>{const pos=n===1?'g':i===0?'s':i===n-1?'g':'m';
+  const d=pos==='s'?VN_HO:pos==='m'?VN_DEM:(nu&&VN_NU[k])?VN_NU:VN_TEN;
+  const v=L[pos][k]||d[k]||L.a[k]||VN_TEN[k]||VN_DEM[k]||VN_HO[k];
+  return v||(k.charAt(0)+k.slice(1).toLowerCase())}).join(' ');
+}
+const viKnown=w=>!!VN_HO[w[0]];
+
+/* Đoán khóa khi nội dung không ghi mã khóa: theo mã/tên khóa trong nội dung, số tiền (học phí, cọc, các đợt), tài khoản nhận */
+function guessProd(tx){
+ const txt=' '+nrm(String(tx.noiDung||'')+' '+String(tx.nguoiCK||''))+' ',amt=n0(tx.soTien),out=[];
+ S.camps.forEach(c=>arr(c.sp).forEach(p=>{let sc=0;const why=[];
+  if(c.ma&&txt.includes(' '+c.ma+' ')){sc+=2;why.push('mã '+c.ma)}
+  if(p.ma&&p.ma!==c.ma&&txt.includes(' '+p.ma+' ')){sc+=3;why.push('mã khóa '+p.ma)}
+  const kw=nrm(p.ten).split(' ').filter(w=>w.length>=4&&!['CMA','KHOA','HOC','NHOM'].includes(w));if(kw.some(w=>txt.includes(' '+w+' '))){sc+=2;why.push('tên khóa')}
+  const net=n0(p.hocPhi)-n0(p.uuDai),dts=arr(p.dot).map(d=>n0(d.soTien));
+  if(amt&&(amt===net||amt===n0(p.coc)||dts.includes(amt))){sc+=2;why.push(amt===net?'số tiền = học phí':amt===n0(p.coc)?'số tiền = tiền cọc':'số tiền = 1 đợt')}
+  if(c.taiKhoan&&c.taiKhoan.soTK&&tx.taiKhoan&&tx.taiKhoan.includes(c.taiKhoan.soTK)){sc+=1;why.push('đúng tài khoản nhận')}
+  if(S.camps.length===1&&arr(c.sp).length===1)sc+=1;
+  if(sc)out.push({c,p,sc,why})}));
+ out.sort((a,b)=>b.sc-a.sc);
+ if(!out.length||out[0].sc<2||(out[1]&&out[1].sc===out[0].sc))return null;
+ return out[0];
+}
+function dotNew(p,amt){if(!p)return 'Đợt 1';const net=n0(p.hocPhi)-n0(p.uuDai);if(net&&amt>=net)return 'Đóng đủ';if(n0(p.coc)&&amt===n0(p.coc))return 'Cọc giữ chỗ';return 'Đợt 1'}
 function guessName(tx,ph,syn){
  const stop=new Set([...STOPW,...S.camps.flatMap(c=>[c.ma,...arr(c.sp).map(p=>p.ma)])]);
- const send=nrm(tx.nguoiCK);if(send&&/^[A-Z ]+$/.test(send)&&send.split(' ').length>=2)return tcase(send);
+ const send=nrm(tx.nguoiCK);if(send&&/^[A-Z ]+$/.test(send)&&send.split(' ').length>=2)return viName(send.split(' '));
  let src=String(tx.noiDung||'');if(ph){const g=[...src.matchAll(/\d+/g)];for(let a=0;a<g.length;a++){let v='',e=g[a].index;for(let b=a;b<g.length&&b<=a+3;b++){if(b>a&&!/^[\s.\-]{1,3}$/.test(src.slice(e,g[b].index)))break;v+=g[b][0];e=g[b].index+g[b][0].length;if(phoneN(v)===ph){src=src.slice(0,g[a].index)+' '+v+' '+src.slice(e);a=g.length;break}}}}
  const t=nrm(src).replace(NOISE,' | ').replace(/\s+/g,' ').trim().split(' '),i=ph?t.findIndex(w=>phoneN(w)===ph):t.findIndex(w=>/^0\d{7,11}$/.test(w));
- const anyRun=()=>{for(let j=0;j<t.length;j++){const o=[];for(let k=j;k<t.length&&o.length<5;k++){if(!/^[A-Z]{2,}$/.test(t[k])||stop.has(t[k]))break;o.push(t[k])}if(o.length>=2)return o}return []};
+ const anyRun=strict=>{for(let j=0;j<t.length;j++){if(strict&&!VN_HO[t[j]])continue;const o=[];for(let k=j;k<t.length&&o.length<5;k++){if(!/^[A-Z]{1,}$/.test(t[k])||stop.has(t[k])||(t[k].length<2&&hasVowel(t[k])))break;o.push(t[k])}if(o.length>=2)return o}return []};
  const vcb=()=>{const m=/ CT TU [\d ]+ ([A-Z ]{5,40}?) TOI /.exec(' '+nrm(src)+' ');return m?m[1].split(' '):[]};
- if(i<0){const b=anyRun();return b.length?tcase(b.join(' ')):''}
- const pick=dir=>{const o=[];for(let j=i+dir;j>=0&&j<t.length&&o.length<5;j+=dir){const w=t[j];if(!/^[A-Z]{2,}$/.test(w)||stop.has(w))break;o.push(w)}return dir<0?o.reverse():o};
- let n=i>=0?pick(-1):[];if(n.length<2&&i>=0)n=pick(1);if(n.length<2)n=vcb();if(n.length<2)n=anyRun();
- return n.length>=2?tcase(n.join(' ')):'';
+ if(i<0){let b=vcb();if(b.length<2)b=anyRun(true);return b.length>=2?viName(b):''}
+ const pick=dir=>{const o=[];for(let j=i+dir;j>=0&&j<t.length&&o.length<5;j+=dir){const w=t[j];if(!/^[A-Z]+$/.test(w)||stop.has(w)||(w.length<2&&hasVowel(w)))break;o.push(w)}return dir<0?o.reverse():o};
+ let n=i>=0?pick(-1):[];if(n.length<2&&i>=0)n=pick(1);if(n.length<2)n=vcb();if(n.length<2)n=anyRun(true);
+ return n.length>=2?viName(n):'';
 }
 function ktMatch(tx){
  const recs=S.real,raw=String(tx.noiDung||'')+' '+String(tx.nguoiCK||''),txt=' '+nrm(raw)+' ',cmp=txt.replace(/ /g,''),amt=n0(tx.soTien);
@@ -1589,6 +1626,7 @@ function ktMatch(tx){
  if(!cands.length){
   if(phones.length){const g=guessName(tx,phones[0],syn);return {c:'moi',cands:[],why:`Có SĐT ${phones[0]} nhưng chưa có học viên này trong CRM${syn?` · nhận ra chiến dịch ${syn.c.ma}${syn.p?' – '+syn.p.ten:' (chưa rõ khóa)'}`:' · chưa nhận ra chiến dịch'}`,syn,nw:{hoTen:g,sdt:phones[0]}}}
   const odd=(String(tx.noiDung||'').match(/(?:^|\D)(0\d{7,8}|0\d{10,11})(?!\d)/)||[])[1];
+  const gn=guessName(tx,'',syn);if(gn)return {c:'moi',cands:[],why:`Có họ tên ${gn} nhưng chưa có trong CRM`+(odd?` · dãy số ${odd} (${odd.length} số) có thể là SĐT ghi sai`:' · nội dung không có SĐT'),syn,nw:{hoTen:gn,sdt:''}};
   return {c:'do',cands:[],why:(odd?`Có dãy số ${odd} (${odd.length} số – có thể SĐT ghi sai/thiếu số). `:'')+(syn?`Nhận ra chiến dịch ${syn.c.ma} nhưng không tìm thấy học viên`:'Không có SĐT đủ 10 số, họ tên học viên hay cú pháp chiến dịch'),syn,nw:{hoTen:guessName(tx,'',syn),sdt:''}};
  }
  const owing=cands.filter(r=>congNo(r)>0),pool=owing.length?owing:cands;
@@ -1762,23 +1800,29 @@ const DOTS=['Đợt 1','Đợt 2','Đợt 3','Đợt 4','Đợt 5','Đợt 6','C
 function personOf(t,m){const base=m.x?[m.x]:m.cands||[];const phs=new Set(base.map(r=>phoneN(r.sdt)).filter(Boolean));if(m.nw&&m.nw.sdt)phs.add(m.nw.sdt);
  const recs=S.real.filter(r=>base.includes(r)||(phs.size&&phs.has(phoneN(r.sdt))));return recs}
 function ovDefault(t,m){
- let v='';if(m.x)v='R|'+m.x.id;else if(m.c==='moi'&&m.syn&&m.syn.p)v='C|'+m.syn.c.id+'|'+m.syn.p.ma;
- const dot=String(m.dot||'').replace(/\s*\(.*\)$/,'')||'Đợt 1';
- const useG=m.c==='moi'||!!m.syn;return {v,dot,hoTen:useG&&m.nw?m.nw.hoTen||'':'',sdt:(m.nw&&m.nw.sdt)||'',edited:false};
+ let v='',dot=String(m.dot||'').replace(/\s*\(.*\)$/,'')||'Đợt 1',kWhy='';const amt=n0(t.soTien);
+ if(m.x){v='R|'+m.x.id;kWhy='hồ sơ đang có'}
+ else if((m.c==='moi'||m.c==='do')&&m.syn&&m.syn.p){v='C|'+m.syn.c.id+'|'+m.syn.p.ma;dot=dotNew(m.syn.p,amt);kWhy='theo cú pháp chuyển khoản'}
+ else if(m.c==='moi'||m.c==='do'){const g=guessProd(t);if(g){v='C|'+g.c.id+'|'+g.p.ma;dot=dotNew(g.p,amt);kWhy='đoán theo '+g.why.join(', ')}}
+ const hoTen=m.nw?m.nw.hoTen||'':'',sdt=(m.nw&&m.nw.sdt)||'';
+ return {v,dot,hoTen,sdt,edited:false,auto:{ten:!!hoTen,sdt:!!sdt,khoa:kWhy}};
 }
 const ovOf=(t,m)=>{const o=S.kt.ov[t.id];return o&&o.edited?o:ovDefault(t,m)};
 function ovCell(t,m){
  const o=ovOf(t,m),pr=personOf(t,m),dis=o.v.startsWith('R|')?pr.find(r=>'R|'+r.id===o.v):null;
  const opt=(v,l)=>`<option value="${esc(v)}" ${o.v===v?'selected':''}>${esc(l)}</option>`;
- const sel=`<select class="inp" data-ov="${esc(t.id)}" data-f="v" style="width:100%"><option value="">— Chọn khóa ghi tiền —</option>
+ const sel=`<select class="inp${o.v?'':' need'}" data-ov="${esc(t.id)}" data-f="v" style="width:100%"><option value="">— Chọn khóa ghi tiền —</option>
   ${pr.length?`<optgroup label="Hồ sơ đang có của học viên">${pr.map(r=>opt('R|'+r.id,`${r.hoTen} · ${prodName(r)}${r.chuongTrinh?' · '+r.chuongTrinh:''} · công nợ ${TR(congNo(r))}`)).join('')}</optgroup>`:''}
   ${S.camps.map(c=>`<optgroup label="${esc((pr.length?'Đăng ký mới – ':'')+c.ten)}">${arr(c.sp).map(p=>opt('C|'+c.id+'|'+p.ma,`${p.ten}${n0(p.hocPhi)?' · '+TR(n0(p.hocPhi)):''}`)).join('')}</optgroup>`).join('')}
   <optgroup label="Khóa khác (không theo chiến dịch)">${Object.entries(COURSES).map(([k,c])=>opt('K|'+k,c.name)).join('')}</optgroup></select>`;
  const dots=[...new Set([...DOTS,o.dot])];
  const dsel=`<select class="inp" data-ov="${esc(t.id)}" data-f="dot" style="width:100%">${dots.map(d=>`<option ${o.dot===d?'selected':''}>${esc(d)}</option>`).join('')}</select>`;
  const needWho=!o.v.startsWith('R|')&&!pr.length;
+ const au=(S.kt.ov[t.id]&&S.kt.ov[t.id].edited)?null:o.auto,miss=[];if(needWho&&!o.hoTen)miss.push('họ tên');if(needWho&&!o.sdt)miss.push('SĐT');if(!o.v)miss.push('khóa');
+ const autoTxt=au?[au.ten&&needWho?'họ tên (đã thêm dấu)':'',au.sdt&&needWho?'SĐT':'',au.khoa?'khóa – '+au.khoa:''].filter(Boolean):[];
  return `<div class="ovbox${o.edited?' ed':''}">${o.edited?'<span class="edtag">✎ Kế toán đã chỉnh</span>':''}
-  ${needWho?`<div class="ovrow"><input class="inp" data-ov="${esc(t.id)}" data-f="hoTen" value="${esc(o.hoTen)}" placeholder="Họ tên học viên" aria-label="Họ tên học viên"><input class="inp" data-ov="${esc(t.id)}" data-f="sdt" value="${esc(o.sdt)}" placeholder="SĐT" inputmode="tel" style="max-width:130px" aria-label="Số điện thoại"></div>`:''}
+  ${autoTxt.length?`<div class="autotag">✓ Hệ thống tự điền: ${esc(autoTxt.join(' · '))}</div>`:''}${miss.length?`<div class="misstag">Chưa nhận ra: ${miss.join(', ')} – kế toán điền / chọn giúp</div>`:''}
+  ${needWho?`<div class="ovrow"><input class="inp${o.hoTen?'':' need'}" data-ov="${esc(t.id)}" data-f="hoTen" value="${esc(o.hoTen)}" placeholder="Họ tên học viên" aria-label="Họ tên học viên"><input class="inp${o.sdt?'':' need'}" data-ov="${esc(t.id)}" data-f="sdt" value="${esc(o.sdt)}" placeholder="SĐT" inputmode="tel" style="max-width:130px" aria-label="Số điện thoại"></div>`:''}
   <div class="ovrow"><div style="flex:1;min-width:0"><span class="mut sm">Khóa / hồ sơ</span>${sel}</div><div style="width:130px"><span class="mut sm">Đợt</span>${dsel}</div></div>
   ${dis?`<div class="mut sm">Còn công nợ ${VND(congNo(dis))}${n0(t.soTien)>congNo(dis)?' · <b style="color:#fb923c">tiền lớn hơn công nợ</b>':''}</div>`:''}</div>`;
 }
@@ -1797,10 +1841,10 @@ async function ovConfirm(t,m,o){
 }
 function ktPending(cho,M,cnt){
  const f=S.kt.flt,list=cho.filter(t=>f==='all'||M.get(t.id).c===f).sort((a,b)=>['do','moi','cam','vang','xanh'].indexOf(M.get(a.id).c)-['do','moi','cam','vang','xanh'].indexOf(M.get(b.id).c)||String(a.ngay).localeCompare(String(b.ngay)));
- const nx=cnt('xanh'),nm=cho.filter(t=>{const m=M.get(t.id);return m.c==='moi'&&m.syn&&m.syn.p&&m.nw.hoTen}).length;
+ const nx=cnt('xanh'),nm=cho.filter(t=>{const m=M.get(t.id),o=ovOf(t,m);return (m.c==='moi'||m.c==='do')&&/^[CK]\|/.test(o.v)&&o.hoTen.trim()}).length;
  if(!cho.length)return `<div class="panel"><p class="mut" style="margin:0">Không còn giao dịch nào chờ xác nhận. Tải sao kê mới ở tab "Tải sao kê".</p></div>`;
  return `<div class="ktflt"><button class="chip ${f==='all'?'on':''}" data-ktflt="all">Tất cả ${cho.length}</button>${Object.entries(KC).map(([k,[c,n]])=>`<button class="chip kc ${f===k?'on':''}" style="--kc:${c}" data-ktflt="${k}">● ${n} ${cnt(k)}</button>`).join('')}
- <span style="margin-left:auto;display:flex;gap:8px;flex-wrap:wrap">${nm?`<button class="btn ghost sm" id="ktAllNew">+ Tạo hồ sơ & ghi tiền cho ${nm} khoản học viên mới</button>`:''}${nx?`<button class="btn sm" id="ktAllGreen">✓ Xác nhận tất cả khoản xanh (${nx})</button>`:''}</span></div>
+ <span style="margin-left:auto;display:flex;gap:8px;flex-wrap:wrap">${nm?`<button class="btn ghost sm" id="ktAllNew">+ Ghi tiền & tạo hồ sơ cho ${nm} khoản học viên mới đã đủ thông tin</button>`:''}${nx?`<button class="btn sm" id="ktAllGreen">✓ Xác nhận tất cả khoản xanh (${nx})</button>`:''}</span></div>
  <div class="ktscroll"><table class="kt pend"><thead><tr><th>Ngày</th><th>Số tiền</th><th>Nội dung CK · người chuyển</th><th>Hệ thống nhận diện</th><th>Ghi vào (kế toán chỉnh được) · thao tác</th></tr></thead><tbody>
  ${list.map(t=>{const m=M.get(t.id),[col,lbl]=KC[m.c],o=ovOf(t,m);return `<tr style="--kc:${col}" class="kcrow"><td class="nw">${fmtD(t.ngay)}</td><td class="r nw"><b>${VND(n0(t.soTien))}</b></td><td style="min-width:200px">${esc(t.noiDung)}${t.nguoiCK?`<br><small class="mut">Người chuyển: ${esc(t.nguoiCK)}</small>`:''}${t.taiKhoan?`<br><small class="mut">TK nhận: ${esc(t.taiKhoan)}</small>`:''}</td>
   <td style="min-width:210px"><span class="kctag" style="--kc:${col}">● ${lbl}</span>${m.dot?` <span class="codechip">${esc(m.dot)}</span>`:''}${m.x?`<div style="margin-top:4px">${ktWho(m.x)}</div>`:''}<div class="mut sm" style="margin-top:4px">${esc(m.why)}</div></td>
@@ -1896,10 +1940,10 @@ async function ktClick(t){
  if(d.ktreset){delete S.kt.ov[d.ktreset];render();return true}
  if(d.ktgo){const tx=S.txns.find(x=>x.id===d.ktgo),m=ktMatch(tx),o=ovOf(tx,m);t.disabled=true;try{await ovConfirm(tx,m,o);delete S.kt.ov[tx.id];render();toast(`Đã ghi ${VND(n0(tx.soTien))} · ${o.dot}`)}catch(e){t.disabled=false;toast(e.message,true)}return true}
  if(d.ktnew){ktNewModal(S.txns.find(x=>x.id===d.ktnew));return true}
- if(t.id==='ktAllNew'){const list=S.txns.filter(x=>x.trangThai==='cho').map(x=>[x,ktMatch(x)]).filter(([,m])=>m.c==='moi'&&m.syn&&m.syn.p&&m.nw.hoTen);
+ if(t.id==='ktAllNew'){const list=S.txns.filter(x=>x.trangThai==='cho').map(x=>{const m=ktMatch(x);return [x,m,ovOf(x,m)]}).filter(([,m,o])=>(m.c==='moi'||m.c==='do')&&/^[CK]\|/.test(o.v)&&o.hoTen.trim());
   if(!d.sure){t.dataset.sure=1;t.textContent=`Bấm lần nữa để tạo hồ sơ cho ${list.length} khoản`;return true}
-  t.disabled=true;let made=0,n=0;try{for(let i=0;i<list.length;i+=40){const items=list.slice(i,i+40).map(([x,m])=>newItem(x,{hoTen:m.nw.hoTen,sdt:m.nw.sdt,c:m.syn.c,p:m.syn.p}));t.textContent=`Đang tạo… ${i}/${list.length}`;const j=await api('txn_newrecs',{items});ktApplyMany(j);made+=j.made;n+=j.txns.length}}catch(e){toast(e.message,true)}
-  render();toast(`Đã ghi ${n} khoản, tạo mới ${made} hồ sơ học viên. Nhớ sửa họ tên có dấu và phân công nhân sự.`);return true}
+  t.disabled=true;let made=0,n=0;try{for(let i=0;i<list.length;i+=40){const items=list.slice(i,i+40).map(([x,m,o])=>{const [k,a1,a2]=o.v.split('|');let khoa=a1,nhom='',ct='',hp=0;if(k==='C'){const c=S.camps.find(z=>z.id===a1),p=c&&arr(c.sp).find(z=>z.ma===a2);if(p){khoa=p.khoa;nhom=p.nhom||'';ct=c.ten;hp=n0(p.hocPhi)}}return {id:x.id,dot:o.dot,rec:{hoTen:o.hoTen.trim(),sdt:phoneN(o.sdt)||'',khoa,nhom,chuongTrinh:ct,hocPhi:hp,phuTrach:[]}}});t.textContent=`Đang tạo… ${i}/${list.length}`;const j=await api('txn_newrecs',{items});ktApplyMany(j);made+=j.made;n+=j.txns.length}}catch(e){toast(e.message,true)}
+  list.forEach(([x])=>delete S.kt.ov[x.id]);render();toast(`Đã ghi ${n} khoản, tạo mới ${made} hồ sơ học viên. Nhớ kiểm tra họ tên và phân công nhân sự.`);return true}
  if(t.id==='pkGo'){const P=S.kt.pick,tx=S.txns.find(x=>x.id===P.id),alloc=[...P.sel.entries()].filter(([,v])=>v>0).map(([id,v])=>({recId:id,soTien:v,dot:dotLabel(S.real.find(r=>r.id===id),v).lb}));
   if(!alloc.length)return toast('Chọn học viên và số tiền',true),true;if(alloc.reduce((a,x)=>a+x.soTien,0)!==n0(tx.soTien))return toast('Tổng tiền chia phải bằng số tiền giao dịch',true),true;
   t.disabled=true;try{await ktConfirm(tx,alloc);closeDrawer();render();toast('Đã ghi tiền vào hồ sơ học viên')}catch(e){t.disabled=false;toast(e.message,true)}return true}

@@ -1570,11 +1570,11 @@ const hasVowel=w=>/[AEIOUY]/.test(w);
 function viName(words){
  if(!words||!words.length)return '';
  const w=[];for(const x of words){if(w.length&&!hasVowel(w[w.length-1]))w[w.length-1]+=x;else w.push(x)}
- const L={s:{},m:{},g:{},a:{}};S.real.forEach(r=>{const p=String(r.hoTen||'').trim().split(/\s+/);p.forEach((t,i)=>{const k=nrm(t);if(!k)return;const pos=i===0?'s':i===p.length-1?'g':'m';L[pos][k]=L[pos][k]||t;L.a[k]=L.a[k]||t})});
+ const L={s:{},m:{},g:{},a:{}};S.real.forEach(r=>{if(/test|thử|phiếu/i.test(r.hoTen||''))return;const p=String(r.hoTen||'').trim().split(/\s+/);p.forEach((t,i)=>{const k=nrm(t);if(!k)return;const pos=i===0?'s':i===p.length-1?'g':'m';L[pos][k]=L[pos][k]||t;L.a[k]=L.a[k]||t})});
  const nu=w.includes('THI'),n=w.length;
  return w.map((k,i)=>{const pos=n===1?'g':i===0?'s':i===n-1?'g':'m';
   const d=pos==='s'?VN_HO:pos==='m'?VN_DEM:(nu&&VN_NU[k])?VN_NU:VN_TEN;
-  const v=L[pos][k]||d[k]||L.a[k]||VN_TEN[k]||VN_DEM[k]||VN_HO[k];
+  const v=d[k]||L[pos][k]||VN_TEN[k]||VN_DEM[k]||VN_HO[k]||L.a[k];
   return v||(k.charAt(0)+k.slice(1).toLowerCase())}).join(' ');
 }
 const viKnown=w=>!!VN_HO[w[0]];

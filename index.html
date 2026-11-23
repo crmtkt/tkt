@@ -1569,7 +1569,7 @@ const VN_NU=VN_D('DUNG:Dung,TIEN:Tiên,HUNG:Hưng,TRINH:Trinh,MY:My,THUY:Thủy,
 const hasVowel=w=>/[AEIOUY]/.test(w);
 function viName(words){
  if(!words||!words.length)return '';
- const w=[];for(const x of words){if(w.length&&!hasVowel(w[w.length-1]))w[w.length-1]+=x;else w.push(x)}
+ const w=vnWords(words);
  const L={s:{},m:{},g:{},a:{}};S.real.forEach(r=>{if(/test|thử|phiếu/i.test(r.hoTen||''))return;const p=String(r.hoTen||'').trim().split(/\s+/);p.forEach((t,i)=>{const k=nrm(t);if(!k)return;const pos=i===0?'s':i===p.length-1?'g':'m';L[pos][k]=L[pos][k]||t;L.a[k]=L.a[k]||t})});
  const nu=w.includes('THI'),n=w.length;
  return w.map((k,i)=>{const pos=n===1?'g':i===0?'s':i===n-1?'g':'m';
@@ -1577,7 +1577,11 @@ function viName(words){
   const v=d[k]||L[pos][k]||VN_TEN[k]||VN_DEM[k]||VN_HO[k]||L.a[k];
   return v||(k.charAt(0)+k.slice(1).toLowerCase())}).join(' ');
 }
-const viKnown=w=>!!VN_HO[w[0]];
+const VN_EXTRA=VN_D('CHANH:Chánh,DUNGG:Dũng,HIEP:Hiệp,KHIET:Khiết,LUU:Lưu,NGHI:Nghi,PHAT:Phát,QUI:Quí,SANG:Sang,TAN:Tân,THAP:Thập,THUY:Thủy,TOAN:Toản,TUNG:Tùng,TY:Tý,UT:Út,VAN:Văn');
+Object.entries(VN_EXTRA).forEach(([k,v])=>{if(!VN_TEN[k])VN_TEN[k]=v});
+function vnWords(words){const w=[];for(const x of words){if(w.length&&!hasVowel(w[w.length-1]))w[w.length-1]+=x;else w.push(x)}while(w.length&&!hasVowel(w[w.length-1]))w.pop();return w}
+const vnKnownW=k=>!!(VN_HO[k]||VN_DEM[k]||VN_TEN[k]||VN_NU[k]);
+const vnOK=words=>{const w=vnWords(words);return w.length>=2&&w.length<=5&&!!VN_HO[w[0]]&&w.every(vnKnownW)};
 
 /* Đoán khóa khi nội dung không ghi mã khóa: theo mã/tên khóa trong nội dung, số tiền (học phí, cọc, các đợt), tài khoản nhận */
 function guessProd(tx){
@@ -1598,14 +1602,14 @@ function guessProd(tx){
 function dotNew(p,amt){if(!p)return 'Đợt 1';const net=n0(p.hocPhi)-n0(p.uuDai);if(net&&amt>=net)return 'Đóng đủ';if(n0(p.coc)&&amt===n0(p.coc))return 'Cọc giữ chỗ';return 'Đợt 1'}
 function guessName(tx,ph,syn){
  const stop=new Set([...STOPW,...S.camps.flatMap(c=>[c.ma,...arr(c.sp).map(p=>p.ma)])]);
- const send=nrm(tx.nguoiCK);if(send&&/^[A-Z ]+$/.test(send)&&send.split(' ').length>=2)return viName(send.split(' '));
+ const send=nrm(tx.nguoiCK);if(send&&/^[A-Z ]+$/.test(send)&&vnOK(send.split(' ')))return viName(send.split(' '));
  let src=String(tx.noiDung||'');if(ph){const g=[...src.matchAll(/\d+/g)];for(let a=0;a<g.length;a++){let v='',e=g[a].index;for(let b=a;b<g.length&&b<=a+3;b++){if(b>a&&!/^[\s.\-]{1,3}$/.test(src.slice(e,g[b].index)))break;v+=g[b][0];e=g[b].index+g[b][0].length;if(phoneN(v)===ph){src=src.slice(0,g[a].index)+' '+v+' '+src.slice(e);a=g.length;break}}}}
  const t=nrm(src).replace(NOISE,' | ').replace(/\s+/g,' ').trim().split(' '),i=ph?t.findIndex(w=>phoneN(w)===ph):t.findIndex(w=>/^0\d{7,11}$/.test(w));
- const anyRun=strict=>{for(let j=0;j<t.length;j++){if(strict&&!VN_HO[t[j]])continue;const o=[];for(let k=j;k<t.length&&o.length<5;k++){if(!/^[A-Z]{1,}$/.test(t[k])||stop.has(t[k])||(t[k].length<2&&hasVowel(t[k])))break;o.push(t[k])}if(o.length>=2)return o}return []};
+ const anyRun=strict=>{for(let j=0;j<t.length;j++){if(strict&&!VN_HO[t[j]])continue;let best=null;const o=[];for(let k=j;k<t.length&&o.length<5;k++){if(!/^[A-Z]{1,}$/.test(t[k])||stop.has(t[k])||(t[k].length<2&&hasVowel(t[k])))break;o.push(t[k])}if(o.length>=2&&(!strict||vnOK(o)))return o;if(strict){for(let L=o.length-1;L>=2;L--)if(vnOK(o.slice(0,L)))return o.slice(0,L)}}return []};
  const vcb=()=>{const m=/ CT TU [\d ]+ ([A-Z ]{5,40}?) TOI /.exec(' '+nrm(src)+' ');return m?m[1].split(' '):[]};
- if(i<0){let b=vcb();if(b.length<2)b=anyRun(true);return b.length>=2?viName(b):''}
+ if(i<0){let b=vcb();if(!vnOK(b))b=anyRun(true);return b.length>=2&&vnOK(b)?viName(b):''}
  const pick=dir=>{const o=[];for(let j=i+dir;j>=0&&j<t.length&&o.length<5;j+=dir){const w=t[j];if(!/^[A-Z]+$/.test(w)||stop.has(w)||(w.length<2&&hasVowel(w)))break;o.push(w)}return dir<0?o.reverse():o};
- let n=i>=0?pick(-1):[];if(n.length<2&&i>=0)n=pick(1);if(n.length<2)n=vcb();if(n.length<2)n=anyRun(true);
+ let n=i>=0?pick(-1):[];if(n.length<2&&i>=0)n=pick(1);if(n.length<2)n=vcb();if(n.length<2||!vnWords(n).length)n=anyRun(true);n=vnWords(n);
  return n.length>=2?viName(n):'';
 }
 function ktMatch(tx){

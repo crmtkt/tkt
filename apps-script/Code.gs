@@ -12,6 +12,8 @@ const COLS = {
   forms: ['id', 'slug', 'ten', 'khoa', 'nam', 'mau', 'moTa', 'mo', 'createdAt'],
   records: ['id', 'formId', 'hoTen', 'sdt', 'email', 'trangThai', 'phuTrach', 'createdAt', 'updatedAt', 'data', 'anh', 'anh2', 'anh3', 'anh4', 'coAnh'],
   settings: ['k', 'v'],
+  camps: ['id', 'ma', 'ten', 'data', 'duyet', 'updatedAt'],
+  txns: ['id', 'key', 'ngay', 'soTien', 'noiDung', 'nguoiCK', 'taiKhoan', 'trangThai', 'alloc', 'ghiChu', 'createdAt', 'xacNhanLuc'],
 };
 const ANSWER_KEYS = ['hoTen','namSinh','sdt','email','thanhPho','congViec','vaiTro','khoaDaHoc','lyDo','vanDe','mongMuon','ketQua','ngaiNgai','sanPhamRieng','thoiGian','aiLevel','aiTools','aiDaLam','aiMuon','dongY'];
 const REQUIRED = {
@@ -150,7 +152,7 @@ function crm_(p) {
   if ('ttTT' in p) o.ttTT = PAY_ST.indexOf(p.ttTT) >= 0 ? p.ttTT : '';
   if ('hanTT' in p) o.hanTT = /^\d{4}-\d{2}-\d{2}$/.test(String(p.hanTT)) ? String(p.hanTT) : '';
   ['hocPhi', 'khauTru', 'daDong'].forEach(k => { if (k in p) o[k] = money_(p[k]); });
-  if ('lichSuTT' in p) o.lichSuTT = entries_(p.lichSuTT, ['ngay', 'soTien', 'noiDung']);
+  if ('lichSuTT' in p) o.lichSuTT = entries_(p.lichSuTT, ['ngay', 'soTien', 'noiDung', 'gd']);
   if ('tienDo' in p && p.tienDo && typeof p.tienDo === 'object') { o.tienDo = {}; Object.keys(p.tienDo).forEach(m => { if (/^\d{4}-\d{2}$/.test(m)) { const s = str_(p.tienDo[m], 1000); if (s) o.tienDo[m] = s; } }); }
   return o;
 }
@@ -196,7 +198,7 @@ function route_(b) {
       case 'bootstrap': {
         const recs = rows_('records'), counts = {};
         recs.forEach(r => counts[r.formId] = (counts[r.formId] || 0) + 1);
-        return out_({ok: true, forms: rows_('forms').reverse().map(f => formOut_(f, counts[f.id])), records: recs.reverse().map(recOut_), staff: staff_()});
+        return out_({ok: true, forms: rows_('forms').reverse().map(f => formOut_(f, counts[f.id])), records: recs.reverse().map(recOut_), staff: staff_(), camps: camps_(), txns: txns_()});
       }
       case 'photos': {
         const ids = list_(b.ids, 40, 40), map = {};
@@ -267,6 +269,7 @@ function route_(b) {
         return out_({ok: true});
       }
     }
+    if (KT_[a]) return KT_[a](b);
     return fail_('Không rõ yêu cầu.', 404);
   } finally { lock.releaseLock(); }
 }
@@ -354,4 +357,115 @@ function submit_(b) {
 }
 
 /** Chạy hàm này một lần trong trình soạn thảo để tạo các trang tính và cấp quyền. */
-function caiDat() { seed_(); sheet_('records'); sheet_('settings'); secret_(); }
+function caiDat() { seed_(); sheet_('records'); sheet_('settings'); sheet_('camps'); sheet_('txns'); secret_(); }
+
+/* ---------- Chiến dịch (bảng giá, cú pháp chuyển khoản) + Kế toán đối soát sao kê ---------- */
+function code_(s, n) { return String(s || '').toUpperCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/Đ/g, 'D').replace(/[^A-Z0-9]/g, '').slice(0, n || 10); }
+function day_(s) { s = String(s || ''); return /^\d{4}-\d{2}-\d{2}$/.test(s) ? s : ''; }
+function campIn_(c) {
+  c = c && typeof c === 'object' ? c : {};
+  const tk = c.taiKhoan && typeof c.taiKhoan === 'object' ? c.taiKhoan : {};
+  const sp = (Array.isArray(c.sp) ? c.sp : []).slice(0, 30).map(p => ({
+    ma: code_(p && p.ma, 8), ten: str_(p && p.ten, 120), khoa: str_(p && p.khoa, 60) || 'Diamond', nhom: str_(p && p.nhom, 80),
+    hocPhi: money_(p && p.hocPhi), uuDai: money_(p && p.uuDai), coc: money_(p && p.coc),
+    dot: (Array.isArray(p && p.dot) ? p.dot : []).slice(0, 12).map(d => ({soTien: money_(d && d.soTien), han: day_(d && d.han)})).filter(d => d.soTien),
+  })).filter(p => p.ma && p.ten);
+  return {ma: code_(c.ma, 10), ten: str_(c.ten, 160), tu: day_(c.tu), den: day_(c.den), phuTrach: list_(c.phuTrach, 20, 80), ghiChu: str_(c.ghiChu, 2000),
+    taiKhoan: {bin: /^\d{6}$/.test(String(tk.bin || '')) ? String(tk.bin) : '', nganHang: str_(tk.nganHang, 80), soTK: String(tk.soTK || '').replace(/[^0-9A-Za-z]/g, '').slice(0, 30), chuTK: code_(tk.chuTK, 60) ? str_(tk.chuTK, 80).toUpperCase() : ''},
+    sp: sp};
+}
+function campOut_(r) { let d = {}; try { d = JSON.parse(r.data || '{}'); } catch (e) {} let v = null; try { v = r.duyet ? JSON.parse(r.duyet) : null; } catch (e) {} return Object.assign(d, {id: r.id, ma: r.ma, ten: r.ten, duyet: v, updatedAt: r.updatedAt}); }
+function camps_() { return rows_('camps').map(campOut_); }
+function txnOut_(r) { let a = []; try { a = JSON.parse(r.alloc || '[]'); } catch (e) {} return {id: r.id, ngay: r.ngay, soTien: Number(r.soTien) || 0, noiDung: r.noiDung, nguoiCK: r.nguoiCK, taiKhoan: r.taiKhoan, trangThai: r.trangThai, alloc: a, ghiChu: r.ghiChu, createdAt: r.createdAt, xacNhanLuc: r.xacNhanLuc}; }
+function txns_() { return rows_('txns').slice(-3000).map(txnOut_); }
+function recData_(r) { let d = {}; try { d = JSON.parse(r.data || '{}'); } catch (e) {} return d; }
+function recSet_(r, d) { r.data = JSON.stringify(d); r.updatedAt = now_(); put_('records', r); }
+function payState_(d) { if (d.ttTT === 'Bảo lưu / chưa chốt') return d.ttTT; const phai = Math.max(0, (Number(d.hocPhi) || 0) - (Number(d.khauTru) || 0)); if (!phai) return d.ttTT || ''; return (Number(d.daDong) || 0) >= phai ? 'Đã đóng đủ' : (Number(d.daDong) || 0) > 0 ? 'Đặt cọc' : 'Chưa đóng'; }
+const KT_ = {
+  camp_save: b => {
+    const c = campIn_(b.camp), id = str_(b.camp && b.camp.id, 32);
+    if (!c.ten) return fail_('Vui lòng đặt tên chiến dịch.');
+    if (!c.ma) return fail_('Vui lòng đặt mã chiến dịch (chữ không dấu, số), ví dụ TR1211.');
+    const all = rows_('camps');
+    if (all.some(x => x.ma === c.ma && x.id !== id)) return fail_('Mã chiến dịch này đã có, vui lòng đặt mã khác.');
+    if (all.some(x => x.ten === c.ten && x.id !== id)) return fail_('Tên chiến dịch này đã có.');
+    const codes = c.sp.map(p => p.ma); if (codes.some((m, i) => codes.indexOf(m) !== i)) return fail_('Mã khóa trong bảng giá bị trùng.');
+    const cur = all.filter(x => x.id === id)[0] || {id: uid_()};
+    const old = cur.data ? recData_(cur) : null;
+    if (cur.duyet && old && JSON.stringify([old.sp, old.taiKhoan]) !== JSON.stringify([c.sp, c.taiKhoan])) return fail_('Bảng giá đã được kế toán duyệt và đang khóa. Bấm "Mở khóa để sửa" trước.');
+    if (cur.ten && cur.ten !== c.ten) { // đổi tên: cập nhật chương trình trong hồ sơ học viên
+      rows_('records').forEach(r => { const d = recData_(r); if (d.chuongTrinh === cur.ten) { d.chuongTrinh = c.ten; recSet_(r, d); } });
+    }
+    Object.assign(cur, {ma: c.ma, ten: c.ten, data: JSON.stringify(c), updatedAt: now_()});
+    put_('camps', cur); return out_({ok: true, camps: camps_()});
+  },
+  camp_approve: b => {
+    const r = rows_('camps').filter(x => x.id === str_(b.id, 32))[0]; if (!r) return fail_('Không tìm thấy chiến dịch.', 404);
+    r.duyet = b.on ? JSON.stringify({nguoi: str_(b.nguoi, 80) || 'Kế toán', luc: now_()}) : '';
+    r.updatedAt = now_(); put_('camps', r); return out_({ok: true, camps: camps_()});
+  },
+  camp_delete: b => {
+    const r = rows_('camps').filter(x => x.id === str_(b.id, 32))[0]; if (!r) return out_({ok: true, camps: camps_()});
+    if (r.duyet) return fail_('Chiến dịch đã duyệt, mở khóa trước khi xóa.');
+    if (rows_('records').some(x => recData_(x).chuongTrinh === r.ten)) return fail_('Chiến dịch đã có học viên nên không xóa được.');
+    sheet_('camps').deleteRow(r._row); return out_({ok: true, camps: camps_()});
+  },
+  txn_import: b => {
+    const list = Array.isArray(b.rows) ? b.rows.slice(0, 3000) : [], have = {};
+    rows_('txns').forEach(r => have[r.key] = 1);
+    let add = 0, dup = 0; const out = [], t = now_(), tk = str_(b.taiKhoan, 80);
+    list.forEach(x => {
+      const ngay = day_(x && x.ngay), so = money_(x && x.soTien), nd = str_(x && x.noiDung, 500), ma = str_(x && x.maGD, 80);
+      if (!ngay || !so) return;
+      const key = ma ? 'm:' + tk + ':' + ma : 'h:' + sha_([tk, ngay, so, nd].join('|')).slice(0, 24);
+      if (have[key]) { dup++; return; } have[key] = 1;
+      out.push([uid_(), key, ngay, String(so), nd, str_(x.nguoiCK, 120), tk, 'cho', '[]', '', t, '']); add++;
+    });
+    if (out.length) { const s = sheet_('txns'); s.getRange(s.getLastRow() + 1, 1, out.length, COLS.txns.length).setValues(out); }
+    return out_({ok: true, added: add, dup: dup, txns: txns_()});
+  },
+  txn_confirm: b => {
+    const tx = rows_('txns').filter(x => x.id === str_(b.id, 32))[0]; if (!tx) return fail_('Không tìm thấy giao dịch.', 404);
+    if (tx.trangThai === 'da') return fail_('Giao dịch này đã được xác nhận rồi.');
+    const al = (Array.isArray(b.alloc) ? b.alloc : []).slice(0, 10).map(a => ({recId: str_(a && a.recId, 32), soTien: money_(a && a.soTien), dot: str_(a && a.dot, 60)})).filter(a => a.recId && a.soTien);
+    if (!al.length) return fail_('Chưa chọn học viên.');
+    if (al.reduce((s, a) => s + a.soTien, 0) !== Number(tx.soTien)) return fail_('Tổng tiền chia cho các khóa phải bằng đúng số tiền giao dịch.');
+    const recs = rows_('records'), changed = [];
+    for (const a of al) if (!recs.some(r => r.id === a.recId)) return fail_('Không tìm thấy hồ sơ học viên.', 404);
+    al.forEach(a => {
+      const r = recs.filter(x => x.id === a.recId)[0], d = recData_(r);
+      d.daDong = (Number(d.daDong) || 0) + a.soTien;
+      d.lichSuTT = (d.lichSuTT || []).concat([{ngay: tx.ngay, soTien: String(a.soTien), noiDung: (a.dot ? a.dot + ' · ' : '') + 'Chuyển khoản: ' + (tx.noiDung || '').slice(0, 300) + ' (kế toán đối soát)', gd: tx.id}]);
+      d.ttTT = payState_(d);
+      recSet_(r, d); a.hoTen = d.hoTen || ''; changed.push(recOut_(r));
+    });
+    Object.assign(tx, {trangThai: 'da', alloc: JSON.stringify(al), ghiChu: str_(b.ghiChu, 500), xacNhanLuc: now_()}); put_('txns', tx);
+    return out_({ok: true, txn: txnOut_(tx), records: changed});
+  },
+  txn_undo: b => {
+    const tx = rows_('txns').filter(x => x.id === str_(b.id, 32))[0]; if (!tx) return fail_('Không tìm thấy giao dịch.', 404);
+    const changed = [];
+    if (tx.trangThai === 'da') {
+      let al = []; try { al = JSON.parse(tx.alloc || '[]'); } catch (e) {}
+      const recs = rows_('records');
+      al.forEach(a => {
+        const r = recs.filter(x => x.id === a.recId)[0]; if (!r) return; const d = recData_(r);
+        const keep = (d.lichSuTT || []).filter(p => p.gd !== tx.id), gone = (d.lichSuTT || []).length - keep.length;
+        if (gone) { d.lichSuTT = keep; d.daDong = Math.max(0, (Number(d.daDong) || 0) - a.soTien); d.ttTT = payState_(d); recSet_(r, d); changed.push(recOut_(r)); }
+      });
+    }
+    Object.assign(tx, {trangThai: 'cho', alloc: '[]', ghiChu: '', xacNhanLuc: ''}); put_('txns', tx);
+    return out_({ok: true, txn: txnOut_(tx), records: changed});
+  },
+  txn_skip: b => {
+    const tx = rows_('txns').filter(x => x.id === str_(b.id, 32))[0]; if (!tx) return fail_('Không tìm thấy giao dịch.', 404);
+    if (tx.trangThai === 'da') return fail_('Giao dịch đã xác nhận, hãy hoàn tác trước.');
+    Object.assign(tx, {trangThai: 'bo', ghiChu: str_(b.ghiChu, 500) || 'Không phải học phí', xacNhanLuc: now_()}); put_('txns', tx);
+    return out_({ok: true, txn: txnOut_(tx)});
+  },
+  txn_delete: b => {
+    const tx = rows_('txns').filter(x => x.id === str_(b.id, 32))[0]; if (!tx) return out_({ok: true});
+    if (tx.trangThai === 'da') return fail_('Giao dịch đã xác nhận, hãy hoàn tác trước.');
+    sheet_('txns').deleteRow(tx._row); return out_({ok: true});
+  },
+};

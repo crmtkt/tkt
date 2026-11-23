@@ -513,6 +513,8 @@ tr.kcrow td{background:color-mix(in srgb,var(--kc) 9%,transparent)}tr.kcrow td:f
 .pkrow{display:flex;gap:10px;align-items:flex-start;padding:8px 6px;border-bottom:1px solid var(--line);cursor:pointer}.pkrow input{margin-top:5px;width:18px;height:18px}
 .pksel{display:flex;gap:10px;align-items:center;padding:8px 0;border-bottom:1px solid var(--line)}
 @media (max-width:760px){.grid3{grid-template-columns:1fr 1fr}.kpis.sm3{grid-template-columns:repeat(3,minmax(0,1fr))}}
+.ovbox{display:flex;flex-direction:column;gap:6px}.ovbox.ed{outline:1px dashed var(--gold);outline-offset:4px;border-radius:8px}.ovrow{display:flex;gap:6px;align-items:flex-end}.ovrow .inp{min-height:38px;padding:6px 8px;font-size:14px}.edtag{align-self:flex-start;font-size:12px;font-weight:700;color:var(--gold2)}
+.ktact2{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}.ktact2 .btn{min-height:36px}
 </style>
 <script>new MutationObserver(()=>{for(const c of document.querySelectorAll('.stack td:not([data-l])')){let i=0,p=c;while(p=p.previousElementSibling)i+=p.colSpan;c.dataset.l=c.closest('table').rows[0].cells[i]?.textContent||''}}).observe(document,{childList:true,subtree:true})</script>
 </head>
@@ -649,7 +651,7 @@ const buyerBtn=b=>b.real?`<button class="btn sm" data-open="${esc(b.rid)}">Hồ 
 const lastNote=b=>{const lc=b.nhatKy[b.nhatKy.length-1];return lc?`${fmtD(lc.ngay)} · ${esc(lc.nguoi||'')}<br>${esc(clip(lc.noiDung,90))}`:'<span class="mut">Chưa có</span>'};
 const payLine=x=>hasPay(x)?`<div class="hvpay">${payPill(x)}<span>Đã thu <b>${TR(n0(x.daDong))}</b></span>${congNo(x)?`<span class="warnTxt">Công nợ <b>${TR(congNo(x))}</b></span>`:''}</div>`:'';
 
-const S={camps:[],txns:[],kt:{tab:null,flt:'all',parsed:null,tk:'',pick:null},rf:{camp:'all',sp:'all',tt:'all',pt:'all',q:'',sort:'no'},calM:'2026-12',camp:null,bf:{q:'',sp:'all',tt:'all',pt:'all',sort:'sp'},real:[],demo:(()=>{try{return localStorage.getItem('crm_demo')==='1'}catch(_){return false}})(),cf:{q:'',khoa:'all',st:'all',pt:'all',ct:'all'},view:(()=>{try{return localStorage.getItem('crm_view')||'card'}catch(_){return 'card'}})(),list:[],forms:[],staff:DEFAULT_STAFF.slice(),loaded:false,canWrite:true,tok:'',site:'',user:'',
+const S={camps:[],txns:[],kt:{tab:null,flt:'all',parsed:null,tk:'',pick:null,ov:{}},rf:{camp:'all',sp:'all',tt:'all',pt:'all',q:'',sort:'no'},calM:'2026-12',camp:null,bf:{q:'',sp:'all',tt:'all',pt:'all',sort:'sp'},real:[],demo:(()=>{try{return localStorage.getItem('crm_demo')==='1'}catch(_){return false}})(),cf:{q:'',khoa:'all',st:'all',pt:'all',ct:'all'},view:(()=>{try{return localStorage.getItem('crm_view')||'card'}catch(_){return 'card'}})(),list:[],forms:[],staff:DEFAULT_STAFF.slice(),loaded:false,canWrite:true,tok:'',site:'',user:'',
  f:{fam:'F5',khoa:'Diamond',nam:'2026',nhom:'all',q:'',st:'all',pt:'all',form:'all',tt:'all',ct:'all'},open:null,phone:''};
 
 /* ---------- UI helpers ---------- */
@@ -1755,18 +1757,56 @@ function ktPreview(P){
  <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px"><button class="btn" id="ktImport" ${ok&&rows.length?'':'disabled'}>Đưa ${rows.length} khoản vào đối soát</button><button class="btn ghost" id="ktClear">Hủy file này</button></div></div>`;
 }
 function ktWho(x){return `<button class="lnk" data-open="${esc(x.id)}"><b>${esc(x.hoTen)}</b></button> <small class="mut">${esc(phoneN(x.sdt)||'')}</small><br><small>${esc(prodName(x))}${x.chuongTrinh?' · '+esc(x.chuongTrinh):''} · công nợ <b style="color:var(--warn)">${VND(congNo(x))}</b></small>`}
+/* ---------- Kế toán chỉnh tay: học viên, khóa, đợt cho từng giao dịch ---------- */
+const DOTS=['Đợt 1','Đợt 2','Đợt 3','Đợt 4','Đợt 5','Đợt 6','Cọc giữ chỗ','Đóng đủ'];
+function personOf(t,m){const base=m.x?[m.x]:m.cands||[];const phs=new Set(base.map(r=>phoneN(r.sdt)).filter(Boolean));if(m.nw&&m.nw.sdt)phs.add(m.nw.sdt);
+ const recs=S.real.filter(r=>base.includes(r)||(phs.size&&phs.has(phoneN(r.sdt))));return recs}
+function ovDefault(t,m){
+ let v='';if(m.x)v='R|'+m.x.id;else if(m.c==='moi'&&m.syn&&m.syn.p)v='C|'+m.syn.c.id+'|'+m.syn.p.ma;
+ const dot=String(m.dot||'').replace(/\s*\(.*\)$/,'')||'Đợt 1';
+ const useG=m.c==='moi'||!!m.syn;return {v,dot,hoTen:useG&&m.nw?m.nw.hoTen||'':'',sdt:(m.nw&&m.nw.sdt)||'',edited:false};
+}
+const ovOf=(t,m)=>{const o=S.kt.ov[t.id];return o&&o.edited?o:ovDefault(t,m)};
+function ovCell(t,m){
+ const o=ovOf(t,m),pr=personOf(t,m),dis=o.v.startsWith('R|')?pr.find(r=>'R|'+r.id===o.v):null;
+ const opt=(v,l)=>`<option value="${esc(v)}" ${o.v===v?'selected':''}>${esc(l)}</option>`;
+ const sel=`<select class="inp" data-ov="${esc(t.id)}" data-f="v" style="width:100%"><option value="">— Chọn khóa ghi tiền —</option>
+  ${pr.length?`<optgroup label="Hồ sơ đang có của học viên">${pr.map(r=>opt('R|'+r.id,`${r.hoTen} · ${prodName(r)}${r.chuongTrinh?' · '+r.chuongTrinh:''} · công nợ ${TR(congNo(r))}`)).join('')}</optgroup>`:''}
+  ${S.camps.map(c=>`<optgroup label="${esc((pr.length?'Đăng ký mới – ':'')+c.ten)}">${arr(c.sp).map(p=>opt('C|'+c.id+'|'+p.ma,`${p.ten}${n0(p.hocPhi)?' · '+TR(n0(p.hocPhi)):''}`)).join('')}</optgroup>`).join('')}
+  <optgroup label="Khóa khác (không theo chiến dịch)">${Object.entries(COURSES).map(([k,c])=>opt('K|'+k,c.name)).join('')}</optgroup></select>`;
+ const dots=[...new Set([...DOTS,o.dot])];
+ const dsel=`<select class="inp" data-ov="${esc(t.id)}" data-f="dot" style="width:100%">${dots.map(d=>`<option ${o.dot===d?'selected':''}>${esc(d)}</option>`).join('')}</select>`;
+ const needWho=!o.v.startsWith('R|')&&!pr.length;
+ return `<div class="ovbox${o.edited?' ed':''}">${o.edited?'<span class="edtag">✎ Kế toán đã chỉnh</span>':''}
+  ${needWho?`<div class="ovrow"><input class="inp" data-ov="${esc(t.id)}" data-f="hoTen" value="${esc(o.hoTen)}" placeholder="Họ tên học viên" aria-label="Họ tên học viên"><input class="inp" data-ov="${esc(t.id)}" data-f="sdt" value="${esc(o.sdt)}" placeholder="SĐT" inputmode="tel" style="max-width:130px" aria-label="Số điện thoại"></div>`:''}
+  <div class="ovrow"><div style="flex:1;min-width:0"><span class="mut sm">Khóa / hồ sơ</span>${sel}</div><div style="width:130px"><span class="mut sm">Đợt</span>${dsel}</div></div>
+  ${dis?`<div class="mut sm">Còn công nợ ${VND(congNo(dis))}${n0(t.soTien)>congNo(dis)?' · <b style="color:#fb923c">tiền lớn hơn công nợ</b>':''}</div>`:''}</div>`;
+}
+async function ovConfirm(t,m,o){
+ const amt=n0(t.soTien);if(!o.v)throw new Error('Chọn khóa / hồ sơ để ghi tiền');
+ const pr=personOf(t,m),ph=(pr[0]&&phoneN(pr[0].sdt))||phoneN(o.sdt),who=(pr[0]&&pr[0].hoTen)||o.hoTen.trim();
+ const [k,a1,a2]=o.v.split('|');
+ if(k==='R')return ktConfirm(t,[{recId:a1,soTien:amt,dot:o.dot}]);
+ let c=null,p=null,khoa,nhom,ct,hp;
+ if(k==='C'){c=S.camps.find(z=>z.id===a1);p=c&&arr(c.sp).find(z=>z.ma===a2);if(!p)throw new Error('Không tìm thấy khóa trong chiến dịch');khoa=p.khoa;nhom=p.nhom||'';ct=c.ten;hp=n0(p.hocPhi)}
+ else{khoa=a1;nhom='';ct='';hp=0}
+ const ex=S.real.find(r=>((ph&&phoneN(r.sdt)===ph)||pr.includes(r))&&r.khoa===khoa&&(r.nhom||'')===nhom&&(r.chuongTrinh||'')===ct);
+ if(ex)return ktConfirm(t,[{recId:ex.id,soTien:amt,dot:o.dot}]);
+ if(!who)throw new Error('Nhập họ tên học viên để tạo hồ sơ mới');
+ const j=await api('txn_newrecs',{items:[{id:t.id,dot:o.dot,rec:{hoTen:who,sdt:ph||'',khoa,nhom,chuongTrinh:ct,hocPhi:hp,phuTrach:[]}}]});if(!j.txns.length)throw new Error('Chưa ghi được, kiểm tra họ tên / SĐT');ktApplyMany(j);return j;
+}
 function ktPending(cho,M,cnt){
  const f=S.kt.flt,list=cho.filter(t=>f==='all'||M.get(t.id).c===f).sort((a,b)=>['do','moi','cam','vang','xanh'].indexOf(M.get(a.id).c)-['do','moi','cam','vang','xanh'].indexOf(M.get(b.id).c)||String(a.ngay).localeCompare(String(b.ngay)));
  const nx=cnt('xanh'),nm=cho.filter(t=>{const m=M.get(t.id);return m.c==='moi'&&m.syn&&m.syn.p&&m.nw.hoTen}).length;
  if(!cho.length)return `<div class="panel"><p class="mut" style="margin:0">Không còn giao dịch nào chờ xác nhận. Tải sao kê mới ở tab "Tải sao kê".</p></div>`;
  return `<div class="ktflt"><button class="chip ${f==='all'?'on':''}" data-ktflt="all">Tất cả ${cho.length}</button>${Object.entries(KC).map(([k,[c,n]])=>`<button class="chip kc ${f===k?'on':''}" style="--kc:${c}" data-ktflt="${k}">● ${n} ${cnt(k)}</button>`).join('')}
  <span style="margin-left:auto;display:flex;gap:8px;flex-wrap:wrap">${nm?`<button class="btn ghost sm" id="ktAllNew">+ Tạo hồ sơ & ghi tiền cho ${nm} khoản học viên mới</button>`:''}${nx?`<button class="btn sm" id="ktAllGreen">✓ Xác nhận tất cả khoản xanh (${nx})</button>`:''}</span></div>
- <div class="ktscroll"><table class="kt pend"><thead><tr><th>Ngày</th><th>Số tiền</th><th>Nội dung CK · người chuyển</th><th>Hệ thống nhận diện</th><th>Thao tác</th></tr></thead><tbody>
- ${list.map(t=>{const m=M.get(t.id),[col,lbl]=KC[m.c];return `<tr style="--kc:${col}" class="kcrow"><td class="nw">${fmtD(t.ngay)}</td><td class="r nw"><b>${VND(n0(t.soTien))}</b></td><td style="min-width:220px">${esc(t.noiDung)}${t.nguoiCK?`<br><small class="mut">Người chuyển: ${esc(t.nguoiCK)}</small>`:''}${t.taiKhoan?`<br><small class="mut">TK nhận: ${esc(t.taiKhoan)}</small>`:''}</td>
-  <td style="min-width:260px"><span class="kctag" style="--kc:${col}">● ${lbl}</span>${m.dot?` <span class="codechip">${esc(m.dot)}</span>`:''}<br>${m.c==='do'&&m.nw&&m.nw.hoTen?`<div style="margin-top:4px" class="mut">Đoán tên: <b style="color:var(--ink)">${esc(m.nw.hoTen)}</b></div>`:''}${m.c==='moi'?`<div style="margin-top:4px"><b>${esc(m.nw.hoTen||'(chưa đoán được tên)')}</b> · ${esc(m.nw.sdt)}${m.syn&&m.syn.p?`<br><small>${esc(m.syn.p.ten)} · ${esc(m.syn.c.ten)}</small>`:''}</div>`:m.x?ktWho(m.x):m.cands.length?m.cands.map(r=>`<div style="margin-top:4px">• ${ktWho(r)}</div>`).join(''):''}<div class="mut sm" style="margin-top:4px">${esc(m.why)}</div></td>
-  <td class="nw"><div class="ktact">${m.c==='moi'?`<button class="btn sm" data-ktnew="${esc(t.id)}">Tạo học viên mới</button>`:m.c==='do'?`<button class="btn ghost sm" data-ktnew="${esc(t.id)}">Tạo học viên mới</button>`:''}${m.x?`<button class="btn sm" data-ktok="${esc(t.id)}">Xác nhận</button>`:''}<button class="btn ghost sm" data-ktpick="${esc(t.id)}">${m.x?'Chọn khác / chia tiền':'Chọn học viên'}</button><button class="btn ghost sm" data-ktskip="${esc(t.id)}">Không phải học phí</button><button class="btn ghost sm" data-ktdel="${esc(t.id)}" style="color:var(--bad)">Xóa</button></div></td></tr>`}).join('')}
+ <div class="ktscroll"><table class="kt pend"><thead><tr><th>Ngày</th><th>Số tiền</th><th>Nội dung CK · người chuyển</th><th>Hệ thống nhận diện</th><th>Ghi vào (kế toán chỉnh được) · thao tác</th></tr></thead><tbody>
+ ${list.map(t=>{const m=M.get(t.id),[col,lbl]=KC[m.c],o=ovOf(t,m);return `<tr style="--kc:${col}" class="kcrow"><td class="nw">${fmtD(t.ngay)}</td><td class="r nw"><b>${VND(n0(t.soTien))}</b></td><td style="min-width:200px">${esc(t.noiDung)}${t.nguoiCK?`<br><small class="mut">Người chuyển: ${esc(t.nguoiCK)}</small>`:''}${t.taiKhoan?`<br><small class="mut">TK nhận: ${esc(t.taiKhoan)}</small>`:''}</td>
+  <td style="min-width:210px"><span class="kctag" style="--kc:${col}">● ${lbl}</span>${m.dot?` <span class="codechip">${esc(m.dot)}</span>`:''}${m.x?`<div style="margin-top:4px">${ktWho(m.x)}</div>`:''}<div class="mut sm" style="margin-top:4px">${esc(m.why)}</div></td>
+  <td style="min-width:340px">${ovCell(t,m)}<div class="ktact2"><button class="btn sm" data-ktgo="${esc(t.id)}" ${o.v?'':'disabled'}>${o.v.startsWith('R|')||(!o.v)?'Xác nhận':'Ghi tiền'}</button>${o.edited?`<button class="btn ghost sm" data-ktreset="${esc(t.id)}">Theo gợi ý</button>`:''}<button class="btn ghost sm" data-ktpick="${esc(t.id)}">Tìm học viên / chia tiền</button><button class="btn ghost sm" data-ktskip="${esc(t.id)}">Không phải học phí</button><button class="btn ghost sm" data-ktdel="${esc(t.id)}" style="color:var(--bad)">Xóa</button></div></td></tr>`}).join('')}
  </tbody></table></div>
- <p class="mut sm">Xanh: đúng cú pháp, đúng số tiền đợt → bấm xác nhận hàng loạt. Vàng: tìm ra học viên qua SĐT / họ tên / người chuyển quen, hoặc số tiền khác lịch → kiểm tra rồi xác nhận. Cam: học viên có nhiều khóa còn công nợ, tiền vượt công nợ hoặc đang bảo lưu → chọn đúng khóa hoặc chia tiền. Xanh dương: có SĐT nhưng học viên chưa có trong CRM → "Tạo học viên mới" (hệ thống tự đoán họ tên, chiến dịch, khóa) và ghi tiền luôn. Đỏ: không tìm ra ai → chọn học viên, hoặc đánh dấu "Không phải học phí".</p>`;
+ <p class="mut sm">Cột <b>Ghi vào</b> luôn chỉnh được: chọn hồ sơ đang có của học viên, hoặc một khóa trong chiến dịch (nếu học viên chưa có khóa đó, hệ thống tạo đăng ký mới khi ghi tiền), và chọn đợt. Hệ thống điền sẵn theo gợi ý; dòng kế toán đã sửa có nhãn "✎ Kế toán đã chỉnh". Xanh: đúng cú pháp, đúng tiền đợt. Vàng: tìm ra qua SĐT / họ tên / người chuyển quen. Cam: nhiều khóa còn công nợ, vượt công nợ, bảo lưu → chọn đúng khóa. Xanh dương: học viên mới. Đỏ: chưa rõ ai → nhập họ tên, SĐT, chọn khóa hoặc "Tìm học viên".</p>`;
 }
 function ktDone(da,bo){
  const nm=id=>{const r=S.real.find(x=>x.id===id);return r?`<button class="lnk" data-open="${esc(id)}">${esc(r.hoTen)}</button> <small class="mut">${esc(prodName(r))}</small>`:'(hồ sơ đã xóa)'};
@@ -1851,8 +1891,10 @@ async function ktClick(t){
  if(t.id==='ktClear'){S.kt.parsed=null;render();return true}
  if(t.id==='ktImport'){const P=S.kt.parsed,rows=stmtRows(P);t.disabled=true;try{const j=await api('txn_import',{rows,taiKhoan:S.kt.tk||''});S.txns=j.txns;S.kt.parsed=null;S.kt.tab='cho';S.kt.flt='all';render();toast(`Đã đưa ${j.added} giao dịch vào đối soát${j.dup?` · bỏ qua ${j.dup} giao dịch đã có`:''}.`)}catch(e){t.disabled=false;toast(e.message,true)}return true}
  if(d.ktok){const tx=S.txns.find(x=>x.id===d.ktok),m=ktMatch(tx);if(!m.x)return true;t.disabled=true;try{await ktConfirm(tx,[{recId:m.x.id,soTien:n0(tx.soTien),dot:m.dot||''}]);render();toast(`Đã ghi ${VND(n0(tx.soTien))} cho ${m.x.hoTen}`)}catch(e){t.disabled=false;toast(e.message,true)}return true}
- if(t.id==='ktAllGreen'){t.disabled=true;let n=0;for(const tx of S.txns.filter(x=>x.trangThai==='cho')){const m=ktMatch(tx);if(m.c!=='xanh')continue;try{await ktConfirm(tx,[{recId:m.x.id,soTien:n0(tx.soTien),dot:m.dot||''}]);n++}catch(e){toast(e.message,true)}}render();toast(`Đã xác nhận ${n} khoản khớp chắc chắn.`);return true}
+ if(t.id==='ktAllGreen'){t.disabled=true;let n=0;for(const tx of S.txns.filter(x=>x.trangThai==='cho')){const m=ktMatch(tx);if(m.c!=='xanh')continue;try{await ovConfirm(tx,m,ovOf(tx,m));delete S.kt.ov[tx.id];n++}catch(e){toast(e.message,true)}}render();toast(`Đã xác nhận ${n} khoản khớp chắc chắn.`);return true}
  if(d.ktpick){ktPickModal(S.txns.find(x=>x.id===d.ktpick));return true}
+ if(d.ktreset){delete S.kt.ov[d.ktreset];render();return true}
+ if(d.ktgo){const tx=S.txns.find(x=>x.id===d.ktgo),m=ktMatch(tx),o=ovOf(tx,m);t.disabled=true;try{await ovConfirm(tx,m,o);delete S.kt.ov[tx.id];render();toast(`Đã ghi ${VND(n0(tx.soTien))} · ${o.dot}`)}catch(e){t.disabled=false;toast(e.message,true)}return true}
  if(d.ktnew){ktNewModal(S.txns.find(x=>x.id===d.ktnew));return true}
  if(t.id==='ktAllNew'){const list=S.txns.filter(x=>x.trangThai==='cho').map(x=>[x,ktMatch(x)]).filter(([,m])=>m.c==='moi'&&m.syn&&m.syn.p&&m.nw.hoTen);
   if(!d.sure){t.dataset.sure=1;t.textContent=`Bấm lần nữa để tạo hồ sơ cho ${list.length} khoản`;return true}
@@ -1871,6 +1913,7 @@ function ktChange(e){
  const t=e.target;
  if(t.id==='ktFile'){const f=t.files[0];if(!f)return true;readStatement(f).then(rows=>ktLoad(rows,f.name)).catch(err=>toast(err.message||'Không đọc được file',true));return true}
  if(t.id==='ktTk'){S.kt.tk=t.value;return true}
+ if(t.dataset.ov){const tx=S.txns.find(x=>x.id===t.dataset.ov);if(!tx)return true;const m=ktMatch(tx);S.kt.ov[tx.id]={...ovOf(tx,m),[t.dataset.f]:t.value,edited:true};if(t.dataset.f==='v'||t.dataset.f==='dot')render();return true}
  if(t.dataset.ktmap){const P=S.kt.parsed;if(t.value==='')delete P.map[t.dataset.ktmap];else P.map[t.dataset.ktmap]=+t.value;render();return true}
  if(t.dataset.pk){const P=S.kt.pick,tx=S.txns.find(x=>x.id===P.id);if(t.checked){const rest=n0(tx.soTien)-[...P.sel.values()].reduce((a,v)=>a+v,0);P.sel.set(t.dataset.pk,Math.max(0,rest))}else P.sel.delete(t.dataset.pk);pkPaint();return true}
  if(t.dataset.pkamt){const v=parseMoney(t.value);S.kt.pick.sel.set(t.dataset.pkamt,isNaN(v)?0:v);pkPaint();return true}

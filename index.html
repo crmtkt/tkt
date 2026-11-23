@@ -1545,20 +1545,31 @@ function dotLabel(x,amt){
  if(d.lich){if(amt===d.soTien)return {lb:`Đợt ${d.n}`,ok:true};const p=prodOf(x),dots=arr(p&&p.dot),paid=n0(x.daDong);let cum=0;for(let i=0;i<dots.length;i++){cum+=n0(dots[i].soTien);if(i+1>d.n&&cum-paid===amt)return {lb:`Đợt ${d.n}–${i+1}`,ok:true}}return {lb:`Đợt ${d.n} (lịch: ${VND(d.soTien)})`,ok:false}}
  return {lb:`Đợt ${d.n}`,ok:true};
 }
-const STOPW=new Set(['AI','QR','MB','MBVCB','VCB','CK','CT','TU','TOI','TAI','FT','IBFT','ND','CK','COC','DOT','GD','HP','PHI','MA','ACSP','SDT','SO','REF','TRACE','NAPAS','VIETQR','IB','SMS','BANKING','INTERNET','APP','TK','STK']);
+const STOPW=new Set(['AI','QR','MB','MBVCB','VCB','CK','CT','TU','TOI','TAI','FT','IBFT','ND','CK','COC','DOT','GD','HP','PHI','DT','DTDD','LH','MA','ACSP','SDT','SO','REF','TRACE','NAPAS','VIETQR','IB','SMS','BANKING','INTERNET','APP','TK','STK']);
+// SĐT bị ngân hàng cắt dòng / chèn dấu cách: ghép các cụm số liền nhau thành đúng 10 số bắt đầu bằng 0
+function splitPh(raw){
+ const g=[...String(raw).matchAll(/\d+/g)].map(m=>({v:m[0],s:m.index,e:m.index+m[0].length})),out=new Set();
+ for(let i=0;i<g.length;i++){let v=g[i].v;for(let j=i+1;j<g.length&&j<=i+3;j++){const gap=raw.slice(g[j-1].e,g[j].s);if(!/^[\s.\-]{1,3}$/.test(gap))break;v+=g[j].v;if(v.length>11)break;if(/^0\d{9}$/.test(v)||/^84\d{9}$/.test(v)){out.add(phoneN(v));break}}}
+ return [...out];
+}
+const NOISE=/\b(C ?H ?U ?Y ?E ?N ?T ?I ?E ?N|C ?H ?U ?Y ?E ?N ?K ?H ?O ?A ?N( NHANH)?( QUA ZALO)?|THANH ?TOAN|HOC ?PHI|KHOA ?HOC|DONG ?TIEN|NOP ?TIEN|QUA ZALO|M ?A GD|CONG TY( TNHH)?)\b/g;
 const tcase=s=>s.toLowerCase().replace(/(^|\s)\S/g,m=>m.toUpperCase());
 function guessName(tx,ph,syn){
  const stop=new Set([...STOPW,...S.camps.flatMap(c=>[c.ma,...arr(c.sp).map(p=>p.ma)])]);
  const send=nrm(tx.nguoiCK);if(send&&/^[A-Z ]+$/.test(send)&&send.split(' ').length>=2)return tcase(send);
- const t=nrm(String(tx.noiDung||'').replace(/(\d)[ .\-](?=\d)/g,'$1')).split(' '),i=ph?t.findIndex(w=>phoneN(w)===ph):t.findIndex(w=>/^0\d{8,10}$/.test(w));
+ let src=String(tx.noiDung||'');if(ph){const g=[...src.matchAll(/\d+/g)];for(let a=0;a<g.length;a++){let v='',e=g[a].index;for(let b=a;b<g.length&&b<=a+3;b++){if(b>a&&!/^[\s.\-]{1,3}$/.test(src.slice(e,g[b].index)))break;v+=g[b][0];e=g[b].index+g[b][0].length;if(phoneN(v)===ph){src=src.slice(0,g[a].index)+' '+v+' '+src.slice(e);a=g.length;break}}}}
+ const t=nrm(src).replace(NOISE,' | ').replace(/\s+/g,' ').trim().split(' '),i=ph?t.findIndex(w=>phoneN(w)===ph):t.findIndex(w=>/^0\d{7,11}$/.test(w));
+ const anyRun=()=>{for(let j=0;j<t.length;j++){const o=[];for(let k=j;k<t.length&&o.length<5;k++){if(!/^[A-Z]{2,}$/.test(t[k])||stop.has(t[k]))break;o.push(t[k])}if(o.length>=2)return o}return []};
+ const vcb=()=>{const m=/ CT TU [\d ]+ ([A-Z ]{5,40}?) TOI /.exec(' '+nrm(src)+' ');return m?m[1].split(' '):[]};
+ if(i<0){const b=anyRun();return b.length?tcase(b.join(' ')):''}
  const pick=dir=>{const o=[];for(let j=i+dir;j>=0&&j<t.length&&o.length<5;j+=dir){const w=t[j];if(!/^[A-Z]{2,}$/.test(w)||stop.has(w))break;o.push(w)}return dir<0?o.reverse():o};
- let n=i>=0?pick(-1):[];if(n.length<2&&i>=0)n=pick(1);
+ let n=i>=0?pick(-1):[];if(n.length<2&&i>=0)n=pick(1);if(n.length<2)n=vcb();if(n.length<2)n=anyRun();
  return n.length>=2?tcase(n.join(' ')):'';
 }
 function ktMatch(tx){
  const recs=S.real,raw=String(tx.noiDung||'')+' '+String(tx.nguoiCK||''),txt=' '+nrm(raw)+' ',cmp=txt.replace(/ /g,''),amt=n0(tx.soTien);
  const findPh=t=>[...new Set([...t.matchAll(/(?:^|\D)((?:\+?84|0)\d{9})(?!\d)/g)].map(m=>phoneN(m[1])))];
- let phones=findPh(raw);if(!phones.length)phones=findPh(raw.replace(/(\d)[ .\-](?=\d)/g,'$1'));
+ let phones=findPh(raw);if(!phones.length)phones=splitPh(raw);
  let why='',cands=[];
  // 1) theo số điện thoại trong nội dung
  if(phones.length){cands=recs.filter(r=>phones.includes(phoneN(r.sdt)));if(cands.length)why='Có SĐT trong nội dung'}
@@ -1735,7 +1746,7 @@ function ktPending(cho,M,cnt){
  <span style="margin-left:auto;display:flex;gap:8px;flex-wrap:wrap">${nm?`<button class="btn ghost sm" id="ktAllNew">+ Tạo hồ sơ & ghi tiền cho ${nm} khoản học viên mới</button>`:''}${nx?`<button class="btn sm" id="ktAllGreen">✓ Xác nhận tất cả khoản xanh (${nx})</button>`:''}</span></div>
  <div class="ktscroll"><table class="kt pend"><thead><tr><th>Ngày</th><th>Số tiền</th><th>Nội dung CK · người chuyển</th><th>Hệ thống nhận diện</th><th>Thao tác</th></tr></thead><tbody>
  ${list.map(t=>{const m=M.get(t.id),[col,lbl]=KC[m.c];return `<tr style="--kc:${col}" class="kcrow"><td class="nw">${fmtD(t.ngay)}</td><td class="r nw"><b>${VND(n0(t.soTien))}</b></td><td style="min-width:220px">${esc(t.noiDung)}${t.nguoiCK?`<br><small class="mut">Người chuyển: ${esc(t.nguoiCK)}</small>`:''}${t.taiKhoan?`<br><small class="mut">TK nhận: ${esc(t.taiKhoan)}</small>`:''}</td>
-  <td style="min-width:260px"><span class="kctag" style="--kc:${col}">● ${lbl}</span>${m.dot?` <span class="codechip">${esc(m.dot)}</span>`:''}<br>${m.c==='moi'?`<div style="margin-top:4px"><b>${esc(m.nw.hoTen||'(chưa đoán được tên)')}</b> · ${esc(m.nw.sdt)}${m.syn&&m.syn.p?`<br><small>${esc(m.syn.p.ten)} · ${esc(m.syn.c.ten)}</small>`:''}</div>`:m.x?ktWho(m.x):m.cands.length?m.cands.map(r=>`<div style="margin-top:4px">• ${ktWho(r)}</div>`).join(''):''}<div class="mut sm" style="margin-top:4px">${esc(m.why)}</div></td>
+  <td style="min-width:260px"><span class="kctag" style="--kc:${col}">● ${lbl}</span>${m.dot?` <span class="codechip">${esc(m.dot)}</span>`:''}<br>${m.c==='do'&&m.nw&&m.nw.hoTen?`<div style="margin-top:4px" class="mut">Đoán tên: <b style="color:var(--ink)">${esc(m.nw.hoTen)}</b></div>`:''}${m.c==='moi'?`<div style="margin-top:4px"><b>${esc(m.nw.hoTen||'(chưa đoán được tên)')}</b> · ${esc(m.nw.sdt)}${m.syn&&m.syn.p?`<br><small>${esc(m.syn.p.ten)} · ${esc(m.syn.c.ten)}</small>`:''}</div>`:m.x?ktWho(m.x):m.cands.length?m.cands.map(r=>`<div style="margin-top:4px">• ${ktWho(r)}</div>`).join(''):''}<div class="mut sm" style="margin-top:4px">${esc(m.why)}</div></td>
   <td class="nw"><div class="ktact">${m.c==='moi'?`<button class="btn sm" data-ktnew="${esc(t.id)}">Tạo học viên mới</button>`:m.c==='do'?`<button class="btn ghost sm" data-ktnew="${esc(t.id)}">Tạo học viên mới</button>`:''}${m.x?`<button class="btn sm" data-ktok="${esc(t.id)}">Xác nhận</button>`:''}<button class="btn ghost sm" data-ktpick="${esc(t.id)}">${m.x?'Chọn khác / chia tiền':'Chọn học viên'}</button><button class="btn ghost sm" data-ktskip="${esc(t.id)}">Không phải học phí</button><button class="btn ghost sm" data-ktdel="${esc(t.id)}" style="color:var(--bad)">Xóa</button></div></td></tr>`}).join('')}
  </tbody></table></div>
  <p class="mut sm">Xanh: đúng cú pháp, đúng số tiền đợt → bấm xác nhận hàng loạt. Vàng: tìm ra học viên qua SĐT / họ tên / người chuyển quen, hoặc số tiền khác lịch → kiểm tra rồi xác nhận. Cam: học viên có nhiều khóa còn công nợ, tiền vượt công nợ hoặc đang bảo lưu → chọn đúng khóa hoặc chia tiền. Xanh dương: có SĐT nhưng học viên chưa có trong CRM → "Tạo học viên mới" (hệ thống tự đoán họ tên, chiến dịch, khóa) và ghi tiền luôn. Đỏ: không tìm ra ai → chọn học viên, hoặc đánh dấu "Không phải học phí".</p>`;

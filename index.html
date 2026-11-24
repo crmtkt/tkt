@@ -689,12 +689,17 @@ function setConn(txt,cls){const c=$('#conn');c.textContent=txt;c.className='pill
 
 const ROLE_N={quantri:'Toàn quyền',cskh:'Chăm sóc khách hàng',marketing:'Marketing',ketoan:'Kế toán'};
 const ROLE_C={quantri:'#f5c451',cskh:'#22c55e',marketing:'#e879f9',ketoan:'#38bdf8'};
-const ROLE_D={quantri:'Trợ lý thầy / quản trị: xem và làm mọi việc, quản lý tài khoản nhân sự.',cskh:'Xem học viên, sản phẩm, doanh thu; sửa hồ sơ, ghi chăm sóc, ghi khoản đóng (báo thu), đổi ảnh. Không vào Kế toán, không sửa bảng giá, không xóa hồ sơ.',marketing:'Tạo và sửa chiến dịch, form thu thập; thêm học viên, sửa thông tin, đổi ảnh; xem doanh thu. Không sửa học phí / tiền đã thu, không vào Kế toán.',ketoan:'Tải sao kê, đối soát, ghi tiền; duyệt bảng giá chiến dịch; sửa thanh toán, công nợ. Không xóa hồ sơ, không sửa form.'};
+const ROLE_D={quantri:'Trợ lý thầy / quản trị: thấy tất cả các ô, làm mọi việc, quản lý tài khoản nhân sự.',cskh:'Thấy: Khách hàng, Sản phẩm, Quy trình vận hành, Nguồn doanh thu, Nhân sự, Kế hoạch, Form thu thập. Sửa hồ sơ, ghi chăm sóc, ghi khoản đóng, đổi ảnh. Không thấy Marketing, Đối tác, Chi phí, Kế toán; không xóa hồ sơ.',marketing:'Thấy: Khách hàng, Sản phẩm, Marketing, Nguồn doanh thu, Kế hoạch, Đối tác, Form thu thập. Tạo / sửa chiến dịch và form, thêm học viên, đổi ảnh. Không sửa học phí / tiền đã thu; không thấy Quy trình, Nhân sự, Chi phí, Kế toán.',ketoan:'Thấy: Khách hàng, Sản phẩm, Marketing (duyệt bảng giá), Nguồn doanh thu, Nhân sự, Chi phí cứng, Kế toán. Tải sao kê, đối soát, ghi tiền, sửa thanh toán. Không thấy Quy trình, Kế hoạch, Đối tác, Form; không xóa hồ sơ.'};
 const PERMC={record_save:['quantri','cskh','ketoan','marketing'],record_create:['quantri','cskh','ketoan','marketing'],photo_save:['quantri','cskh','marketing'],record_delete:['quantri'],form_save:['quantri','marketing'],form_delete:['quantri'],staff_save:['quantri'],camp_save:['quantri','marketing'],camp_approve:['quantri','ketoan'],camp_delete:['quantri','marketing'],txn_confirm:['quantri','ketoan'],user_save:['quantri'],money:['quantri','cskh','ketoan']};
 const can=a=>!S.me||!PERMC[a]||PERMC[a].includes(S.me.role);
+/* Mỗi phòng ban chỉ thấy các ô đúng việc của mình */
+const VIEWS={cskh:['tong-quan','khach-hang','san-pham','quy-trinh','doanh-thu','nhan-su','ke-hoach','form'],marketing:['tong-quan','khach-hang','san-pham','marketing','doanh-thu','ke-hoach','doi-tac','form'],ketoan:['tong-quan','khach-hang','san-pham','marketing','doanh-thu','nhan-su','chi-phi','ke-toan']};
+const canSee=r=>!S.me||S.me.role==='quantri'||(VIEWS[S.me.role]||[]).includes(r);
+const VIEW_NAME=r=>r==='form'?'Form thu thập':r==='ke-toan'?'Kế toán':r==='tong-quan'?'Tổng quan':((MODS.find(m=>m.id===r)||{}).name||r);
 function setMe(me){if(!me)return;S.me=me;try{localStorage.setItem('crm_me',JSON.stringify(me))}catch(_){}
  const c=$('#meChip');if(c)c.innerHTML=`<span class="medot" style="--rc:${ROLE_C[me.role]||'#94a3b8'}"></span><b>${esc(me.ten)}</b><small>${esc(ROLE_N[me.role]||'')}</small>`}
-function applyPerms(root){root=root||document;const hide=(sel,ok)=>{if(!ok)root.querySelectorAll(sel).forEach(e=>e.remove())};
+function applyPerms(root){root=root||document;
+ root.querySelectorAll('#view a[href^="#"],#drawer a[href^="#"]').forEach(a=>{const r=a.getAttribute('href').slice(1);if(r&&!canSee(r)){const sp=document.createElement('span');sp.textContent=a.textContent;a.replaceWith(sp)}});const hide=(sel,ok)=>{if(!ok)root.querySelectorAll(sel).forEach(e=>e.remove())};
  hide('[data-campedit],[data-campnew],[data-campdel]',can('camp_save'));hide('[data-campappr]',can('camp_approve'));
  hide('#newForm,[data-editform]',can('form_save'));hide('[data-delform]',can('form_delete'));hide('#dDel',can('record_delete'));hide('#staffForm,[data-delstaff]',can('staff_save'));
  if(!can('money')){const pp=root.querySelector('#drawer .dbody>.panel');if(pp&&/Thanh toán/.test(pp.querySelector('h3')?.textContent||'')){pp.querySelectorAll('input,select,textarea,button:not([data-copyck]):not([data-qrsave])').forEach(e=>{e.disabled=true});pp.querySelector('h3').insertAdjacentHTML('beforeend',' <small class="rotag">Chỉ xem</small>')}
@@ -702,10 +707,10 @@ function applyPerms(root){root=root||document;const hide=(sel,ok)=>{if(!ok)root.
 }
 function renderNav(route){
  $('#nav').innerHTML=`<a class="home ${route==='tong-quan'?'on':''}" href="#tong-quan" data-tip="Tổng quan">${svgI('home')}<span class="lbl">Tổng quan</span></a>`+
-  MODS.map(m=>`<a href="#${m.id}" style="--c:${m.c}" class="${route===m.id?'on':''}" data-tip="${m.n}. ${m.name}">${svgI(m.ic)}<span class="lbl">${m.n}. ${m.name}</span></a>`).join('')+
-  `<a class="home ${route==='form'?'on':''}" href="#form" data-tip="Form thu thập" style="border-color:#a43be6;color:#f0d9ff">${svgI('form')}<span class="lbl">Form thu thập</span></a>`+
-  (can('txn_confirm')?`<a class="home ${route==='ke-toan'?'on':''}" href="#ke-toan" data-tip="Kế toán · Đối soát" style="border-color:#16a34a;color:#d9ffe9">${svgI('calc')}<span class="lbl">Kế toán · Đối soát</span></a>`:'');
- $('#bnav').innerHTML=[['tong-quan','home','Tổng quan'],['san-pham','box','Sản phẩm'],['khach-hang','users','Khách hàng'],['form','form','Form']].map(([h,ic,t])=>`<a href="#${h}" class="${route===h?'on':''}">${svgI(ic)}<span>${t}</span></a>`).join('');
+  MODS.filter(m=>canSee(m.id)).map(m=>`<a href="#${m.id}" style="--c:${m.c}" class="${route===m.id?'on':''}" data-tip="${m.n}. ${m.name}">${svgI(m.ic)}<span class="lbl">${m.n}. ${m.name}</span></a>`).join('')+
+  (canSee('form')?`<a class="home ${route==='form'?'on':''}" href="#form" data-tip="Form thu thập" style="border-color:#a43be6;color:#f0d9ff">${svgI('form')}<span class="lbl">Form thu thập</span></a>`:'')+
+  (can('txn_confirm')&&canSee('ke-toan')?`<a class="home ${route==='ke-toan'?'on':''}" href="#ke-toan" data-tip="Kế toán · Đối soát" style="border-color:#16a34a;color:#d9ffe9">${svgI('calc')}<span class="lbl">Kế toán · Đối soát</span></a>`:'');
+ $('#bnav').innerHTML=[['tong-quan','home','Tổng quan'],['san-pham','box','Sản phẩm'],['khach-hang','users','Khách hàng'],['form','form','Form']].filter(([h])=>canSee(h)).map(([h,ic,t])=>`<a href="#${h}" class="${route===h?'on':''}">${svgI(ic)}<span>${t}</span></a>`).join('');
 }
 
 /* ---------- Views ---------- */
@@ -1443,7 +1448,8 @@ function route(){
  document.body.classList.remove('menu-open');
  if(!S.loaded)return;
  let r=(location.hash||'').slice(1)||'tong-quan';
- const m=MODS.find(x=>x.id===r);if(!m&&!TITLES[r])r='tong-quan';
+ let m=MODS.find(x=>x.id===r);if(!m&&!TITLES[r])r='tong-quan';
+ if(!canSee(r)){toast(`Phòng ban của anh/chị không dùng mục ${VIEW_NAME(r)}.`,true);r='tong-quan';m=null;try{history.replaceState(null,'','#tong-quan')}catch(_){}}
  document.body.classList.remove('solo');
  renderNav(r);$('#title').textContent=m?`${m.n}. ${m.name}`:TITLES[r];
  S.route=r;render(true);
@@ -2161,7 +2167,7 @@ async function saveStaff(list){
 }
 async function reload(quiet){
  const j=await api('bootstrap');saveCache(j);
- S.forms=j.forms;S.real=j.records;S.camps=j.camps||[];S.txns=j.txns||[];S.users=j.users||[];if(j.me){const ch=!S.me||S.me.role!==j.me.role;setMe(j.me);if(ch&&S.route)renderNav(S.route)}mergeList();S.staff=j.staff&&j.staff.length?j.staff:DEFAULT_STAFF.slice();S.loaded=true;
+ S.forms=j.forms;S.real=j.records;S.camps=j.camps||[];S.txns=j.txns||[];S.users=j.users||[];if(j.me){const ch=!S.me||S.me.role!==j.me.role;setMe(j.me);if(ch&&S.route)route()}mergeList();S.staff=j.staff&&j.staff.length?j.staff:DEFAULT_STAFF.slice();S.loaded=true;
  setConn(`Đã đồng bộ · ${S.real.length} học viên`,'ok');
  if(quiet&&($('#drawer').classList.contains('on')||EDITING))return; // không làm mất chữ đang gõ trong hồ sơ
  if(quiet&&S.route==='san-pham'&&document.activeElement&&document.activeElement.id==='q')return;

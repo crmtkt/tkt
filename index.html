@@ -548,6 +548,7 @@ tr.dayrow td{background:#1b2c6b!important;color:var(--gold2);font-weight:700;fon
 .subrow .who{padding-left:22px}.subarrow{font-size:22px;color:var(--gold);width:34px;text-align:center}.regtag{display:inline-block;font-size:12px;font-weight:700;color:#0b1433;background:#7dd3fc;border-radius:99px;padding:1px 8px}
 .custcell{display:flex;flex-direction:column;gap:6px}.regchips{display:flex;flex-wrap:wrap;gap:5px;align-items:center;padding-left:2px}.regchip{all:unset;cursor:pointer;display:inline-flex;align-items:center;gap:6px;font-size:12.5px;padding:3px 9px;border-radius:99px;background:#0f1c4a;border:1px solid #2c3f86;color:var(--ink);white-space:nowrap}.regchip i{width:8px;height:8px;border-radius:50%}.regchip:hover,.regchip:focus-visible{border-color:var(--gold)}.regchip.on{background:#2c3f86;border-color:var(--gold);font-weight:700}.regchip.dia{border-color:#a855f7}
 .dregs{padding:10px 20px 12px;border-bottom:1px solid var(--line);background:#0b1636;display:flex;flex-direction:column;gap:6px}
+.regdd summary{list-style:none;cursor:pointer;display:inline-flex;align-items:center;gap:8px;font-size:13px;padding:3px 8px 3px 3px;border-radius:99px;border:1px solid #2c3f86;background:#0f1c4a;width:max-content}.regdd summary::-webkit-details-marker{display:none}.regdd[open] summary{border-color:var(--gold)}.regdd .regchips{margin-top:6px;flex-direction:column;align-items:flex-start}.rdots{display:inline-flex;gap:3px}.rdots i{width:8px;height:8px;border-radius:50%}
 </style>
 <script>new MutationObserver(()=>{for(const c of document.querySelectorAll('.stack td:not([data-l])')){let i=0,p=c;while(p=p.previousElementSibling)i+=p.colSpan;c.dataset.l=c.closest('table').rows[0].cells[i]?.textContent||''}}).observe(document,{childList:true,subtree:true})</script>
 </head>
@@ -926,7 +927,14 @@ function vProducts(){
 }
 
 /* Bảng khách hàng: MỖI NGƯỜI 1 DÒNG. Tiền cộng gộp mọi khóa; dưới tên là các tab khóa đang học, bấm tab để mở hồ sơ khóa đó. */
-function regChips(rs,cur){return `<div class="regchips">${rs.length>1?`<span class="regtag">Học ${rs.length} khóa</span>`:''}${rs.map(r=>`<button class="regchip ${isDia(r)?'dia':''} ${cur===r.id?'on':''}" data-open="${esc(r.id)}" title="Mở hồ sơ khóa này"><i style="background:${congNo(r)?'#fb923c':hasPay(r)?'#22c55e':stColor(r.trangThai)}"></i>${esc(prodName(r))}${hasPay(r)?` · ${congNo(r)?'nợ '+TR(congNo(r)):'đủ'}`:''}</button>`).join('')}</div>`}
+function regChips(rs,cur){
+ const chip=r=>`<button class="regchip ${isDia(r)?'dia':''} ${cur===r.id?'on':''}" data-open="${esc(r.id)}" title="Mở hồ sơ khóa này"><i style="background:${congNo(r)?'#fb923c':hasPay(r)?'#22c55e':stColor(r.trangThai)}"></i>${esc(prodName(r))}${hasPay(r)?` · ${congNo(r)?'nợ '+TR(congNo(r)):'đủ'}`:''}</button>`;
+ if(rs.length===1)return `<div class="regchips">${chip(rs[0])}</div>`;
+ const no=rs.reduce((a,r)=>a+congNo(r),0),dots=rs.map(r=>`<i style="background:${congNo(r)?'#fb923c':hasPay(r)?'#22c55e':stColor(r.trangThai)}"></i>`).join('');
+ if(cur){return rs.length<=4?`<div class="regchips">${rs.map(chip).join('')}</div>`:`<select class="inp" data-regjump="1" aria-label="Chuyển sang khóa khác" style="max-width:100%">${rs.map(r=>`<option value="${esc(r.id)}" ${r.id===cur?'selected':''}>${esc(prodName(r))}${r.chuongTrinh?' · '+esc(r.chuongTrinh):''}${hasPay(r)?` · ${congNo(r)?'nợ '+TR(congNo(r)):'đủ'}`:''}</option>`).join('')}</select>`}
+ return `<details class="regdd"><summary><span class="regtag">Học ${rs.length} khóa</span><span class="rdots">${dots}</span>${no?`<span class="warnTxt">nợ ${TR(no)}</span>`:'<span style="color:#4ade80">đủ</span>'}<span class="mut">▾</span></summary><div class="regchips">${rs.map(chip).join('')}</div></details>`;
+}
+function regChipsOld(rs,cur){return `<div class="regchips">${rs.length>1?`<span class="regtag">Học ${rs.length} khóa</span>`:''}${rs.map(r=>`<button class="regchip ${isDia(r)?'dia':''} ${cur===r.id?'on':''}" data-open="${esc(r.id)}" title="Mở hồ sơ khóa này"><i style="background:${congNo(r)?'#fb923c':hasPay(r)?'#22c55e':stColor(r.trangThai)}"></i>${esc(prodName(r))}${hasPay(r)?` · ${congNo(r)?'nợ '+TR(congNo(r)):'đủ'}`:''}</button>`).join('')}</div>`}
 function custTable(list){
  const H=['Khách hàng','Điện thoại','Thanh toán','Tổng phải thu','Đã thu','Công nợ','Chương trình','Phụ trách','Trạng thái','Năm sinh','Email','Công việc','Tỉnh/thành','Mức AI','Chăm sóc gần nhất','Ngày vào'];
  const sum=(rs,f)=>rs.reduce((a,r)=>a+f(r),0);
@@ -1207,23 +1215,38 @@ function rpBuyers(list,title,id,showSp,showCamp){
 }
 const MOD_DEMO={
 'marketing':()=>{
- const pct=(a,b)=>b?(a/b*100).toLocaleString('vi-VN',{maximumFractionDigits:1})+'%':'—';
+ /* Báo cáo marketing theo mẫu công ty: logo SKT, tiêu đề cam, tên cột vàng nhạt, dòng tổng vàng. Mỗi bảng 4 cột. */
+ const pct=(a,b)=>b?(a/b*100).toLocaleString('vi-VN',{maximumFractionDigits:1})+'%':'—',num=v=>Math.round(v).toLocaleString('vi-VN');
  const F=[['Tiếp cận (lượt xem quảng cáo, bài viết)',420000],['Tương tác (bình luận, nhắn tin, bấm link)',18600],['Để lại thông tin (khách tiềm năng)',3150],['Tham gia Zoom miễn phí',1240],['Được tư vấn 1 kèm 1',410],['Mua khóa chuyên sâu',152]];
- const CH=[['Facebook Ads','#3b82f6',180e6,1420,610,64,2.9e9],['Zalo (nhóm, OA)','#0ea5e9',25e6,620,280,38,1.9e9],['TikTok','#ec4899',60e6,690,190,21,0.7e9],['YouTube','#ef4444',20e6,240,90,12,0.6e9],['Giới thiệu từ học viên','#f5c451',15e6,180,140,17,1.3e9]];
- const CP=[['Zoom miễn phí "AI cho người 40+"','Facebook, Zalo',45e6,1350,520,48,2.2e9],['Offline Sài Gòn 10/2026','Facebook, Zalo, giới thiệu',120e6,980,410,86,3.96e9],['Chuỗi video "Đóng gói di sản"','TikTok, YouTube',35e6,560,140,9,0.45e9],['Ưu đãi học viên cũ lên Diamond','Zalo, gọi điện',8e6,95,62,11,2.4e9],['Giới thiệu từ học viên','Giới thiệu',12e6,165,120,9,1.07e9]];
- const tr=[['T6',1800,4.1],['T7',2050,4.4],['T8',2300,4.0],['T9',2700,4.6],['T10',3600,5.2],['T11',3150,4.8]];
- const spend=CH.reduce((a,c)=>a+c[2],0),leads=CH.reduce((a,c)=>a+c[3],0),buy=CH.reduce((a,c)=>a+c[5],0),rev=CH.reduce((a,c)=>a+c[6],0);
- return `${kpi([[TR(spend),'Chi phí marketing tháng'],[leads.toLocaleString('vi-VN'),'Khách tiềm năng'],[TR(spend/leads),'Chi phí / khách tiềm năng'],[buy,'Đơn chuyên sâu','#34d399'],[pct(buy,leads),'Tỷ lệ chốt (khách → mua)','#34d399'],[TR(spend/buy),'Chi phí / đơn'],[TR(rev),'Doanh thu từ marketing','#34d399'],[(rev/spend).toLocaleString('vi-VN',{maximumFractionDigits:1})+' lần','ROAS (doanh thu / chi phí)']])}
- <div class="panel" style="margin-bottom:16px"><h3>Phễu chuyển đổi tháng 11/2026</h3><p class="mut sm" style="margin:0 0 10px">Mỗi bước ghi số người, tỷ lệ so với bước trước và so với đầu phễu.</p>
- <div class="funnel">${F.map(([k,v],i)=>`<div class="fs"><div class="fsb" style="width:${Math.max(6,Math.sqrt(v/F[0][1])*100).toFixed(1)}%"><b>${v.toLocaleString('vi-VN')}</b></div><div class="fsl"><span>${esc(k)}</span><small>${i?`${pct(v,F[i-1][1])} từ bước trước · ${pct(v,F[0][1])} từ đầu phễu`:'Đầu phễu'}</small></div></div>`).join('')}</div>
- <p class="sm" style="margin:10px 0 0">Điểm nghẽn: chỉ <b class="warnTxt">${pct(F[3][1],F[2][1])}</b> khách tiềm năng vào Zoom. Nên nhắc Zalo trước buổi 1 ngày và 1 giờ.</p></div>
- <h3>Hiệu quả theo kênh</h3>${tbl(['Kênh','Chi phí','Khách tiềm năng','Chi phí/khách','Vào Zoom','Tỷ lệ vào Zoom','Mua','Tỷ lệ chốt','Doanh thu','ROAS'],CH.map(c=>[`<b style="color:${c[1]}">${esc(c[0])}</b>`,TR(c[2]),c[3].toLocaleString('vi-VN'),TR(c[2]/c[3]),c[4],pct(c[4],c[3]),c[5],`<b>${pct(c[5],c[3])}</b>`,TR(c[6]),`<b>${(c[6]/c[2]).toLocaleString('vi-VN',{maximumFractionDigits:1})}×</b>`]).concat([['<b>Tổng</b>',`<b>${TR(spend)}</b>`,`<b>${leads.toLocaleString('vi-VN')}</b>`,TR(spend/leads),CH.reduce((a,c)=>a+c[4],0),pct(CH.reduce((a,c)=>a+c[4],0),leads),`<b>${buy}</b>`,`<b>${pct(buy,leads)}</b>`,`<b>${TR(rev)}</b>`,`<b>${(rev/spend).toLocaleString('vi-VN',{maximumFractionDigits:1})}×</b>`]]))}
- <div class="grid2" style="margin:16px 0"><div class="panel"><h3>Tỷ lệ chốt theo kênh</h3>${hbars(CH.map(c=>[c[0],c[5]/c[3]*100,c[1]]),'#6366f1',v=>v.toLocaleString('vi-VN',{maximumFractionDigits:1})+'%')}</div>
- <div class="panel"><h3>Chi phí cho mỗi đơn</h3>${hbars(CH.map(c=>[c[0],c[2]/c[5],c[1]]),'#6366f1',TR)}</div></div>
- <div class="grid2" style="margin-bottom:16px"><div class="panel"><h3>Khách tiềm năng 6 tháng</h3>${vbarsN(tr.map(t=>[t[0],t[1]]),'#3b82f6',v=>v.toLocaleString('vi-VN'))}</div>
- <div class="panel"><h3>Tỷ lệ chốt 6 tháng</h3>${vbarsN(tr.map(t=>[t[0],t[2],t[2]>=5]),'#34d399',v=>v.toLocaleString('vi-VN')+'%')}</div></div>
- <h3>Hiệu quả theo chiến dịch</h3>${tbl(['Chiến dịch','Kênh','Chi phí','Khách tiềm năng','Tư vấn','Tỷ lệ tư vấn','Mua','Tỷ lệ chốt','Doanh thu','ROI'],CP.map(c=>[`<b>${esc(c[0])}</b>`,esc(c[1]),TR(c[2]),c[3].toLocaleString('vi-VN'),c[4],pct(c[4],c[3]),c[5],`<b>${pct(c[5],c[3])}</b>`,TR(c[6]),`<b>${Math.round((c[6]-c[2])/c[2]*100).toLocaleString('vi-VN')}%</b>`]))}
- <h3 style="margin-top:18px">Việc cần làm theo kênh</h3><div class="subs">${[['Facebook','#3b82f6',['3 bài/tuần về câu chuyện học viên','Chạy quảng cáo Zoom miễn phí','Trả lời bình luận trong 2 giờ']],['TikTok','#ec4899',['5 video ngắn/tuần, không lộ mặt','Dùng AI dựng kịch bản','Gắn link đăng ký Zoom']],['YouTube','#ef4444',['1 video dài/tuần từ buổi Zoom','Cắt 3 shorts từ mỗi buổi']],['Zalo','#0ea5e9',['Nhắc lịch Zoom trước 1 ngày và 1 giờ','Gửi tài liệu sau buổi học','Chăm sóc nhóm Diamond']]].map(([k,c,l])=>`<div class="sub" style="--c:${c}"><b>${k}</b><ul class="chk2">${l.map(x=>`<li>${esc(x)}</li>`).join('')}</ul></div>`).join('')}</div>`;
+ const CH=[['Facebook Ads',180e6,1420,64,2.9e9],['Zalo (nhóm, OA)',25e6,620,38,1.9e9],['TikTok',60e6,690,21,0.7e9],['YouTube',20e6,240,12,0.6e9],['Giới thiệu từ học viên',15e6,180,17,1.3e9]];
+ const CP=[['Zoom miễn phí "AI cho người 40+"',45e6,1350,48,2.2e9],['Offline Sài Gòn 10/2026',120e6,980,86,3.96e9],['Chuỗi video "Đóng gói di sản"',35e6,560,9,0.45e9],['Ưu đãi học viên cũ lên Diamond',8e6,95,11,2.4e9],['Giới thiệu từ học viên',12e6,165,9,1.07e9]];
+ const TM=[['Tháng 6/2026',1800,74,3.4e9],['Tháng 7/2026',2050,90,4.1e9],['Tháng 8/2026',2300,92,4.3e9],['Tháng 9/2026',2700,124,5.9e9],['Tháng 10/2026',3600,187,8.6e9],['Tháng 11/2026',3150,152,7.4e9]];
+ const spend=CH.reduce((a,c)=>a+c[1],0),leads=CH.reduce((a,c)=>a+c[2],0),buy=CH.reduce((a,c)=>a+c[3],0),rev=CH.reduce((a,c)=>a+c[4],0);
+ const P={spend:320e6,leads:3600,buy:187,rev:8.6e9};
+ const chg=(a,b,good)=>{if(!b)return '—';const d=(a-b)/b*100,up=d>=0,ok=good==='up'?up:!up;return `<b style="color:${ok?'#15803d':'#b91c1c'}">${up?'▲':'▼'} ${Math.abs(d).toLocaleString('vi-VN',{maximumFractionDigits:1})}%</b>`};
+ const best=CH.slice().sort((x,y)=>y[3]/y[2]-x[3]/x[2])[0],worst=CH.slice().sort((x,y)=>x[3]/x[2]-y[3]/y[2])[0];
+ return `${kpi([[TR(spend),'Chi phí marketing tháng 11'],[num(leads),'Khách tiềm năng'],[buy,'Đơn chuyên sâu','#34d399'],[TR(rev),'Doanh thu từ marketing','#34d399']])}
+ ${rpTable({id:'mk-tq',title:'Báo cáo tổng quan marketing tháng 11/2026',cols:[['Chỉ số','l'],['Tháng 11','n'],['Tháng 10','n'],['Tăng / giảm','c']],rows:[
+  ['Chi phí marketing',VND(spend),VND(P.spend),chg(spend,P.spend,'down')],
+  ['Khách tiềm năng (để lại thông tin)',num(leads),num(P.leads),chg(leads,P.leads,'up')],
+  ['Chi phí / khách tiềm năng',VND(spend/leads),VND(P.spend/P.leads),chg(spend/leads,P.spend/P.leads,'down')],
+  ['Đơn khóa chuyên sâu',num(buy),num(P.buy),chg(buy,P.buy,'up')],
+  ['Tỷ lệ chốt (khách → đơn)',pct(buy,leads),pct(P.buy,P.leads),chg(buy/leads,P.buy/P.leads,'up')],
+  ['Chi phí / đơn',VND(spend/buy),VND(P.spend/P.buy),chg(spend/buy,P.spend/P.buy,'down')],
+  ['Doanh thu từ marketing',VND(rev),VND(P.rev),chg(rev,P.rev,'up')],
+  ['Doanh thu / chi phí (ROAS)',(rev/spend).toLocaleString('vi-VN',{maximumFractionDigits:1})+' lần',(P.rev/P.spend).toLocaleString('vi-VN',{maximumFractionDigits:1})+' lần',chg(rev/spend,P.rev/P.spend,'up')]],
+  note:'Mũi tên xanh = tốt hơn tháng trước, đỏ = kém hơn (với chi phí: giảm là tốt).'})}
+ ${rpTable({id:'mk-kenh',title:'Hiệu quả theo kênh – tháng 11/2026',cols:[['Kênh','l'],['Chi phí','n'],['Số đơn (tỷ lệ chốt)','c'],['Doanh thu','n']],
+  rows:CH.map(c=>[c[0],VND(c[1]),`${c[3]} đơn (${pct(c[3],c[2])})`,VND(c[4])]),total:['Tổng cộng',VND(spend),`${buy} đơn (${pct(buy,leads)})`,VND(rev)],
+  note:`Chốt tốt nhất: ${best[0]} (${pct(best[3],best[2])}). Thấp nhất: ${worst[0]} (${pct(worst[3],worst[2])}) – xem lại nội dung và cách dẫn về Zoom.`})}
+ ${rpTable({id:'mk-cd',title:'Hiệu quả theo chiến dịch – tháng 11/2026',cols:[['Chiến dịch','l'],['Chi phí','n'],['Số đơn (tỷ lệ chốt)','c'],['Doanh thu','n']],
+  rows:CP.map(c=>[c[0],VND(c[1]),`${c[3]} đơn (${pct(c[3],c[2])})`,VND(c[4])]),total:['Tổng cộng',VND(CP.reduce((a,c)=>a+c[1],0)),`${CP.reduce((a,c)=>a+c[3],0)} đơn`,VND(CP.reduce((a,c)=>a+c[4],0))]})}
+ ${rpTable({id:'mk-pheu',title:'Phễu chuyển đổi tháng 11/2026',cols:[['Bước','l'],['Số người','n'],['So với bước trước','c'],['So với đầu phễu','c']],
+  rows:F.map(([k,v],i)=>[`${i+1}. ${k}`,num(v),i?pct(v,F[i-1][1]):'—',i?pct(v,F[0][1]):'100%']),
+  note:`Điểm nghẽn: chỉ ${pct(F[3][1],F[2][1])} khách tiềm năng vào Zoom – nên nhắc qua Zalo trước buổi 1 ngày và 1 giờ.`})}
+ ${rpTable({id:'mk-6t',title:'Khách tiềm năng và đơn 6 tháng gần nhất',cols:[['Tháng','l'],['Khách tiềm năng','n'],['Số đơn (tỷ lệ chốt)','c'],['Doanh thu','n']],
+  rows:TM.map(t=>[t[0],num(t[1]),`${t[2]} đơn (${pct(t[2],t[1])})`,VND(t[3])]),total:['Tổng cộng',num(TM.reduce((a,t)=>a+t[1],0)),`${TM.reduce((a,t)=>a+t[2],0)} đơn`,VND(TM.reduce((a,t)=>a+t[3],0))]})}
+ <details class="morebox"><summary>Việc cần làm theo kênh</summary><div class="subs">${[['Facebook','#3b82f6',['3 bài/tuần về câu chuyện học viên','Chạy quảng cáo Zoom miễn phí','Trả lời bình luận trong 2 giờ']],['TikTok','#ec4899',['5 video ngắn/tuần, không lộ mặt','Dùng AI dựng kịch bản','Gắn link đăng ký Zoom']],['YouTube','#ef4444',['1 video dài/tuần từ buổi Zoom','Cắt 3 shorts từ mỗi buổi']],['Zalo','#0ea5e9',['Nhắc lịch Zoom trước 1 ngày và 1 giờ','Gửi tài liệu sau buổi học','Chăm sóc nhóm Diamond']]].map(([k,c,l])=>`<div class="sub" style="--c:${c}"><b>${k}</b><ul class="chk2">${l.map(x=>`<li>${esc(x)}</li>`).join('')}</ul></div>`).join('')}</div></details>`;
 },
 'quy-trinh':()=>{
  const P=[['Sự kiện Zoom miễn phí','#3b82f6',[['Chốt chủ đề, slide, link Zoom','Oanh',1],['Đăng bài + nhắc Zalo trước 1 ngày','Mỹ Linh',1],['Kiểm tra âm thanh, MC mở màn','Oanh',1],['Thầy Tư chia sẻ 90 phút','Thầy Tư',0],['Gửi form đăng ký + quà sau buổi','Kim Anh',0],['Gọi tư vấn người quan tâm trong 48 giờ','Kim Anh, Mỹ Linh',0]]],
@@ -2150,6 +2173,7 @@ function ktChange(e){
  const t=e.target;
  if(t.id==='ktFile'){const f=t.files[0];if(!f)return true;readStatement(f).then(rows=>ktLoad(rows,f.name)).catch(err=>toast(err.message||'Không đọc được file',true));return true}
  if(t.id==='ktTk'){S.kt.tk=t.value;return true}
+ if(t.dataset.regjump){openDrawer(t.value);return true}
  if(t.id==='hdM'){S.kt.hdM=t.value;render();return true}
  if(t.dataset.hdsel){const st=S.kt.hdSel||(S.kt.hdSel=new Set());t.checked?st.add(t.dataset.hdsel):st.delete(t.dataset.hdsel);render();return true}
  if(t.id==='hdAll'){const st=S.kt.hdSel||(S.kt.hdSel=new Set());hdList().forEach(x=>t.checked?st.add(x.id):st.delete(x.id));render();return true}

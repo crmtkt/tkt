@@ -14,7 +14,8 @@ const COLS = {
   settings: ['k', 'v'],
   camps: ['id', 'ma', 'ten', 'data', 'duyet', 'updatedAt'],
   users: ['id', 'hoTen', 'sdt', 'email', 'phong', 'salt', 'hash', 'active', 'createdAt', 'updatedAt', 'lastLogin'],
-  txns: ['id', 'key', 'ngay', 'soTien', 'noiDung', 'nguoiCK', 'taiKhoan', 'trangThai', 'alloc', 'ghiChu', 'createdAt', 'xacNhanLuc'],
+  txns: ['id', 'key', 'ngay', 'soTien', 'noiDung', 'nguoiCK', 'taiKhoan', 'trangThai', 'alloc', 'ghiChu', 'createdAt', 'xacNhanLuc', 'lo', 'hd'],
+  uploads: ['id', 'ten', 'taiKhoan', 'soDong', 'them', 'trung', 'tongTien', 'tuNgay', 'denNgay', 'nguoi', 'luc'],
 };
 const ANSWER_KEYS = ['hoTen','namSinh','sdt','email','thanhPho','congViec','vaiTro','khoaDaHoc','lyDo','vanDe','mongMuon','ketQua','ngaiNgai','sanPhamRieng','thoiGian','aiLevel','aiTools','aiDaLam','aiMuon','dongY'];
 const REQUIRED = {
@@ -199,7 +200,7 @@ function route_(b) {
       case 'bootstrap': {
         const recs = rows_('records'), counts = {};
         recs.forEach(r => counts[r.formId] = (counts[r.formId] || 0) + 1);
-        return out_({ok: true, forms: rows_('forms').reverse().map(f => formOut_(f, counts[f.id])), records: recs.reverse().map(recOut_), staff: staff_(), camps: camps_(), txns: txns_(), me: ME, users: ME.role === 'quantri' ? users_() : []});
+        return out_({ok: true, forms: rows_('forms').reverse().map(f => formOut_(f, counts[f.id])), records: recs.reverse().map(recOut_), staff: staff_(), camps: camps_(), txns: txns_(), uploads: ['quantri', 'ketoan'].indexOf(ME.role) >= 0 ? uploads_() : [], me: ME, users: ME.role === 'quantri' ? users_() : []});
       }
       case 'photos': {
         const ids = list_(b.ids, 40, 40), map = {};
@@ -378,7 +379,8 @@ function campIn_(c) {
 }
 function campOut_(r) { let d = {}; try { d = JSON.parse(r.data || '{}'); } catch (e) {} let v = null; try { v = r.duyet ? JSON.parse(r.duyet) : null; } catch (e) {} return Object.assign(d, {id: r.id, ma: r.ma, ten: r.ten, duyet: v, updatedAt: r.updatedAt}); }
 function camps_() { return rows_('camps').map(campOut_); }
-function txnOut_(r) { let a = []; try { a = JSON.parse(r.alloc || '[]'); } catch (e) {} return {id: r.id, ngay: r.ngay, soTien: Number(r.soTien) || 0, noiDung: r.noiDung, nguoiCK: r.nguoiCK, taiKhoan: r.taiKhoan, trangThai: r.trangThai, alloc: a, ghiChu: r.ghiChu, createdAt: r.createdAt, xacNhanLuc: r.xacNhanLuc}; }
+function txnOut_(r) { let a = []; try { a = JSON.parse(r.alloc || '[]'); } catch (e) {} return {id: r.id, ngay: r.ngay, soTien: Number(r.soTien) || 0, noiDung: r.noiDung, nguoiCK: r.nguoiCK, taiKhoan: r.taiKhoan, trangThai: r.trangThai, alloc: a, ghiChu: r.ghiChu, createdAt: r.createdAt, xacNhanLuc: r.xacNhanLuc, lo: r.lo || '', hd: (() => { try { return r.hd ? JSON.parse(r.hd) : null; } catch (e) { return null; } })()}; }
+function uploads_() { return rows_('uploads').slice(-1000).map(u => ({id: u.id, ten: u.ten, taiKhoan: u.taiKhoan, soDong: Number(u.soDong) || 0, them: Number(u.them) || 0, trung: Number(u.trung) || 0, tongTien: Number(u.tongTien) || 0, tuNgay: u.tuNgay, denNgay: u.denNgay, nguoi: u.nguoi, luc: u.luc})); }
 function txns_() { return rows_('txns').slice(-3000).map(txnOut_); }
 function recData_(r) { let d = {}; try { d = JSON.parse(r.data || '{}'); } catch (e) {} return d; }
 function recSet_(r, d) { r.data = JSON.stringify(d); r.updatedAt = now_(); put_('records', r); }
@@ -415,16 +417,18 @@ const KT_ = {
   txn_import: b => {
     const list = Array.isArray(b.rows) ? b.rows.slice(0, 3000) : [], have = {};
     rows_('txns').forEach(r => have[r.key] = 1);
-    let add = 0, dup = 0; const out = [], t = now_(), tk = str_(b.taiKhoan, 80);
+    let add = 0, dup = 0, sum = 0, d1 = '', d2 = ''; const out = [], t = now_(), tk = str_(b.taiKhoan, 80), lo = uid_();
     list.forEach(x => {
       const ngay = day_(x && x.ngay), so = money_(x && x.soTien), nd = str_(x && x.noiDung, 500), ma = str_(x && x.maGD, 80);
       if (!ngay || !so) return;
       const key = ma ? 'm:' + tk + ':' + ma : 'h:' + sha_([tk, ngay, so, nd].join('|')).slice(0, 24);
       if (have[key]) { dup++; return; } have[key] = 1;
-      out.push([uid_(), key, ngay, String(so), nd, str_(x.nguoiCK, 120), tk, 'cho', '[]', '', t, '']); add++;
+      out.push([uid_(), key, ngay, String(so), nd, str_(x.nguoiCK, 120), tk, 'cho', '[]', '', t, '', lo, '']); add++; sum += so;
+      if (!d1 || ngay < d1) d1 = ngay; if (!d2 || ngay > d2) d2 = ngay;
     });
-    if (out.length) { const s = sheet_('txns'); s.getRange(s.getLastRow() + 1, 1, out.length, COLS.txns.length).setValues(out); }
-    return out_({ok: true, added: add, dup: dup, txns: txns_()});
+    if (out.length) { const s = sheet_('txns'); if (s.getLastColumn() < COLS.txns.length) s.getRange(1, 1, 1, COLS.txns.length).setValues([COLS.txns]).setFontWeight('bold'); s.getRange(s.getLastRow() + 1, 1, out.length, COLS.txns.length).setValues(out); }
+    put_('uploads', {id: lo, ten: str_(b.file, 160) || 'Dữ liệu dán', taiKhoan: tk, soDong: String(list.length), them: String(add), trung: String(dup), tongTien: String(sum), tuNgay: d1, denNgay: d2, nguoi: (b.__me && b.__me.ten) || '', luc: t});
+    return out_({ok: true, added: add, dup: dup, txns: txns_(), uploads: uploads_()});
   },
   txn_confirm: b => {
     const tx = rows_('txns').filter(x => x.id === str_(b.id, 32))[0]; if (!tx) return fail_('Không tìm thấy giao dịch.', 404);
@@ -446,18 +450,20 @@ const KT_ = {
   },
   txn_undo: b => {
     const tx = rows_('txns').filter(x => x.id === str_(b.id, 32))[0]; if (!tx) return fail_('Không tìm thấy giao dịch.', 404);
-    const changed = [];
+    const changed = [], dels = [], removed = [];
     if (tx.trangThai === 'da') {
       let al = []; try { al = JSON.parse(tx.alloc || '[]'); } catch (e) {}
       const recs = rows_('records');
       al.forEach(a => {
         const r = recs.filter(x => x.id === a.recId)[0]; if (!r) return; const d = recData_(r);
         const keep = (d.lichSuTT || []).filter(p => p.gd !== tx.id), gone = (d.lichSuTT || []).length - keep.length;
+        if (gone && a.moi && !keep.length) { dels.push(r); return; } // hồ sơ tạo nhầm từ chính giao dịch này: xóa luôn
         if (gone) { d.lichSuTT = keep; d.daDong = Math.max(0, (Number(d.daDong) || 0) - a.soTien); d.ttTT = payState_(d); recSet_(r, d); changed.push(recOut_(r)); }
       });
+      dels.sort((x, y) => y._row - x._row).forEach(r => { sheet_('records').deleteRow(r._row); removed.push(r.id); });
     }
-    Object.assign(tx, {trangThai: 'cho', alloc: '[]', ghiChu: '', xacNhanLuc: ''}); put_('txns', tx);
-    return out_({ok: true, txn: txnOut_(tx), records: changed});
+    Object.assign(tx, {trangThai: 'cho', alloc: '[]', ghiChu: '', xacNhanLuc: '', hd: ''}); put_('txns', tx);
+    return out_({ok: true, txn: txnOut_(tx), records: changed, removed: removed});
   },
   txn_skip: b => {
     const tx = rows_('txns').filter(x => x.id === str_(b.id, 32))[0]; if (!tx) return fail_('Không tìm thấy giao dịch.', 404);
@@ -478,16 +484,34 @@ const KT_ = {
       const pay = {ngay: tx.ngay, soTien: String(so), noiDung: dot + ' · Chuyển khoản: ' + (tx.noiDung || '').slice(0, 300) + ' (kế toán đối soát)', gd: tx.id};
       const nd = {hoTen: hoTen, sdt: sd, khoa: str_(R.khoa, 60) || 'Diamond', nhom: str_(R.nhom, 80), chuongTrinh: str_(R.chuongTrinh, 160), hocPhi: money_(R.hocPhi), khauTru: 0, daDong: 0, nam: '2026', trangThai: 'Mới đăng ký', phuTrach: list_(R.phuTrach, 10, 80), hanhTrinh: [{ngay: tx.ngay, noiDung: 'Tạo hồ sơ từ sao kê ngân hàng (kế toán đối soát)'}], nhatKy: [], tienDo: {}, lichSuTT: []};
       let r = recs.filter(x => keyOf(recData_(x)) === keyOf(nd))[0];
+      let isNew = 0;
       if (r) { const d = recData_(r); d.daDong = (Number(d.daDong) || 0) + so; d.lichSuTT = (d.lichSuTT || []).concat([pay]); d.ttTT = payState_(d); recSet_(r, d); }
-      else {
+      else { isNew = 1;
         nd.daDong = so; nd.lichSuTT = [pay]; nd.ttTT = payState_(nd);
         r = {id: uid_(), formId: '', createdAt: now_(), data: JSON.stringify(nd), hoTen: hoTen, sdt: phone_(sd), email: '', trangThai: 'Mới đăng ký', phuTrach: nd.phuTrach.join(', '), updatedAt: now_()};
         setPhoto_(r, ''); put_('records', r); r._row = sheet_('records').getLastRow(); recs.push(r); made++;
       }
       changed[r.id] = r;
-      Object.assign(tx, {trangThai: 'da', alloc: JSON.stringify([{recId: r.id, soTien: so, dot: dot, hoTen: hoTen}]), ghiChu: 'Tạo hồ sơ mới từ sao kê', xacNhanLuc: now_()}); put_('txns', tx); outTx.push(txnOut_(tx));
+      Object.assign(tx, {trangThai: 'da', alloc: JSON.stringify([{recId: r.id, soTien: so, dot: dot, hoTen: hoTen, moi: isNew}]), ghiChu: isNew ? 'Tạo hồ sơ mới từ sao kê' : 'Ghi vào hồ sơ đang có', xacNhanLuc: now_()}); put_('txns', tx); outTx.push(txnOut_(tx));
     });
     return out_({ok: true, made: made, bad: bad, txns: outTx, records: Object.keys(changed).map(k => recOut_(changed[k]))});
+  },
+  txn_invoice: b => {
+    // Hóa đơn: cập nhật trạng thái / số hóa đơn / thông tin người mua cho 1 hoặc nhiều giao dịch đã đối soát; lưu lịch sử ai sửa lúc nào.
+    const ids = (Array.isArray(b.ids) ? b.ids : []).slice(0, 500).map(x => str_(x, 32)), P = b.patch || {}, me = (b.__me && b.__me.ten) || '';
+    const TT = ['cho', 'thieu', 'da', 'khong'];
+    if (P.tt && TT.indexOf(P.tt) < 0) return fail_('Trạng thái hóa đơn chưa đúng.');
+    const all = rows_('txns'), out = [];
+    ids.forEach(id => {
+      const tx = all.filter(x => x.id === id)[0]; if (!tx || tx.trangThai !== 'da') return;
+      let h = {}; try { h = tx.hd ? JSON.parse(tx.hd) : {}; } catch (e) {}
+      const ch = [];
+      ['tt', 'so', 'ngay', 'ten', 'mst', 'dc', 'email', 'ghiChu'].forEach(k => { if (k in P) { const v = k === 'ngay' ? day_(P[k]) : str_(P[k], k === 'dc' || k === 'ghiChu' ? 500 : 160); if (v !== (h[k] || '')) { ch.push(k); h[k] = v; } } });
+      if (!ch.length) return;
+      h.nguoi = me; h.capNhat = now_(); h.lichSu = (h.lichSu || []).concat([{luc: h.capNhat, nguoi: me, tt: h.tt || 'cho', so: h.so || '', thay: ch.join(',')}]).slice(-30);
+      tx.hd = JSON.stringify(h); put_('txns', tx); out.push(txnOut_(tx));
+    });
+    return out_({ok: true, txns: out});
   },
   txn_delete: b => {
     const tx = rows_('txns').filter(x => x.id === str_(b.id, 32))[0]; if (!tx) return out_({ok: true});
@@ -503,7 +527,7 @@ const PERM_ = {
   record_save: ['quantri', 'cskh', 'ketoan', 'marketing'], record_create: ['quantri', 'cskh', 'ketoan', 'marketing'], photo_save: ['quantri', 'cskh', 'marketing'],
   record_delete: ['quantri'], form_save: ['quantri', 'marketing'], form_delete: ['quantri'], staff_save: ['quantri'],
   camp_save: ['quantri', 'marketing'], camp_approve: ['quantri', 'ketoan'], camp_delete: ['quantri', 'marketing'],
-  txn_import: ['quantri', 'ketoan'], txn_confirm: ['quantri', 'ketoan'], txn_undo: ['quantri', 'ketoan'], txn_skip: ['quantri', 'ketoan'], txn_delete: ['quantri', 'ketoan'], txn_newrecs: ['quantri', 'ketoan'],
+  txn_import: ['quantri', 'ketoan'], txn_confirm: ['quantri', 'ketoan'], txn_undo: ['quantri', 'ketoan'], txn_skip: ['quantri', 'ketoan'], txn_delete: ['quantri', 'ketoan'], txn_newrecs: ['quantri', 'ketoan'], txn_invoice: ['quantri', 'ketoan'],
   user_save: ['quantri'], user_delete: ['quantri'],
 };
 function pwHash_(salt, pw) { let h = sha_(salt + ':' + pw); for (let i = 0; i < 1000; i++) h = sha_(h + salt); return h; }

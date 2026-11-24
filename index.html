@@ -546,6 +546,8 @@ body.side-mini .brandlogo{display:none}
 .hdbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;background:#0d1840;border:1px solid var(--gold);border-radius:12px;padding:10px 12px;margin:0 0 12px}
 tr.dayrow td{background:#1b2c6b!important;color:var(--gold2);font-weight:700;font-size:14px}tr.lsdetail>td{background:#0b1433!important;padding:10px}
 .subrow .who{padding-left:22px}.subarrow{font-size:22px;color:var(--gold);width:34px;text-align:center}.regtag{display:inline-block;font-size:12px;font-weight:700;color:#0b1433;background:#7dd3fc;border-radius:99px;padding:1px 8px}
+.custcell{display:flex;flex-direction:column;gap:6px}.regchips{display:flex;flex-wrap:wrap;gap:5px;align-items:center;padding-left:2px}.regchip{all:unset;cursor:pointer;display:inline-flex;align-items:center;gap:6px;font-size:12.5px;padding:3px 9px;border-radius:99px;background:#0f1c4a;border:1px solid #2c3f86;color:var(--ink);white-space:nowrap}.regchip i{width:8px;height:8px;border-radius:50%}.regchip:hover,.regchip:focus-visible{border-color:var(--gold)}.regchip.on{background:#2c3f86;border-color:var(--gold);font-weight:700}.regchip.dia{border-color:#a855f7}
+.dregs{padding:10px 20px 12px;border-bottom:1px solid var(--line);background:#0b1636;display:flex;flex-direction:column;gap:6px}
 </style>
 <script>new MutationObserver(()=>{for(const c of document.querySelectorAll('.stack td:not([data-l])')){let i=0,p=c;while(p=p.previousElementSibling)i+=p.colSpan;c.dataset.l=c.closest('table').rows[0].cells[i]?.textContent||''}}).observe(document,{childList:true,subtree:true})</script>
 </head>
@@ -923,6 +925,26 @@ function vProducts(){
  </div>`}`;
 }
 
+/* Bảng khách hàng: MỖI NGƯỜI 1 DÒNG. Tiền cộng gộp mọi khóa; dưới tên là các tab khóa đang học, bấm tab để mở hồ sơ khóa đó. */
+function regChips(rs,cur){return `<div class="regchips">${rs.length>1?`<span class="regtag">Học ${rs.length} khóa</span>`:''}${rs.map(r=>`<button class="regchip ${isDia(r)?'dia':''} ${cur===r.id?'on':''}" data-open="${esc(r.id)}" title="Mở hồ sơ khóa này"><i style="background:${congNo(r)?'#fb923c':hasPay(r)?'#22c55e':stColor(r.trangThai)}"></i>${esc(prodName(r))}${hasPay(r)?` · ${congNo(r)?'nợ '+TR(congNo(r)):'đủ'}`:''}</button>`).join('')}</div>`}
+function custTable(list){
+ const H=['Khách hàng','Điện thoại','Thanh toán','Tổng phải thu','Đã thu','Công nợ','Chương trình','Phụ trách','Trạng thái','Năm sinh','Email','Công việc','Tỉnh/thành','Mức AI','Chăm sóc gần nhất','Ngày vào'];
+ const sum=(rs,f)=>rs.reduce((a,r)=>a+f(r),0);
+ return `<p class="mut sm" style="margin:0 0 8px">Mỗi khách hàng một dòng; tiền là tổng mọi khóa. Dưới tên là các khóa đang học – bấm vào khóa để mở hồ sơ, xem và sửa học phí, công nợ của khóa đó. Khách học 1 khóa thì bấm thẳng vào ô để sửa.</p><div class="widewrap"><table class="wide"><thead><tr>${H.map(h=>`<th>${h}</th>`).join('')}</tr></thead><tbody>${list.map(({main:x,rs})=>{
+  const one=rs.length===1,pay=rs.some(hasPay),no=sum(rs,congNo),lc=rs.map(lastCare).filter(Boolean).sort((a,b)=>String(b.ngay).localeCompare(String(a.ngay)))[0];
+  const ttAll=!pay?'':no?`<span class="st" style="--sc:#fb923c">Còn công nợ${rs.length>1?` (${rs.filter(r=>congNo(r)).length}/${rs.length} khóa)`:''}</span>`:`<span class="st" style="--sc:#22c55e">Đã đóng đủ${rs.length>1?' tất cả':''}</span>`;
+  const cts=[...new Set(rs.map(r=>r.chuongTrinh).filter(Boolean))],pts=[...new Set(rs.flatMap(r=>arr(r.phuTrach)))];
+  return `<tr><td class="stick"><div class="custcell"><button class="who linkbtn" data-open="${esc(x.id)}">${ava(x,'ava tbimg')}<span><b>${esc(x.hoTen)}</b>${x.demo?' <span class="tag mau">Mẫu</span>':''}</span></button>${regChips(rs)}</div></td>
+  ${ec(x,'sdt','nw')}${one?ec(x,'ttTT'):`<td>${ttAll}</td>`}
+  <td class="nw">${pay?VND(sum(rs,phaiThu)):''}</td>${one?ec(x,'daDong','nw'):`<td class="nw"><b>${VND(sum(rs,r=>n0(r.daDong)))}</b></td>`}
+  <td class="nw">${pay?(no?`<b class="warnTxt">${VND(no)}</b>`:'<span class="mut">0</span>'):''}</td>
+  ${one?ec(x,'chuongTrinh'):`<td>${cts.map(esc).join('<br>')}</td>`}${one?ec(x,'phuTrach'):`<td>${pts.map(esc).join(', ')}</td>`}${one?ec(x,'trangThai'):`<td>${[...new Set(rs.map(r=>r.trangThai||'Mới đăng ký'))].map(t=>`<span class="st" style="--sc:${stColor(t)}">${esc(t)}</span>`).join(' ')}</td>`}
+  ${ec(x,'namSinh','nw')}${ec(x,'email')}${ec(x,'congViec')}${ec(x,'thanhPho')}
+  <td>${lvBar(+x.aiLevel||0)}</td>
+  <td class="tx">${lc?`${fmtD(lc.ngay)} · ${esc(lc.nguoi||'')}<br>${esc(clip(lc.noiDung,80))}`:'<span class="mut">Chưa có</span>'}</td>
+  <td class="nw">${fmtD(rs.map(r=>r.createdAt).sort()[0])}</td></tr>`}).join('')}</tbody>
+  ${list.some(g=>g.rs.some(hasPay))?`<tfoot><tr class="tot"><td class="stick"><b>Tổng cộng · ${list.length} khách hàng</b></td><td></td><td></td><td class="nw"><b>${VND(list.reduce((a,g)=>a+sum(g.rs,phaiThu),0))}</b></td><td class="nw"><b>${VND(list.reduce((a,g)=>a+sum(g.rs,r=>n0(r.daDong)),0))}</b></td><td class="nw"><b class="warnTxt">${VND(list.reduce((a,g)=>a+sum(g.rs,congNo),0))}</b></td><td colspan="10"></td></tr></tfoot>`:''}</table></div>`;
+}
 function customers(){
  const map=new Map();
  S.list.forEach(r=>{const k=String(r.sdt||'').replace(/\D/g,'')||r.id;if(!map.has(k))map.set(k,[]);map.get(k).push(r)});
@@ -947,7 +969,7 @@ function vCustomers(){
   <select class="inp" id="cpt" aria-label="Người phụ trách"><option value="all">Mọi người phụ trách</option><option value="none" ${c.pt==='none'?'selected':''}>Chưa có người phụ trách</option>${S.staff.map(x=>`<option ${c.pt===x?'selected':''}>${esc(x)}</option>`).join('')}</select>
  </div></div>
  <div class="viewbar"><span class="mut">${list.length} khách hàng</span><div class="seg" role="group" aria-label="Kiểu xem"><button class="${S.view==='card'?'on':''}" data-view="card">Thẻ khách hàng</button><button class="${S.view==='table'?'on':''}" data-view="table">Bảng đầy đủ</button></div></div>
- ${list.length?(S.view==='table'?listTable(recs):`<div class="cards">${list.map(({main,rs})=>cardHV(main,`<small class="mut" style="display:block;margin-top:6px">Lớp đã và đang học (${rs.length})</small>${classChips(rs)}${rs.some(hasPay)?`<div class="hvpay"><span>Đã thu <b>${TR(rs.reduce((a,r)=>a+n0(r.daDong),0))}</b></span>${rs.some(r=>congNo(r))?`<span class="warnTxt">Công nợ <b>${TR(rs.reduce((a,r)=>a+congNo(r),0))}</b></span>`:''}</div>`:''}`)).join('')}</div>`)
+ ${list.length?(S.view==='table'?custTable(list):`<div class="cards">${list.map(({main,rs})=>cardHV(main,`<small class="mut" style="display:block;margin-top:6px">Lớp đã và đang học (${rs.length})</small>${classChips(rs)}${rs.some(hasPay)?`<div class="hvpay"><span>Đã thu <b>${TR(rs.reduce((a,r)=>a+n0(r.daDong),0))}</b></span>${rs.some(r=>congNo(r))?`<span class="warnTxt">Công nợ <b>${TR(rs.reduce((a,r)=>a+congNo(r),0))}</b></span>`:''}</div>`:''}`)).join('')}</div>`)
   :`<div class="panel empty">${S.list.length?'Không có khách hàng khớp bộ lọc.':'Chưa có khách hàng nào. Gửi link form cho học viên, hoặc bấm "Xem dữ liệu mẫu" để xem thử.'}</div>`}
  ${personaPanel()}
  <details class="morebox"><summary>Các nhánh khác của ô Khách hàng (đang xây dần)</summary>${subsHTML(MODS[0])}</details></div>`;
@@ -1329,7 +1351,7 @@ function openDrawer(id){
  const x=S.list.find(r=>r.id===id);if(!x)return;S.open=id;const w=true;
  const kv=(k,v)=>v&&String(v).trim()?`<dt>${k}</dt><dd>${esc(Array.isArray(v)?v.join(', '):v)}</dd>`:'';
  const zl=safeUrl(x.zaloGroup);
- $('#drawer').innerHTML=`<div class="dh"><div style="display:flex;flex-direction:column;align-items:center">${ava(x)}<label class="phbtn mini">${x.hasPhoto?'Đổi ảnh':'Thêm ảnh'}<input type="file" accept="image/*" id="phIn" hidden></label></div><div style="flex:1"><h3>${esc(x.hoTen)} ${x.mau?'<span class="tag mau">Mẫu</span>':''}</h3><div class="mut">${[x.sdt,x.email].filter(Boolean).map(esc).join(' · ')||'<span class="warnTxt">Chưa có số điện thoại</span>'}</div><div style="margin-top:6px"><span class="st" style="--sc:${stColor(x.trangThai)}">${esc(x.trangThai||'Mới đăng ký')}</span> ${zl?`<a href="${esc(zl)}" target="_blank" rel="noopener">Nhóm Zalo ↗</a>`:''}</div></div><button class="btn ghost sm" id="closeD" aria-label="Đóng">Đóng</button></div>
+ $('#drawer').innerHTML=`<div class="dh"><div style="display:flex;flex-direction:column;align-items:center">${ava(x)}<label class="phbtn mini">${x.hasPhoto?'Đổi ảnh':'Thêm ảnh'}<input type="file" accept="image/*" id="phIn" hidden></label></div><div style="flex:1"><h3>${esc(x.hoTen)} ${x.mau?'<span class="tag mau">Mẫu</span>':''}</h3><div class="mut">${[x.sdt,x.email].filter(Boolean).map(esc).join(' · ')||'<span class="warnTxt">Chưa có số điện thoại</span>'}</div><div style="margin-top:6px"><span class="st" style="--sc:${stColor(x.trangThai)}">${esc(x.trangThai||'Mới đăng ký')}</span> ${zl?`<a href="${esc(zl)}" target="_blank" rel="noopener">Nhóm Zalo ↗</a>`:''}</div></div><button class="btn ghost sm" id="closeD" aria-label="Đóng">Đóng</button></div>${(()=>{const k=phoneN(x.sdt);const sib=k?S.list.filter(r=>phoneN(r.sdt)===k):[x];return sib.length>1?`<div class="dregs"><span class="mut sm">Các khóa của học viên này – bấm để chuyển:</span>${regChips(sib,x.id)}<div class="mut sm">Tổng: đã thu <b style="color:#34d399">${VND(sib.reduce((a,r)=>a+n0(r.daDong),0))}</b> · công nợ <b style="color:var(--warn)">${VND(sib.reduce((a,r)=>a+congNo(r),0))}</b></div></div>`:''})()}
  <div class="dbody">
  <div class="panel"><h3>Thanh toán &amp; công nợ</h3>
   ${x.canhBao?`<p class="alertTxt" style="margin:0 0 10px">⚠ ${esc(x.canhBao)}</p>`:''}

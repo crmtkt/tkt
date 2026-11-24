@@ -13,6 +13,7 @@ const COLS = {
   records: ['id', 'formId', 'hoTen', 'sdt', 'email', 'trangThai', 'phuTrach', 'createdAt', 'updatedAt', 'data', 'anh', 'anh2', 'anh3', 'anh4', 'coAnh'],
   settings: ['k', 'v'],
   camps: ['id', 'ma', 'ten', 'data', 'duyet', 'updatedAt'],
+  users: ['id', 'hoTen', 'sdt', 'email', 'phong', 'salt', 'hash', 'active', 'createdAt', 'updatedAt', 'lastLogin'],
   txns: ['id', 'key', 'ngay', 'soTien', 'noiDung', 'nguoiCK', 'taiKhoan', 'trangThai', 'alloc', 'ghiChu', 'createdAt', 'xacNhanLuc'],
 };
 const ANSWER_KEYS = ['hoTen','namSinh','sdt','email','thanhPho','congViec','vaiTro','khoaDaHoc','lyDo','vanDe','mongMuon','ketQua','ngaiNgai','sanPhamRieng','thoiGian','aiLevel','aiTools','aiDaLam','aiMuon','dongY'];
@@ -96,13 +97,13 @@ function secret_() {
   return s;
 }
 function sign_(payload) { return hex_(Utilities.computeHmacSha256Signature(payload, secret_())); }
-function makeToken_() { const p = ADMIN_USER + '|' + (Date.now() + 12 * 3600 * 1000); return Utilities.base64EncodeWebSafe(p) + '.' + sign_(p); }
+function makeToken_(uid) { const p = (uid || ADMIN_USER) + '|' + (Date.now() + 12 * 3600 * 1000); return Utilities.base64EncodeWebSafe(p) + '.' + sign_(p); }
 function checkToken_(t) {
   if (typeof t !== 'string' || t.indexOf('.') < 0) return false;
   const parts = t.split('.'); let p;
   try { p = Utilities.newBlob(Utilities.base64DecodeWebSafe(parts[0])).getDataAsString(); } catch (e) { return false; }
   if (sign_(p) !== parts[1]) return false;
-  return Number(p.split('|')[1]) > Date.now();
+  return Number(p.split('|')[1]) > Date.now() ? p.split('|')[0] : false;
 }
 function passOk_(pw) {
   let h = sha_(ADMIN_SALT + ':' + pw);
@@ -118,9 +119,10 @@ function recOut_(r) {
   return d;
 }
 function staff_() {
-  const r = rows_('settings').filter(x => x.k === 'staff')[0];
-  try { const l = JSON.parse(r.v); if (l.length) return l; } catch (e) {}
-  return STAFF_DEFAULT;
+  let l = STAFF_DEFAULT; const r = rows_('settings').filter(x => x.k === 'staff')[0];
+  try { const v = JSON.parse(r.v); if (v.length) l = v; } catch (e) {}
+  const u = rows_('users').filter(x => x.active === '1').map(x => x.hoTen).filter(n => n && l.indexOf(n) < 0);
+  return l.concat(u);
 }
 
 /* ---------- làm sạch dữ liệu ---------- */
@@ -183,22 +185,21 @@ function route_(b) {
   const a = b.a;
   if (a === 'submit') return submit_(b);
   if (a === 'lookup') return lookup_(b);
-  if (a === 'login') {
-    const c = CacheService.getScriptCache(), n = Number(c.get('fail') || 0);
-    if (n >= 10) return fail_('Sai quá nhiều lần. Vui lòng thử lại sau 15 phút.', 429);
-    if (str_(b.u, 100) !== ADMIN_USER || !passOk_(String(b.p || ''))) { c.put('fail', String(n + 1), 900); return fail_('Sai tài khoản hoặc mật khẩu.', 401); }
-    return out_({ok: true, tok: makeToken_(), user: ADMIN_USER});
-  }
-  if (!checkToken_(b.tok)) return fail_('Chưa đăng nhập.', 401);
+  if (a === 'login') return login_(b);
+  const uid = checkToken_(b.tok); if (!uid) return fail_('Chưa đăng nhập.', 401);
+  const ME = who_(uid); if (!ME) return fail_('Tài khoản đã bị khóa hoặc không còn tồn tại.', 401);
+  if (PERM_[a] && PERM_[a].indexOf(ME.role) < 0) return fail_('Tài khoản của anh/chị (' + ROLES_[ME.role] + ') không có quyền làm việc này.', 403);
+  if (ME.role === 'marketing' && b.patch && (a === 'record_save' || a === 'record_create')) MONEY_KEYS_.forEach(k => delete b.patch[k]);
+  b.__me = ME;
   seed_();
   const lock = LockService.getScriptLock(); lock.waitLock(20000);
   try {
     switch (a) {
-      case 'me': return out_({ok: true, user: ADMIN_USER});
+      case 'me': return out_({ok: true, user: ME.ten, me: ME});
       case 'bootstrap': {
         const recs = rows_('records'), counts = {};
         recs.forEach(r => counts[r.formId] = (counts[r.formId] || 0) + 1);
-        return out_({ok: true, forms: rows_('forms').reverse().map(f => formOut_(f, counts[f.id])), records: recs.reverse().map(recOut_), staff: staff_(), camps: camps_(), txns: txns_()});
+        return out_({ok: true, forms: rows_('forms').reverse().map(f => formOut_(f, counts[f.id])), records: recs.reverse().map(recOut_), staff: staff_(), camps: camps_(), txns: txns_(), me: ME, users: ME.role === 'quantri' ? users_() : []});
       }
       case 'photos': {
         const ids = list_(b.ids, 40, 40), map = {};
@@ -270,6 +271,7 @@ function route_(b) {
       }
     }
     if (KT_[a]) return KT_[a](b);
+    if (US_[a]) return US_[a](b, ME);
     return fail_('Không rõ yêu cầu.', 404);
   } finally { lock.releaseLock(); }
 }
@@ -357,7 +359,7 @@ function submit_(b) {
 }
 
 /** Chạy hàm này một lần trong trình soạn thảo để tạo các trang tính và cấp quyền. */
-function caiDat() { seed_(); sheet_('records'); sheet_('settings'); sheet_('camps'); sheet_('txns'); secret_(); }
+function caiDat() { seed_(); sheet_('records'); sheet_('settings'); sheet_('camps'); sheet_('txns'); sheet_('users'); secret_(); }
 
 /* ---------- Chiến dịch (bảng giá, cú pháp chuyển khoản) + Kế toán đối soát sao kê ---------- */
 function code_(s, n) { return String(s || '').toUpperCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/Đ/g, 'D').replace(/[^A-Z0-9]/g, '').slice(0, n || 10); }
@@ -491,5 +493,69 @@ const KT_ = {
     const tx = rows_('txns').filter(x => x.id === str_(b.id, 32))[0]; if (!tx) return out_({ok: true});
     if (tx.trangThai === 'da') return fail_('Giao dịch đã xác nhận, hãy hoàn tác trước.');
     sheet_('txns').deleteRow(tx._row); return out_({ok: true});
+  },
+};
+
+/* ---------- Tài khoản nhân sự & phân quyền theo phòng ban ---------- */
+const ROLES_ = {quantri: 'Toàn quyền', cskh: 'Chăm sóc khách hàng', marketing: 'Marketing', ketoan: 'Kế toán'};
+const MONEY_KEYS_ = ['hocPhi', 'khauTru', 'daDong', 'lichSuTT', 'ttTT', 'hanTT', 'canhBao', 'ghiChuTT', 'dongHanh'];
+const PERM_ = {
+  record_save: ['quantri', 'cskh', 'ketoan', 'marketing'], record_create: ['quantri', 'cskh', 'ketoan', 'marketing'], photo_save: ['quantri', 'cskh', 'marketing'],
+  record_delete: ['quantri'], form_save: ['quantri', 'marketing'], form_delete: ['quantri'], staff_save: ['quantri'],
+  camp_save: ['quantri', 'marketing'], camp_approve: ['quantri', 'ketoan'], camp_delete: ['quantri', 'marketing'],
+  txn_import: ['quantri', 'ketoan'], txn_confirm: ['quantri', 'ketoan'], txn_undo: ['quantri', 'ketoan'], txn_skip: ['quantri', 'ketoan'], txn_delete: ['quantri', 'ketoan'], txn_newrecs: ['quantri', 'ketoan'],
+  user_save: ['quantri'], user_delete: ['quantri'],
+};
+function pwHash_(salt, pw) { let h = sha_(salt + ':' + pw); for (let i = 0; i < 1000; i++) h = sha_(h + salt); return h; }
+function loginKey_(s) { s = String(s || '').trim().toLowerCase(); if (s.indexOf('@') > 0) return s; const p = phone_(s); return p || s; }
+function userOut_(u) { return {id: u.id, hoTen: u.hoTen, sdt: u.sdt, email: u.email, phong: u.phong, active: u.active === '1', coMK: !!u.hash, lastLogin: u.lastLogin || '', createdAt: String(u.createdAt || '').slice(0, 10)}; }
+function users_() { return rows_('users').map(userOut_); }
+function who_(uid) {
+  if (uid === ADMIN_USER) return {uid: uid, role: 'quantri', ten: 'Quản trị (crmtkt)', phong: 'quantri'};
+  const u = rows_('users').filter(x => x.id === uid)[0];
+  if (!u || u.active !== '1' || !ROLES_[u.phong]) return null;
+  return {uid: u.id, role: u.phong, ten: u.hoTen, phong: u.phong};
+}
+function login_(b) {
+  const c = CacheService.getScriptCache(), id = loginKey_(str_(b.u, 120)), ck = 'fail:' + sha_(id).slice(0, 16), n = Number(c.get(ck) || 0);
+  if (n >= 8) return fail_('Sai quá nhiều lần. Vui lòng thử lại sau 15 phút.', 429);
+  const pw = String(b.p || '');
+  if (id === ADMIN_USER) {
+    if (!passOk_(pw)) { c.put(ck, String(n + 1), 900); return fail_('Sai tài khoản hoặc mật khẩu.', 401); }
+    return out_({ok: true, tok: makeToken_(ADMIN_USER), user: 'Quản trị (crmtkt)', me: who_(ADMIN_USER)});
+  }
+  const u = rows_('users').filter(x => x.active === '1' && x.hash && (String(x.email).toLowerCase() === id || phone_(x.sdt) === id))[0];
+  if (!u || pwHash_(u.salt, pw) !== u.hash) { c.put(ck, String(n + 1), 900); return fail_('Sai tài khoản hoặc mật khẩu.', 401); }
+  u.lastLogin = now_(); put_('users', u);
+  return out_({ok: true, tok: makeToken_(u.id), user: u.hoTen, me: who_(u.id)});
+}
+const US_ = {
+  user_save: b => {
+    const U = b.user || {}, id = str_(U.id, 32), all = rows_('users');
+    const hoTen = str_(U.hoTen, 80), sdt = String(U.sdt || '').replace(/[\s.\-]/g, ''), email = str_(U.email, 120).toLowerCase(), phong = str_(U.phong, 20), pw = String(U.pw || '');
+    if (!hoTen) return fail_('Vui lòng nhập họ tên.');
+    if (!ROLES_[phong]) return fail_('Vui lòng chọn phòng ban.');
+    if (sdt && !/^\+?\d{9,12}$/.test(sdt)) return fail_('Số điện thoại chưa đúng.');
+    if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return fail_('Email chưa đúng.');
+    if (!sdt && !email) return fail_('Cần có số điện thoại hoặc email để nhân sự đăng nhập.');
+    if (pw && pw.length < 8) return fail_('Mật khẩu cần ít nhất 8 ký tự.');
+    if (sdt && all.some(x => x.id !== id && phone_(x.sdt) === phone_(sdt))) return fail_('Số điện thoại này đã dùng cho tài khoản khác.');
+    if (email && all.some(x => x.id !== id && String(x.email).toLowerCase() === email)) return fail_('Email này đã dùng cho tài khoản khác.');
+    const u = all.filter(x => x.id === id)[0] || {id: uid_(), createdAt: now_(), salt: '', hash: '', lastLogin: ''};
+    Object.assign(u, {hoTen: hoTen, sdt: sdt ? phone_(sdt) : '', email: email, phong: phong, active: U.active === false ? '0' : '1', updatedAt: now_()});
+    if (pw) { u.salt = Utilities.getUuid().replace(/-/g, ''); u.hash = pwHash_(u.salt, pw); }
+    put_('users', u); return out_({ok: true, users: users_(), staff: staff_()});
+  },
+  user_delete: b => {
+    const u = rows_('users').filter(x => x.id === str_(b.id, 32))[0]; if (u) sheet_('users').deleteRow(u._row);
+    return out_({ok: true, users: users_(), staff: staff_()});
+  },
+  pw_change: (b, ME) => {
+    if (ME.uid === ADMIN_USER) return fail_('Tài khoản quản trị crmtkt đổi mật khẩu trong mã máy chủ (xem hướng dẫn).');
+    const u = rows_('users').filter(x => x.id === ME.uid)[0]; if (!u) return fail_('Không tìm thấy tài khoản.', 404);
+    if (pwHash_(u.salt, String(b.old || '')) !== u.hash) return fail_('Mật khẩu hiện tại chưa đúng.');
+    const pw = String(b.pw || ''); if (pw.length < 8) return fail_('Mật khẩu mới cần ít nhất 8 ký tự.');
+    u.salt = Utilities.getUuid().replace(/-/g, ''); u.hash = pwHash_(u.salt, pw); u.updatedAt = now_(); put_('users', u);
+    return out_({ok: true});
   },
 };

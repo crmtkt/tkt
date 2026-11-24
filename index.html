@@ -1228,21 +1228,26 @@ const MOD_DEMO={
  const CH0=[['Facebook Ads',180e6,1420,64,2.9e9],['Zalo (nhóm, OA)',25e6,620,38,1.9e9],['TikTok',60e6,690,21,0.7e9],['YouTube',20e6,240,12,0.6e9],['Giới thiệu từ học viên',15e6,180,17,1.3e9]];
  const CP0=[['Zoom miễn phí "AI cho người 40+"',45e6,1350,48,2.2e9],['Offline Sài Gòn 10/2026',120e6,980,86,3.96e9],['Chuỗi video "Đóng gói di sản"',35e6,560,9,0.45e9],['Ưu đãi học viên cũ lên Diamond',8e6,95,11,2.4e9],['Giới thiệu từ học viên',12e6,165,9,1.07e9]];
  const F0=[['Tiếp cận (lượt xem quảng cáo, bài viết)',420000],['Tương tác (bình luận, nhắn tin, bấm link)',18600],['Để lại thông tin (khách tiềm năng)',3150],['Tham gia Zoom miễn phí',1240],['Được tư vấn 1 kèm 1',410],['Mua khóa chuyên sâu',152]];
+ const real=progList(),CPL=[...real.map((n,i)=>{const b=CP0[(i+1)%CP0.length];return [n,b[1],b[2],b[3],b[4]]}),...CP0.filter(c=>!real.includes(c[0]))];
+ if(M.cd&&!CPL.some(c=>c[0]===M.cd))M.cd='';
  const scale=M.k==='ngay'?1/30:M.k==='tuan'?7/30:1;
  const gen=key=>{const r=rnd(M.k+key),f=()=>scale*(0.8+r()*0.4),fz=(v,x)=>Math.max(0,Math.round(v*x));
   const CH=CH0.map(c=>{const x=f();return [c[0],Math.round(c[1]*x/1e5)*1e5,fz(c[2],x),fz(c[3],x*(0.85+r()*0.3)),Math.round(c[4]*x/1e6)*1e6]});
-  const CP=CP0.map(c=>{const x=f();return [c[0],Math.round(c[1]*x/1e5)*1e5,fz(c[2],x),fz(c[3],x),Math.round(c[4]*x/1e6)*1e6]});
-  const x=f(),F=F0.map(([k,v])=>[k,fz(v,x)]);
-  const t=(i)=>CH.reduce((a,c)=>a+c[i],0);return {CH,CP,F,spend:t(1),leads:t(2),buy:t(3),rev:t(4)}};
- const cur=gen(start(M.k,M.d).toISOString()),prv=gen(start(M.k,shift(M.k,M.d,-1)).toISOString());
- const {CH,CP,F,spend,leads,buy,rev}=cur,L=label(M.k,M.d),PL=short(M.k,shift(M.k,M.d,-1)),CL=short(M.k,M.d);
+  const CP=CPL.map(c=>{const x=f();return [c[0],Math.round(c[1]*x/1e5)*1e5,fz(c[2],x),fz(c[3],x),Math.round(c[4]*x/1e6)*1e6]});
+  let x=f(),CHo=CH;
+  if(M.cd){const c=CP.find(z=>z[0]===M.cd),sh=c[1]/Math.max(1,CP.reduce((a,z)=>a+z[1],0));x*=sh;
+   CHo=CH.map(h=>{const y=sh*(0.6+r()*0.8);return [h[0],Math.round(h[1]*y/1e5)*1e5,fz(h[2],y),fz(h[3],y),Math.round(h[4]*y/1e6)*1e6]})}
+  const F=F0.map(([k,v])=>[k,fz(v,x)]);
+  const t=(i)=>CHo.reduce((a,c)=>a+c[i],0);return {CH:CHo,CP,F,spend:t(1),leads:t(2),buy:t(3),rev:t(4)}};
+ const cur=gen(M.cd+start(M.k,M.d).toISOString()),prv=gen(M.cd+start(M.k,shift(M.k,M.d,-1)).toISOString());
+ const {CH,CP,F,spend,leads,buy,rev}=cur,CDN=M.cd?' – '+M.cd:'',L=label(M.k,M.d)+CDN,PL=short(M.k,shift(M.k,M.d,-1)),CL=short(M.k,M.d);
  const chg=(a,b,good)=>{if(!b)return '—';const d=(a-b)/b*100,up=d>=0,ok=good==='up'?up:!up;return `<b style="color:${ok?'#15803d':'#b91c1c'}">${up?'▲':'▼'} ${Math.abs(d).toLocaleString('vi-VN',{maximumFractionDigits:1})}%</b>`};
  const ok=CH.filter(c=>c[2]),best=ok.slice().sort((x,y)=>y[3]/y[2]-x[3]/x[2])[0],worst=ok.slice().sort((x,y)=>x[3]/x[2]-y[3]/y[2])[0];
- const hist=[5,4,3,2,1,0].map(n=>{const s=shift(M.k,M.d,-n),g=gen(start(M.k,s).toISOString());return [short(M.k,s),g.leads,g.buy,g.rev]});
+ const hist=[5,4,3,2,1,0].map(n=>{const s=shift(M.k,M.d,-n),g=gen(M.cd+start(M.k,s).toISOString());return [short(M.k,s),g.leads,g.buy,g.rev]});
  const ratio=(a,b)=>b?(a/b).toLocaleString('vi-VN',{maximumFractionDigits:1})+' lần':'—';
  return `<div class="mkbar"><div class="seg" role="group" aria-label="Xem theo">${[['ngay','Ngày'],['tuan','Tuần'],['thang','Tháng']].map(([k,n])=>`<button class="${M.k===k?'on':''}" data-mkk="${k}">${n}</button>`).join('')}</div>
   <button class="btn ghost sm" data-mkstep="-1" aria-label="Kỳ trước">◀</button><input class="inp" type="${M.k==='thang'?'month':'date'}" id="mkD" value="${M.k==='thang'?M.d.slice(0,7):M.d}" style="width:auto;min-height:38px"><button class="btn ghost sm" data-mkstep="1" aria-label="Kỳ sau">▶</button>
-  <button class="btn ghost sm" data-mknow="1">Hôm nay</button><span class="mut">Đang xem: <b style="color:var(--gold2)">${esc(L)}</b> · so với ${esc(PL)}</span></div>
+  <button class="btn ghost sm" data-mknow="1">Hôm nay</button><select class="inp" id="mkCD" aria-label="Chiến dịch / chương trình" style="width:auto;max-width:300px;min-height:38px"><option value="">Tất cả chiến dịch / chương trình</option>${real.length?`<optgroup label="Chương trình trong CRM">${real.map(n=>`<option ${M.cd===n?'selected':''}>${esc(n)}</option>`).join('')}</optgroup>`:''}<optgroup label="Chiến dịch mẫu">${CPL.filter(c=>!real.includes(c[0])).map(c=>`<option ${M.cd===c[0]?'selected':''}>${esc(c[0])}</option>`).join('')}</optgroup></select><span class="mut">Đang xem: <b style="color:var(--gold2)">${esc(L)}</b> · so với ${esc(PL)}</span></div>
  ${kpi([[TR(spend),'Chi phí marketing'],[num(leads),'Khách tiềm năng'],[buy,'Đơn chuyên sâu','#34d399'],[TR(rev),'Doanh thu từ marketing','#34d399']])}
  ${rpTable({id:'mk-tq',title:'Báo cáo tổng quan marketing '+L,cols:[['Chỉ số','l'],[CL,'n'],[PL+' (kỳ trước)','n'],['Tăng / giảm','c']],rows:[
   ['Chi phí marketing',VND(spend),VND(prv.spend),chg(spend,prv.spend,'down')],
@@ -1257,12 +1262,12 @@ const MOD_DEMO={
  ${rpTable({id:'mk-kenh',title:'Hiệu quả theo kênh – '+L,cols:[['Kênh','l'],['Chi phí','n'],['Số đơn (tỷ lệ chốt)','c'],['Doanh thu','n']],
   rows:CH.map(c=>[c[0],VND(c[1]),`${c[3]} đơn (${pct(c[3],c[2])})`,VND(c[4])]),total:['Tổng cộng',VND(spend),`${buy} đơn (${pct(buy,leads)})`,VND(rev)],
   note:best&&worst?`Chốt tốt nhất: ${best[0]} (${pct(best[3],best[2])}). Thấp nhất: ${worst[0]} (${pct(worst[3],worst[2])}).`:''})}
- ${rpTable({id:'mk-cd',title:'Hiệu quả theo chiến dịch – '+L,cols:[['Chiến dịch','l'],['Chi phí','n'],['Số đơn (tỷ lệ chốt)','c'],['Doanh thu','n']],
-  rows:CP.map(c=>[c[0],VND(c[1]),`${c[3]} đơn (${pct(c[3],c[2])})`,VND(c[4])]),total:['Tổng cộng',VND(CP.reduce((a,c)=>a+c[1],0)),`${CP.reduce((a,c)=>a+c[3],0)} đơn`,VND(CP.reduce((a,c)=>a+c[4],0))]})}
+ ${M.cd?'':rpTable({id:'mk-cd',title:'Hiệu quả theo chiến dịch – '+L,cols:[['Chiến dịch','l'],['Chi phí','n'],['Số đơn (tỷ lệ chốt)','c'],['Doanh thu','n']],
+  rows:CP.map(c=>[c[0],VND(c[1]),`${c[3]} đơn (${pct(c[3],c[2])})`,VND(c[4])]),total:['Tổng cộng',VND(CP.reduce((a,c)=>a+c[1],0)),`${CP.reduce((a,c)=>a+c[3],0)} đơn`,VND(CP.reduce((a,c)=>a+c[4],0))],note:'Chọn 1 chiến dịch ở ô lọc phía trên để xem riêng chiến dịch đó.'})}
  ${rpTable({id:'mk-pheu',title:'Phễu chuyển đổi – '+L,cols:[['Bước','l'],['Số người','n'],['So với bước trước','c'],['So với đầu phễu','c']],
   rows:F.map(([k,v],i)=>[`${i+1}. ${k}`,num(v),i?pct(v,F[i-1][1]):'—',i?pct(v,F[0][1]):'100%']),
   note:`Điểm nghẽn: chỉ ${pct(F[3][1],F[2][1])} khách tiềm năng vào Zoom – nên nhắc qua Zalo trước buổi 1 ngày và 1 giờ.`})}
- ${rpTable({id:'mk-6t',title:'6 '+(M.k==='ngay'?'ngày':M.k==='tuan'?'tuần':'tháng')+' gần nhất',cols:[[M.k==='ngay'?'Ngày':M.k==='tuan'?'Tuần (từ thứ hai)':'Tháng','l'],['Khách tiềm năng','n'],['Số đơn (tỷ lệ chốt)','c'],['Doanh thu','n']],
+ ${rpTable({id:'mk-6t',title:'6 '+(M.k==='ngay'?'ngày':M.k==='tuan'?'tuần':'tháng')+' gần nhất'+CDN,cols:[[M.k==='ngay'?'Ngày':M.k==='tuan'?'Tuần (từ thứ hai)':'Tháng','l'],['Khách tiềm năng','n'],['Số đơn (tỷ lệ chốt)','c'],['Doanh thu','n']],
   rows:hist.map(t=>[t[0],num(t[1]),`${t[2]} đơn (${pct(t[2],t[1])})`,VND(t[3])]),total:['Tổng cộng',num(hist.reduce((a,t)=>a+t[1],0)),`${hist.reduce((a,t)=>a+t[2],0)} đơn`,VND(hist.reduce((a,t)=>a+t[3],0))]})}
  <details class="morebox"><summary>Việc cần làm theo kênh</summary><div class="subs">${[['Facebook','#3b82f6',['3 bài/tuần về câu chuyện học viên','Chạy quảng cáo Zoom miễn phí','Trả lời bình luận trong 2 giờ']],['TikTok','#ec4899',['5 video ngắn/tuần, không lộ mặt','Dùng AI dựng kịch bản','Gắn link đăng ký Zoom']],['YouTube','#ef4444',['1 video dài/tuần từ buổi Zoom','Cắt 3 shorts từ mỗi buổi']],['Zalo','#0ea5e9',['Nhắc lịch Zoom trước 1 ngày và 1 giờ','Gửi tài liệu sau buổi học','Chăm sóc nhóm Diamond']]].map(([k,c,l])=>`<div class="sub" style="--c:${c}"><b>${k}</b><ul class="chk2">${l.map(x=>`<li>${esc(x)}</li>`).join('')}</ul></div>`).join('')}</div></details>`;
 },
@@ -2213,6 +2218,7 @@ function ktChange(e){
  if(t.id==='ktFile'){const f=t.files[0];if(!f)return true;readStatement(f).then(rows=>ktLoad(rows,f.name)).catch(err=>toast(err.message||'Không đọc được file',true));return true}
  if(t.id==='ktTk'){S.kt.tk=t.value;return true}
  if(t.dataset.regjump){openDrawer(t.value);return true}
+ if(t.id==='mkCD'){S.mk.cd=t.value;render();return true}
  if(t.id==='mkD'){if(t.value)S.mk.d=t.value.length===7?t.value+'-01':t.value;render();return true}
  if(t.id==='hdM'){S.kt.hdM=t.value;render();return true}
  if(t.dataset.hdsel){const st=S.kt.hdSel||(S.kt.hdSel=new Set());t.checked?st.add(t.dataset.hdsel):st.delete(t.dataset.hdsel);render();return true}

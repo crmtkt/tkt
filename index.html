@@ -516,6 +516,7 @@ tr.kcrow td{background:color-mix(in srgb,var(--kc) 9%,transparent)}tr.kcrow td:f
 .ovbox{display:flex;flex-direction:column;gap:6px}.ovbox.ed{outline:1px dashed var(--gold);outline-offset:4px;border-radius:8px}.ovrow{display:flex;gap:6px;align-items:flex-end}.ovrow .inp{min-height:38px;padding:6px 8px;font-size:14px}.edtag{align-self:flex-start;font-size:12px;font-weight:700;color:var(--gold2)}
 .ktact2{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}.ktact2 .btn{min-height:36px}
 .autotag{font-size:12.5px;color:#4ade80}.misstag{font-size:12.5px;color:#fb923c;font-weight:600}.inp.need{border-color:#f97316;box-shadow:0 0 0 1px #f9731655}
+.ovwho{font-size:14px}.ovsum{font-size:13.5px;background:#0d1840;border:1px solid #3a4c93;border-radius:8px;padding:6px 9px;line-height:1.5}
 </style>
 <script>new MutationObserver(()=>{for(const c of document.querySelectorAll('.stack td:not([data-l])')){let i=0,p=c;while(p=p.previousElementSibling)i+=p.colSpan;c.dataset.l=c.closest('table').rows[0].cells[i]?.textContent||''}}).observe(document,{childList:true,subtree:true})</script>
 </head>
@@ -1805,7 +1806,8 @@ function personOf(t,m){const base=m.x?[m.x]:m.cands||[];const phs=new Set(base.m
  const recs=S.real.filter(r=>base.includes(r)||(phs.size&&phs.has(phoneN(r.sdt))));return recs}
 function ovDefault(t,m){
  let v='',dot=String(m.dot||'').replace(/\s*\(.*\)$/,'')||'Đợt 1',kWhy='';const amt=n0(t.soTien);
- if(m.x){v='R|'+m.x.id;kWhy='hồ sơ đang có'}
+ if(m.x){v='R|'+m.x.id;kWhy='khóa học viên đang học'}
+ else if(m.cands&&m.cands.length){const own=m.cands.filter(r=>congNo(r)>0),ex=(own.length?own:m.cands).find(r=>{const d=nextDue(r);return d&&(d.soTien===amt||congNo(r)===amt)})||own[0]||m.cands[0];v='R|'+ex.id;dot=String(dotLabel(ex,amt).lb).replace(/\s*\(.*\)$/,'');kWhy=m.cands.length>1?`học viên có ${m.cands.length} khóa – chọn khóa còn công nợ${own.length>1?', kế toán kiểm tra':''}`:'khóa học viên đang học'}
  else if((m.c==='moi'||m.c==='do')&&m.syn&&m.syn.p){v='C|'+m.syn.c.id+'|'+m.syn.p.ma;dot=dotNew(m.syn.p,amt);kWhy='theo cú pháp chuyển khoản'}
  else if(m.c==='moi'||m.c==='do'){const g=guessProd(t);if(g){v='C|'+g.c.id+'|'+g.p.ma;dot=dotNew(g.p,amt);kWhy='đoán theo '+g.why.join(', ')}}
  const hoTen=m.nw?m.nw.hoTen||'':'',sdt=(m.nw&&m.nw.sdt)||'';
@@ -1813,10 +1815,10 @@ function ovDefault(t,m){
 }
 const ovOf=(t,m)=>{const o=S.kt.ov[t.id];return o&&o.edited?o:ovDefault(t,m)};
 function ovCell(t,m){
- const o=ovOf(t,m),pr=personOf(t,m),dis=o.v.startsWith('R|')?pr.find(r=>'R|'+r.id===o.v):null;
+ const o=ovOf(t,m),pr=personOf(t,m),dis=o.v.startsWith('R|')?pr.find(r=>'R|'+r.id===o.v):null,multi=new Set(pr.map(r=>nrm(r.hoTen))).size>1;
  const opt=(v,l)=>`<option value="${esc(v)}" ${o.v===v?'selected':''}>${esc(l)}</option>`;
  const sel=`<select class="inp${o.v?'':' need'}" data-ov="${esc(t.id)}" data-f="v" style="width:100%"><option value="">— Chọn khóa ghi tiền —</option>
-  ${pr.length?`<optgroup label="Hồ sơ đang có của học viên">${pr.map(r=>opt('R|'+r.id,`${r.hoTen} · ${prodName(r)}${r.chuongTrinh?' · '+r.chuongTrinh:''} · công nợ ${TR(congNo(r))}`)).join('')}</optgroup>`:''}
+  ${pr.length?`<optgroup label="Khóa học viên đang học">${pr.map(r=>opt('R|'+r.id,`${multi?r.hoTen+' – ':''}${prodName(r)}${r.chuongTrinh?' · '+r.chuongTrinh:''} (công nợ ${TR(congNo(r))})`)).join('')}</optgroup>`:''}
   ${S.camps.map(c=>`<optgroup label="${esc((pr.length?'Đăng ký mới – ':'')+c.ten)}">${arr(c.sp).map(p=>opt('C|'+c.id+'|'+p.ma,`${p.ten}${n0(p.hocPhi)?' · '+TR(n0(p.hocPhi)):''}`)).join('')}</optgroup>`).join('')}
   <optgroup label="Khóa khác (không theo chiến dịch)">${Object.entries(COURSES).map(([k,c])=>opt('K|'+k,c.name)).join('')}</optgroup></select>`;
  const dots=[...new Set([...DOTS,o.dot])];
@@ -1827,9 +1829,11 @@ function ovCell(t,m){
  return `<div class="ovbox${o.edited?' ed':''}">${o.edited?'<span class="edtag">✎ Kế toán đã chỉnh</span>':''}
   ${autoTxt.length?`<div class="autotag">✓ Hệ thống tự điền: ${esc(autoTxt.join(' · '))}</div>`:''}${miss.length?`<div class="misstag">Chưa nhận ra: ${miss.join(', ')} – kế toán điền / chọn giúp</div>`:''}
   ${needWho?`<div class="ovrow"><input class="inp${o.hoTen?'':' need'}" data-ov="${esc(t.id)}" data-f="hoTen" value="${esc(o.hoTen)}" placeholder="Họ tên học viên" aria-label="Họ tên học viên"><input class="inp${o.sdt?'':' need'}" data-ov="${esc(t.id)}" data-f="sdt" value="${esc(o.sdt)}" placeholder="SĐT" inputmode="tel" style="max-width:130px" aria-label="Số điện thoại"></div>`:''}
-  <div class="ovrow"><div style="flex:1;min-width:0"><span class="mut sm">Khóa / hồ sơ</span>${sel}</div><div style="width:130px"><span class="mut sm">Đợt</span>${dsel}</div></div>
-  ${dis?`<div class="mut sm">Còn công nợ ${VND(congNo(dis))}${n0(t.soTien)>congNo(dis)?' · <b style="color:#fb923c">tiền lớn hơn công nợ</b>':''}</div>`:''}</div>`;
+  ${pr.length?`<div class="ovwho">Học viên: <button class="lnk" data-open="${esc((dis||pr[0]).id)}"><b>${esc((dis||pr[0]).hoTen)}</b></button> <small class="mut">${esc(phoneN((dis||pr[0]).sdt)||'')}</small>${pr.length>1?` <small class="mut">· ${pr.length} khóa</small>`:''}</div>`:''}
+  <div class="ovrow"><div style="flex:1;min-width:0"><span class="mut sm">Khóa</span>${sel}</div><div style="width:130px"><span class="mut sm">Đợt</span>${dsel}</div></div>
+  ${o.v?`<div class="ovsum">→ Ghi <b>${VND(n0(t.soTien))}</b> vào <b>${esc(ovProdLabel(o.v))}</b> · <b>${esc(o.dot)}</b>${o.v.startsWith('R|')?'':' <span class="mut">(tạo đăng ký mới)</span>'}${dis?` <span class="mut">· còn công nợ ${VND(congNo(dis))}</span>${n0(t.soTien)>congNo(dis)?' · <b style="color:#fb923c">tiền lớn hơn công nợ</b>':''}`:''}</div>`:''}</div>`;
 }
+function ovProdLabel(v){const [k,a1,a2]=v.split('|');if(k==='R'){const r=S.real.find(x=>x.id===a1);return r?prodName(r)+(r.chuongTrinh?' · '+r.chuongTrinh:''):''}if(k==='C'){const c=S.camps.find(z=>z.id===a1),p=c&&arr(c.sp).find(z=>z.ma===a2);return p?p.ten+' · '+c.ten:''}return (COURSES[a1]||{}).name||a1}
 async function ovConfirm(t,m,o){
  const amt=n0(t.soTien);if(!o.v)throw new Error('Chọn khóa / hồ sơ để ghi tiền');
  const pr=personOf(t,m),ph=(pr[0]&&phoneN(pr[0].sdt))||phoneN(o.sdt),who=(pr[0]&&pr[0].hoTen)||o.hoTen.trim();

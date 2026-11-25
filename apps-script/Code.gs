@@ -167,6 +167,7 @@ function slug_(s) {
 /* ---------- điểm vào ---------- */
 function doGet(e) {
   const a = (e.parameter || {}).a;
+  if (e.pathInfo || a === 'gpt') { try { return gpt_(e); } catch (err) { console.error(err); return fail_('Lỗi máy chủ, vui lòng thử lại.', 500); } }
   if (a === 'form') {
     seed_();
     const f = rows_('forms').filter(x => x.slug === String(e.parameter.s || ''))[0];
@@ -273,6 +274,7 @@ function route_(b) {
     }
     if (KT_[a]) return KT_[a](b);
     if (US_[a]) return US_[a](b, ME);
+    if (GP_[a]) return GP_[a](b, ME);
     return fail_('Không rõ yêu cầu.', 404);
   } finally { lock.releaseLock(); }
 }
@@ -528,7 +530,7 @@ const PERM_ = {
   record_delete: ['quantri'], form_save: ['quantri', 'marketing'], form_delete: ['quantri'], staff_save: ['quantri'],
   camp_save: ['quantri', 'marketing'], camp_approve: ['quantri', 'ketoan'], camp_delete: ['quantri', 'marketing'],
   txn_import: ['quantri', 'ketoan'], txn_confirm: ['quantri', 'ketoan'], txn_undo: ['quantri', 'ketoan'], txn_skip: ['quantri', 'ketoan'], txn_delete: ['quantri', 'ketoan'], txn_newrecs: ['quantri', 'ketoan'], txn_invoice: ['quantri', 'ketoan'],
-  user_save: ['quantri'], user_delete: ['quantri'],
+  user_save: ['quantri'], user_delete: ['quantri'], gpt_list: ['quantri'], gpt_create: ['quantri'], gpt_revoke: ['quantri'],
 };
 function pwHash_(salt, pw) { let h = sha_(salt + ':' + pw); for (let i = 0; i < 1000; i++) h = sha_(h + salt); return h; }
 function loginKey_(s) { s = String(s || '').trim().toLowerCase(); if (s.indexOf('@') > 0) return s; const p = phone_(s); return p || s; }
@@ -583,3 +585,101 @@ const US_ = {
     return out_({ok: true});
   },
 };
+
+/* ---------- Kết nối ChatGPT (chỉ đọc) ----------
+   Mỗi mã kết nối gắn với 1 tài khoản CRM, nên ChatGPT chỉ thấy đúng phần tài khoản đó được thấy.
+   Mã lưu dạng băm trong Script Properties; quản trị tạo / thu hồi ở ô Nhân sự. */
+function gkLoad_() { try { return JSON.parse(PropertiesService.getScriptProperties().getProperty('GPTKEYS') || '[]'); } catch (e) { return []; } }
+function gkSave_(l) { PropertiesService.getScriptProperties().setProperty('GPTKEYS', JSON.stringify(l.slice(-50))); }
+function gkOut_(k) { const u = who_(k.uid); return {id: k.id, ten: k.ten, uid: k.uid, nguoi: u ? u.ten : '(tài khoản không còn)', quyen: u ? ROLES_[u.role] : '', active: !!k.active && !!u, createdAt: k.createdAt, lastUsed: k.lastUsed || '', dem: k.dem || 0, duoi: k.duoi}; }
+const GP_ = {
+  gpt_list: () => out_({ok: true, keys: gkLoad_().map(gkOut_)}),
+  gpt_create: (b, ME) => {
+    const uid = str_(b.uid, 40) || ADMIN_USER; if (!who_(uid)) return fail_('Tài khoản này đã khóa hoặc không còn.');
+    const key = 'skt_' + (Utilities.getUuid() + Utilities.getUuid()).replace(/-/g, '').slice(0, 40);
+    const l = gkLoad_(), k = {id: uid_(), h: sha_(key), uid: uid, ten: str_(b.ten, 80) || 'ChatGPT', active: true, createdAt: now_(), by: ME.ten, duoi: key.slice(-4), dem: 0};
+    l.push(k); gkSave_(l);
+    return out_({ok: true, key: key, item: gkOut_(k)});
+  },
+  gpt_revoke: b => { const l = gkLoad_(), k = l.filter(x => x.id === str_(b.id, 32))[0]; if (!k) return fail_('Không thấy mã.'); k.active = false; gkSave_(l); return out_({ok: true}); },
+};
+const GPT_HIDE_ = ['cccd', 'diaChi', 'phieuOffline', 'anh', 'phV', 'hasPhoto', 'formId', 'dongY', 'zaloGroup'];
+function gNum_(v) { return Number(v) || 0; }
+function gRec_(d, role, full) {
+  const phai = Math.max(0, gNum_(d.hocPhi) - gNum_(d.khauTru)), o = {
+    id: d.id, hoTen: d.hoTen, sdt: d.sdt, email: d.email, khoa: COURSE[d.khoa] || d.khoa || '', nhom: d.nhom || '', chuongTrinh: d.chuongTrinh || '',
+    trangThai: d.trangThai || 'Mới đăng ký', phuTrach: (d.phuTrach || []).join(', '), ngayDangKy: d.createdAt,
+    lanChamSocCuoi: (d.nhatKy || []).map(e => e.ngay).filter(Boolean).sort().pop() || ''};
+  if (role !== 'marketing') Object.assign(o, {hocPhi: gNum_(d.hocPhi), khauTru: gNum_(d.khauTru), phaiThu: phai, daThu: gNum_(d.daDong), congNo: Math.max(0, phai - gNum_(d.daDong)), thanhToan: d.ttTT || payState_(d), hanDongNot: d.hanTT || ''});
+  if (full) {
+    Object.keys(d).forEach(k => { if (!(k in o) && GPT_HIDE_.indexOf(k) < 0 && (role !== 'marketing' || MONEY_KEYS_.indexOf(k) < 0)) o[k] = d[k]; });
+    o.nhatKy = (d.nhatKy || []).slice(-40); o.hanhTrinh = (d.hanhTrinh || []).slice(-20);
+  }
+  return o;
+}
+function gIn_(s, a, b) { s = String(s || '').slice(0, 10); return (!a || s >= a) && (!b || s <= b); }
+function gNorm_(s) { return String(s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/đ/g, 'd'); }
+function gpt_(e) {
+  const P = e.parameter || {}, c = CacheService.getScriptCache();
+  const key = String(P.key || ''); if (!/^skt_[0-9a-f]{40}$/.test(key)) return fail_('Thiếu hoặc sai mã kết nối (key).', 401);
+  const l = gkLoad_(), k = l.filter(x => x.h === sha_(key))[0]; if (!k || !k.active) return fail_('Mã kết nối không hợp lệ hoặc đã bị thu hồi.', 401);
+  const ME = who_(k.uid); if (!ME) return fail_('Tài khoản gắn với mã này đã bị khóa.', 401);
+  const rk = 'gpt:' + k.id, n = Number(c.get(rk) || 0); if (n > 300) return fail_('Quá nhiều yêu cầu, thử lại sau ít phút.', 429); c.put(rk, String(n + 1), 600);
+  if (!c.get('gptu:' + k.id)) { c.put('gptu:' + k.id, '1', 300); k.lastUsed = now_(); k.dem = (k.dem || 0) + 1; gkSave_(l); }
+  const op = String(e.pathInfo || P.op || 'tongquan').replace(/^\/+|\/+$/g, ''), role = ME.role;
+  const tu = day_(P.tuNgay), den = day_(P.denNgay), today = today_();
+  const recs = rows_('records').map(recOut_);
+  const base = {ok: true, nguoiDung: ME.ten, quyen: ROLES_[role], homNay: today, donViTien: 'VND'};
+  if (op === 'tongquan') {
+    const sel = recs.filter(d => gIn_(d.createdAt, tu, den)), by = (f) => { const m = {}; sel.forEach(d => { const ks = f(d); (Array.isArray(ks) ? (ks.length ? ks : ['(chưa phân công)']) : [ks || '(chưa có)']).forEach(x => { const g = m[x] || (m[x] = {so: 0, phaiThu: 0, daThu: 0, congNo: 0}); const r = gRec_(d, 'quantri'); g.so++; g.phaiThu += r.phaiThu; g.daThu += r.daThu; g.congNo += r.congNo; }); }); return Object.keys(m).map(x => Object.assign({ten: x}, role === 'marketing' ? {so: m[x].so} : m[x])); };
+    const nguoi = {}; sel.forEach(d => nguoi[phoneN_(d.sdt) || d.id] = 1);
+    const R = sel.map(d => gRec_(d, role)), old = new Date(Date.now() - 14 * 864e5).toISOString().slice(0, 10), soon = new Date(Date.now() + 7 * 864e5).toISOString().slice(0, 10);
+    const careBy = {}; recs.forEach(d => (d.nhatKy || []).forEach(x => { if (gIn_(x.ngay, tu || old, den || today)) careBy[x.nguoi || '(không rõ)'] = (careBy[x.nguoi || '(không rõ)'] || 0) + 1; }));
+    const o = Object.assign(base, {pham_vi: tu || den ? ('đăng ký từ ' + (tu || 'đầu') + ' đến ' + (den || today)) : 'toàn bộ', soLuotDangKy: sel.length, soHocVien: Object.keys(nguoi).length,
+      theoTrangThai: by(d => d.trangThai || 'Mới đăng ký').map(x => ({ten: x.ten, so: x.so})), theoChuongTrinh: by(d => d.chuongTrinh), theoKhoa: by(d => (COURSE[d.khoa] || d.khoa || '') + (d.nhom ? ' · ' + d.nhom : '')), theoNhanSuPhuTrach: by(d => d.phuTrach || []),
+      soLanChamSocTheoNguoi: {pham_vi: (tu || old) + ' → ' + (den || today), so: careBy},
+      canChuY: {
+        canChamSocGap: R.filter(r => r.trangThai === 'Cần chăm sóc gấp').map(r => ({id: r.id, hoTen: r.hoTen, phuTrach: r.phuTrach})),
+        chuaPhanCong: R.filter(r => !r.phuTrach).map(r => ({id: r.id, hoTen: r.hoTen, chuongTrinh: r.chuongTrinh})),
+        chuaChamSoc14Ngay: R.filter(r => !r.lanChamSocCuoi || r.lanChamSocCuoi < old).map(r => ({id: r.id, hoTen: r.hoTen, phuTrach: r.phuTrach, lanChamSocCuoi: r.lanChamSocCuoi || 'chưa có'})).slice(0, 60),
+        quaHanDongTien: role === 'marketing' ? undefined : R.filter(r => r.congNo > 0 && r.hanDongNot && r.hanDongNot < today).map(r => ({id: r.id, hoTen: r.hoTen, congNo: r.congNo, han: r.hanDongNot, phuTrach: r.phuTrach})),
+        sapDenHanDong7Ngay: role === 'marketing' ? undefined : R.filter(r => r.congNo > 0 && r.hanDongNot >= today && r.hanDongNot <= soon).map(r => ({id: r.id, hoTen: r.hoTen, congNo: r.congNo, han: r.hanDongNot}))
+      }});
+    if (role !== 'marketing') { o.tongPhaiThu = R.reduce((a, r) => a + r.phaiThu, 0); o.tongDaThu = R.reduce((a, r) => a + r.daThu, 0); o.tongCongNo = R.reduce((a, r) => a + r.congNo, 0); }
+    if (role === 'quantri' || role === 'ketoan') { const t = txns_(); o.keToan = {choXacNhan: {so: t.filter(x => x.trangThai === 'cho').length, tien: t.filter(x => x.trangThai === 'cho').reduce((a, x) => a + x.soTien, 0)}, hoaDonChuaXuat: t.filter(x => x.trangThai === 'da' && (!x.hd || !x.hd.tt || x.hd.tt === 'cho' || x.hd.tt === 'thieu')).length}; }
+    return out_(o);
+  }
+  if (op === 'hocvien') {
+    const q = gNorm_(P.q), lim = Math.min(200, Math.max(1, parseInt(P.limit, 10) || 50));
+    let L = recs.filter(d => gIn_(d.createdAt, tu, den)).map(d => gRec_(d, role));
+    if (q) L = L.filter(r => gNorm_([r.hoTen, r.sdt, r.email].join(' ')).indexOf(q) >= 0 || String(r.sdt).replace(/\D/g, '').indexOf(String(P.q).replace(/\D/g, '') || '~') >= 0);
+    if (P.chuongTrinh) L = L.filter(r => gNorm_(r.chuongTrinh).indexOf(gNorm_(P.chuongTrinh)) >= 0);
+    if (P.khoa) L = L.filter(r => gNorm_(r.khoa + ' ' + r.nhom).indexOf(gNorm_(P.khoa)) >= 0);
+    if (P.phuTrach) L = L.filter(r => gNorm_(r.phuTrach).indexOf(gNorm_(P.phuTrach)) >= 0);
+    if (P.trangThai) L = L.filter(r => gNorm_(r.trangThai) === gNorm_(P.trangThai));
+    if (String(P.conNo) === 'true' && role !== 'marketing') L = L.filter(r => r.congNo > 0);
+    return out_(Object.assign(base, {tong: L.length, hienThi: Math.min(lim, L.length), hocVien: L.slice(0, lim)}));
+  }
+  if (op === 'chitiet') {
+    const id = str_(P.id, 40), sdt = phoneN_(P.sdt);
+    const L = recs.filter(d => (id && d.id === id) || (sdt && phoneN_(d.sdt) === sdt));
+    if (!L.length) return fail_('Không tìm thấy học viên.', 404);
+    return out_(Object.assign(base, {soDangKy: L.length, dangKy: L.map(d => gRec_(d, role, true))}));
+  }
+  if (op === 'nhatky') {
+    const a = tu || new Date(Date.now() - 7 * 864e5).toISOString().slice(0, 10), b2 = den || today, ng = gNorm_(P.nguoi), out = [];
+    recs.forEach(d => (d.nhatKy || []).forEach(x => { if (gIn_(x.ngay, a, b2) && (!ng || gNorm_(x.nguoi).indexOf(ng) >= 0)) out.push({ngay: x.ngay, nguoi: x.nguoi, hocVien: d.hoTen, id: d.id, chuongTrinh: d.chuongTrinh || '', noiDung: x.noiDung}); }));
+    out.sort((x, y) => x.ngay < y.ngay ? 1 : -1);
+    const dem = {}; out.forEach(x => dem[x.nguoi || '(không rõ)'] = (dem[x.nguoi || '(không rõ)'] || 0) + 1);
+    return out_(Object.assign(base, {tuNgay: a, denNgay: b2, tongSoLan: out.length, theoNguoi: dem, nhatKy: out.slice(0, 300)}));
+  }
+  if (op === 'doisoat') {
+    if (role !== 'quantri' && role !== 'ketoan') return fail_('Tài khoản ' + ROLES_[role] + ' không xem được phần kế toán.', 403);
+    const t = txns_().filter(x => gIn_(x.ngay, tu, den)), day = {};
+    t.forEach(x => { if (x.trangThai === 'bo') return; const g = day[x.ngay] || (day[x.ngay] = {ngay: x.ngay, so: 0, tien: 0, daXacNhan: 0, choXacNhan: 0}); g.so++; g.tien += x.soTien; if (x.trangThai === 'da') g.daXacNhan += x.soTien; else g.choXacNhan += x.soTien; });
+    const hd = {}; t.filter(x => x.trangThai === 'da').forEach(x => { const s = (x.hd && x.hd.tt) || 'cho'; const lb = {cho: 'Chưa xuất', thieu: 'Thiếu thông tin', da: 'Đã xuất', khong: 'Không xuất'}[s] || s; hd[lb] = (hd[lb] || 0) + 1; });
+    return out_(Object.assign(base, {pham_vi: (tu || 'đầu') + ' → ' + (den || today), tienVeTheoNgay: Object.keys(day).sort().map(k => day[k]),
+      choXacNhan: t.filter(x => x.trangThai === 'cho').slice(0, 100).map(x => ({ngay: x.ngay, soTien: x.soTien, noiDung: x.noiDung, nguoiCK: x.nguoiCK})), hoaDon: hd}));
+  }
+  return fail_('Không có mục "' + op + '". Dùng: tongquan, hocvien, chitiet, nhatky, doisoat.', 404);
+}

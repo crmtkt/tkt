@@ -565,6 +565,14 @@ tr.dayrow td{background:#1b2c6b!important;color:var(--gold2);font-weight:700;fon
 .hl{position:relative;outline:2.5px solid #f97316;outline-offset:2px}.mk{display:inline-grid;place-items:center;width:20px;height:20px;border-radius:50%;background:#ef4444;color:#fff;font-size:12px;font-weight:800;margin-right:4px;vertical-align:middle}
 #drawer.wide{width:min(860px,100vw)}
 @media(max-width:600px){.wfrow{flex-direction:column}.wfside{width:auto;flex-direction:row;flex-wrap:wrap}.wfprev{display:none}}
+.aiwrap h2{margin-bottom:6px}.aiintro{font-size:16px;line-height:1.6;max-width:900px;margin:0 0 16px}.aistep{display:flex;gap:14px;background:#0f1c4a;border:1px solid #10a37f55;border-radius:16px;padding:16px;margin:0 0 14px}
+.ain{flex:none;width:40px;height:40px;border-radius:50%;background:#10a37f;color:#fff;font-weight:800;font-size:20px;display:grid;place-items:center}.aib{flex:1;min-width:0}.aib h3{margin:6px 0 10px;font-size:19px}
+.aiopts{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:8px}.aiopt{display:flex;gap:10px;align-items:flex-start;border:1.5px solid #334a8a;border-radius:12px;padding:10px 12px;cursor:pointer;background:#13225a}.aiopt.on{border-color:#10a37f;background:#10a37f22}.aiopt input{margin-top:4px;width:18px;height:18px;accent-color:#10a37f}.aiopt small{display:block;color:#9fb0d9;font-size:13px}
+.btn.big{font-size:16px;padding:12px 18px;background:#10a37f;color:#fff;border-color:#10a37f}.ailink{background:#10a37f1a;border:1.5px solid #10a37f;border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:8px}
+.aitabs{display:inline-flex;gap:4px;background:#13225a;border-radius:999px;padding:4px;margin-bottom:10px}.aitabs button{border:0;background:none;color:#cbd5e1;padding:6px 16px;border-radius:999px;font-weight:700;cursor:pointer}.aitabs .on{background:#10a37f;color:#fff}
+.aigrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:12px}.aicap{font-size:14.5px;line-height:1.5;min-height:44px}.aicap a,.aiol a{color:#6ee7b7}.aiol{font-size:15px;line-height:1.8}
+.aiq{display:flex;flex-wrap:wrap;gap:8px}.chipq{border:1px solid #334a8a;background:#13225a;color:#e2e8f0;border-radius:999px;padding:7px 12px;cursor:pointer;font-size:14px}.chipq:hover{border-color:#10a37f}
+.aicard{display:block;margin:0 0 14px;padding:12px 14px;border:1.5px solid #10a37f;border-radius:12px;background:#10a37f1a;color:#d1fae5;text-decoration:none}
 </style>
 <script>new MutationObserver(()=>{for(const c of document.querySelectorAll('.stack td:not([data-l])')){let i=0,p=c;while(p=p.previousElementSibling)i+=p.colSpan;c.dataset.l=c.closest('table').rows[0].cells[i]?.textContent||''}}).observe(document,{childList:true,subtree:true})</script>
 </head>
@@ -645,6 +653,7 @@ const IC={
  team:'<circle cx="12" cy="8" r="4"/><path d="M4 21v-1a6 6 0 0 1 6-6h4a6 6 0 0 1 6 6v1"/>',
  cal:'<rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01"/>',
  hand:'<path d="m11 17 2 2a1 1 0 1 0 3-3"/><path d="m14 14 2.5 2.5a1 1 0 1 0 3-3l-3.9-3.9a2 2 0 0 0-2.8 0l-.9.9a1 1 0 1 1-3-3l2.8-2.8a5 5 0 0 1 5.7-1L21 4l1 1v7l-2 2M3 4l-1 1v7l6.5 6.5a1 1 0 1 0 3-3"/>',
+ spark:'<path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z"/><path d="M19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8z"/>',
  calc:'<rect x="4" y="2" width="16" height="20" rx="2"/><path d="M8 6h8M8 10h.01M12 10h.01M16 10h.01M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01M16 18h.01"/>',
  form:'<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M8 13h8M8 17h5"/>',
  home:'<path d="m3 10 9-7 9 7v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>'
@@ -731,7 +740,8 @@ function renderNav(route){
  $('#nav').innerHTML=`<a class="home ${route==='tong-quan'?'on':''}" href="#tong-quan" data-tip="Tổng quan">${svgI('home')}<span class="lbl">Tổng quan</span></a>`+
   MODS.filter(m=>canSee(m.id)).map(m=>`<a href="#${m.id}" style="--c:${m.c}" class="${route===m.id?'on':''}" data-tip="${m.name}">${svgI(m.ic)}<span class="lbl">${m.name}</span></a>`).join('')+
   (canSee('form')?`<a class="home ${route==='form'?'on':''}" href="#form" data-tip="Form thu thập" style="border-color:#a43be6;color:#f0d9ff">${svgI('form')}<span class="lbl">Form thu thập</span></a>`:'')+
-  (can('txn_confirm')&&canSee('ke-toan')?`<a class="home ${route==='ke-toan'?'on':''}" href="#ke-toan" data-tip="Kế toán · Đối soát" style="border-color:#16a34a;color:#d9ffe9">${svgI('calc')}<span class="lbl">Kế toán · Đối soát</span></a>`:'');
+  (can('txn_confirm')&&canSee('ke-toan')?`<a class="home ${route==='ke-toan'?'on':''}" href="#ke-toan" data-tip="Kế toán · Đối soát" style="border-color:#16a34a;color:#d9ffe9">${svgI('calc')}<span class="lbl">Kế toán · Đối soát</span></a>`:'')+
+  (isQT()?`<a class="home ${route==='ket-noi-ai'?'on':''}" href="#ket-noi-ai" data-tip="Kết nối ChatGPT" style="border-color:#10a37f;color:#d1fae5">${svgI('spark')}<span class="lbl">Kết nối ChatGPT</span></a>`:'');
  $('#bnav').innerHTML=[['tong-quan','home','Tổng quan'],['san-pham','box','Sản phẩm'],['khach-hang','users','Khách hàng'],['form','form','Form']].filter(([h])=>canSee(h)).map(([h,ic,t])=>`<a href="#${h}" class="${route===h?'on':''}">${svgI(ic)}<span>${t}</span></a>`).join('');
 }
 
@@ -1456,6 +1466,40 @@ function gptGuide(){
  <ul class="gtxt"><li><b>"Mã kết nối không hợp lệ hoặc đã bị thu hồi"</b>: mã sai hoặc đã thu hồi → tạo mã mới, sao chép lại Hướng dẫn, dán đè ở bước 5.</li><li><b>Không hiện 5 hành động ở bước 7</b>: dán thiếu – bấm lại "Sao chép Schema" và dán đè toàn bộ.</li><li><b>Không thấy nút Tạo GPT</b>: tài khoản ChatGPT đang là gói miễn phí.</li><li>Bảng mã có cột <b>"Dùng gần nhất"</b> để biết ChatGPT đã gọi được CRM chưa.</li></ul>
  </div>`;
 }
+/* ---------- Mục "Kết nối AI" (chỉ quản trị): link MCP cho ChatGPT / Claude ---------- */
+const MCP_URL=k=>String(API).replace(/[?#].*$/,'')+'?mcp=1&key='+k;
+function aiPics(){
+ const w1=wfWin('chatgpt.com/plugins',`<div class="wfmain"><div class="wfside" style="width:auto;flex-direction:row;flex-wrap:wrap"><div class="wfs">＋ Đoạn chat mới</div><div class="wfs hl">${MK(1)} 🧩 Plugins</div><div class="wfs mut2">GPTs</div></div><div class="wftop" style="margin-top:6px"><span class="wft">Plugins</span><span class="wfbtn dark hl">${MK(2)} ＋</span></div><div class="wfpop" style="width:auto;max-width:240px"><div class="wfopt">Duyệt plugin</div><div class="wfopt on hl">${MK(3)} Add custom MCP server</div></div></div>`,230);
+ const w2=wfWin('chatgpt.com/plugins · Add custom MCP server',`<div class="wfmain"><div class="wflab">Name (Tên)</div><div class="wfinp hl">${MK(1)} CRM SKT</div><div class="wflab">Connection · Server URL</div><div class="wfinp code hl">${MK(2)} https://script.google.com/macros/s/…/exec?mcp=1&key=skt_••••</div><div class="wflab">Authentication (Xác thực)</div><div class="wfinp hl">${MK(3)} No authentication ▾</div><div class="wfchk hl">${MK(4)} ☑ I understand and want to continue</div><div><span class="wfbtn dark hl">${MK(5)} Create as a plugin</span></div></div>`,270);
+ const w3=wfWin('chatgpt.com',`<div class="wfmain"><div class="wfbub me">@CRM SKT báo cáo tình hình CRM tuần này</div><div class="wfai"><div class="wfnote">CRM SKT muốn chạy công cụ "tong_quan"</div><span class="wfbtn dark hl">${MK(1)} Allow / Cho phép</span></div><div class="wfai"><b>Tuần 23/11 – 29/11/2026</b><br>• 13 lượt đăng ký · đã thu 507 tr · công nợ 1,737 tỷ<br>• Cần chú ý: 3 học viên quá hạn đóng tiền…</div></div>`,210);
+ return [w1,w2,w3];
+}
+function vAI(){
+ if(!isQT())return '<div class="band"><h2>Kết nối AI</h2><p class="mut">Chỉ quản trị viên (Toàn quyền) dùng được mục này.</p></div>';
+ if(!S.gk){S.gk={l:null};api('gpt_list').then(j=>{S.gk.l=j.keys;if(S.route==='ket-noi-ai')render()}).catch(e=>{S.gk.err=e.message;render()})}
+ const G=S.gk,U=(S.users||[]).filter(u=>u.active),who=G.who||'crmtkt',[p1,p2,p3]=aiPics();
+ const opt=(v,t,d)=>`<label class="aiopt ${who===v?'on':''}"><input type="radio" name="aiWho" value="${esc(v)}" ${who===v?'checked':''}><span><b>${t}</b><small>${d}</small></span></label>`;
+ const Q=['Báo cáo tình hình CRM tuần này','Ai còn công nợ trên 100 triệu, ai phụ trách?','Tuần này từng nhân sự chăm sóc những ai, làm gì?','Học viên nào 2 tuần chưa được chăm sóc?','Tiền về hôm qua bao nhiêu, còn bao nhiêu khoản chờ xác nhận?'];
+ return `<div class="band aiwrap"><h2>Kết nối ChatGPT / Claude</h2>
+ <p class="aiintro">Nối CRM vào ChatGPT để <b>hỏi bằng lời và nhận báo cáo ngay</b>. Chỉ cần <b>1 đường link</b>, làm 1 lần khoảng 3 phút. Kết nối <b>chỉ đọc</b>: AI xem và báo cáo, không sửa / xóa được gì. Không gửi CCCD, địa chỉ, ảnh. Mục này chỉ quản trị viên thấy.</p>
+ <section class="aistep"><div class="ain">1</div><div class="aib"><h3>Tạo link kết nối</h3>
+  ${G.newKey?`<div class="ailink"><div class="mut sm">✅ Đã tạo link cho <b>${esc(G.newFor||'')}</b>. Bấm nút để sao chép, rồi làm bước 2. Link chỉ hiện 1 lần – lỡ mất thì tạo link mới.</div><div class="bar"><input class="inp" readonly value="${esc(MCP_URL(G.newKey))}" onfocus="this.select()" style="flex:1;font-family:monospace;font-size:13px"><button class="btn big" data-aicopy="1">📋 Sao chép link</button></div><div class="mut sm">⚠️ Link này như chìa khóa: chỉ dán vào ChatGPT / Claude của đúng người được cấp, không gửi vào nhóm.</div><button class="btn ghost sm" data-gpdone="1">Tạo link khác</button></div>`:
+  `<form id="aiForm"><div class="mut" style="margin-bottom:6px">Link này dành cho ai?</div><div class="aiopts">${opt('crmtkt','Tôi – xem toàn bộ CRM','Toàn quyền: học viên, doanh thu, công nợ, kế toán')}${U.map(u=>opt(u.id,esc(u.hoTen),'Chỉ xem phần của '+(ROLE_N[u.phong]||u.phong))).join('')}</div>
+  <div class="bar" style="margin-top:12px"><input class="inp" id="aiPw" type="password" autocomplete="current-password" placeholder="Nhập lại mật khẩu đăng nhập CRM của anh/chị" required style="flex:1;min-width:240px"><button class="btn big">🔗 Tạo link kết nối</button></div></form>`}
+ </div></section>
+ <section class="aistep"><div class="ain">2</div><div class="aib"><h3>Dán link vào ChatGPT</h3>
+  <div class="aitabs"><button class="${S.aiApp!=='claude'?'on':''}" data-aiapp="chatgpt">ChatGPT</button><button class="${S.aiApp==='claude'?'on':''}" data-aiapp="claude">Claude</button></div>
+  ${S.aiApp==='claude'?`<ol class="aiol"><li>Mở <a href="https://claude.ai/settings/connectors" target="_blank" rel="noopener">claude.ai → Cài đặt → Connectors</a>.</li><li>Bấm <b>Add custom connector</b> (Thêm kết nối tùy chỉnh).</li><li>Tên: <b>CRM SKT</b> · URL: <b>dán link</b> ở bước 1 → <b>Add</b>.</li><li>Mở đoạn chat mới, bấm biểu tượng công cụ, bật <b>CRM SKT</b> rồi hỏi.</li></ol>`:
+  `<div class="aigrid"><div><div class="aicap"><b>①</b> Mở <a href="https://chatgpt.com/plugins" target="_blank" rel="noopener">chatgpt.com/plugins</a> → bấm <b>＋</b> → <b>Add custom MCP server</b>.</div>${p1}</div>
+  <div><div class="aicap"><b>②</b> Tên <b>CRM SKT</b> · Server URL: <b>dán link</b> · Authentication: <b>No authentication</b> · tích ô đồng ý → <b>Create as a plugin</b>.</div>${p2}</div>
+  <div><div class="aicap"><b>③</b> Mở đoạn chat mới, gõ <b>@CRM SKT</b> + câu hỏi. Lần đầu bấm <b>Allow / Cho phép</b>.</div>${p3}</div></div>
+  <p class="mut sm">Hình minh họa vị trí nút; giao diện ChatGPT có thể khác đôi chút. Cần tài khoản ChatGPT trả phí. Không thấy mục <b>Add custom MCP server</b> nghĩa là gói hiện tại chưa hỗ trợ → dùng gói Business, hoặc dùng Claude (tab bên cạnh).</p>`}
+ </div></section>
+ <section class="aistep"><div class="ain">3</div><div class="aib"><h3>Hỏi thử</h3><div class="aiq">${Q.map(q=>`<button class="chipq" data-aiq="${esc(q)}">💬 ${esc(q)}</button>`).join('')}</div><p class="mut sm">Bấm để sao chép câu hỏi, dán vào ChatGPT sau chữ <b>@CRM SKT</b>.</p></div></section>
+ <h3 style="margin-top:22px">Các link đã tạo</h3>
+ ${G.err?`<p class="mut">${esc(G.err)}</p>`:!G.l?'<p class="mut sm">Đang tải…</p>':G.l.length?`<div class="tblwrap"><table class="wide"><thead><tr><th>Dành cho</th><th>Quyền xem</th><th>Người tạo</th><th>Tạo lúc</th><th>AI dùng gần nhất</th><th>Trạng thái</th><th></th></tr></thead><tbody>${G.l.slice().reverse().map(k=>`<tr><td><b>${esc(k.nguoi)}</b><br><small class="mut">…${esc(k.duoi||'')}</small></td><td>${esc(k.quyen)}</td><td>${esc(k.by||'')}</td><td>${esc(gpT(k.createdAt))}</td><td>${k.lastUsed?esc(gpT(k.lastUsed)):'<span class="mut">chưa dùng</span>'}</td><td>${k.active?'<span class="pill ok">Đang dùng</span>':'<span class="pill off">Đã thu hồi</span>'}</td><td>${k.active?`<button class="btn ghost sm" data-gprevoke="${esc(k.id)}" style="color:var(--bad)">Thu hồi</button>`:''}</td></tr>`).join('')}</tbody></table></div><p class="mut sm">Nhân sự nghỉ việc, mất máy hoặc lộ link → bấm <b>Thu hồi</b>: AI mất quyền ngay.</p>`:'<p class="mut sm">Chưa có link nào.</p>'}
+ </div>`;
+}
 function gptHTML(){
  if(!S.me||S.me.role!=='quantri')return '';
  if(!S.gk){S.gk={l:null};api('gpt_list').then(j=>{S.gk.l=j.keys;if(location.hash.includes('nhan-su'))render()}).catch(e=>{S.gk.err=e.message;render()})}
@@ -1478,7 +1522,7 @@ function gptHTML(){
 }
 const isQT=()=>!!(S.me&&S.me.role==='quantri');
 function vStaff(){
- return `<div class="band"><h2>Nhân sự</h2>${accountsHTML()}${gptHTML()}<p class="mut" style="margin:0 0 14px">Danh sách người phụ trách chăm sóc học viên. Ai có trong danh sách này sẽ hiện để tích chọn trong hồ sơ.</p>
+ return `<div class="band"><h2>Nhân sự</h2>${accountsHTML()}${isQT()?`<a class="aicard" href="#ket-noi-ai">🤖 <b>Kết nối ChatGPT / Claude</b> – tạo link cho AI đọc CRM và báo cáo (chỉ quản trị viên) →</a>`:''}<p class="mut" style="margin:0 0 14px">Danh sách người phụ trách chăm sóc học viên. Ai có trong danh sách này sẽ hiện để tích chọn trong hồ sơ.</p>
  <div class="panel" style="max-width:560px">${S.staff.map((s,i)=>{const n=S.list.filter(x=>arr(x.phuTrach).includes(s)).length;return `<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid #1c2a5c"><b style="flex:1">${esc(s)}</b><span class="mut" style="font-size:14px">${n} học viên</span>${isQT()?`<button class="btn ghost sm" data-delstaff="${i}">Bỏ</button>`:''}</div>`}).join('')}
  ${isQT()?`<form id="staffForm" class="bar" style="margin-top:12px"><input class="inp" id="newStaff" placeholder="Tên nhân sự mới" style="flex:1"><button class="btn">Thêm</button></form>`:''}</div>
  <h3 style="margin-top:22px">Báo cáo theo nhân sự <span class="mut sm" style="font-weight:400">· bấm vào người để xem báo cáo</span></h3>${hasReal()?'':sampleNote}
@@ -1621,7 +1665,7 @@ function showLogin(msg){
 }
 
 /* ---------- Router ---------- */
-const TITLES={'tong-quan':'Tổng quan','form':'Form thu thập','ke-toan':'Kế toán · Đối soát sao kê'};
+const TITLES={'ket-noi-ai':'Kết nối ChatGPT / Claude','tong-quan':'Tổng quan','form':'Form thu thập','ke-toan':'Kế toán · Đối soát sao kê'};
 function route(){
  document.body.classList.remove('menu-open');
  if(!S.loaded)return;
@@ -1635,7 +1679,7 @@ function route(){
 function render(full){
  if(!S.loaded||!S.route)return;
  const r=S.route,y=scrollY;
- $('#view').innerHTML=r==='tong-quan'?vHome():r==='san-pham'?vProducts():r==='khach-hang'?vCustomers():r==='nhan-su'?vStaff():r==='form'?vForms():r==='ke-toan'?(can('txn_confirm')?vKeToan():'<div class="band"><h2>Kế toán</h2><p class="mut">Tài khoản của anh/chị không có quyền vào mục Kế toán.</p></div>'):vModule(MODS.find(x=>x.id===r));
+ $('#view').innerHTML=r==='tong-quan'?vHome():r==='san-pham'?vProducts():r==='khach-hang'?vCustomers():r==='nhan-su'?vStaff():r==='form'?vForms():r==='ket-noi-ai'?vAI():r==='ke-toan'?(can('txn_confirm')?vKeToan():'<div class="band"><h2>Kế toán</h2><p class="mut">Tài khoản của anh/chị không có quyền vào mục Kế toán.</p></div>'):vModule(MODS.find(x=>x.id===r));
  scrollTo(0,full?0:y);
  const fo=document.querySelector('.fam.on');if(fo){const c=fo.parentElement;c.scrollLeft=fo.offsetLeft-c.clientWidth/2+fo.clientWidth/2}
  setTimeout(loadPhotos,50);
@@ -2300,8 +2344,11 @@ async function ktClick(t){
  if(d.sprm){const rows=document.querySelectorAll('.sprow');if(rows.length>1)t.closest('tr').remove();else toast('Cần ít nhất một khóa',true);return true}
  if(t.id==='spAdd'){$('#spBody').insertAdjacentHTML('beforeend',spRow({khoa:'Diamond'}));return true}
  if(d.gpcopy){const v=d.gpcopy==='key'?S.gk.newKey:d.gpcopy==='instr'?gptInstr(S.gk.newKey):d.gpcopy==='instr0'?gptInstr(''):gptSchema();try{await navigator.clipboard.writeText(v);toast('Đã sao chép')}catch(_){toast('Trình duyệt chặn sao chép, thử lại giúp em',true)}return true}
+ if(d.aicopy){try{await navigator.clipboard.writeText(MCP_URL(S.gk.newKey));toast('Đã sao chép link – dán vào ChatGPT ở bước 2')}catch(_){toast('Trình duyệt chặn sao chép: bấm vào ô link, Ctrl+C',true)}return true}
+ if(d.aiapp){S.aiApp=d.aiapp;render();return true}
+ if(d.aiq){try{await navigator.clipboard.writeText(d.aiq);toast('Đã sao chép câu hỏi')}catch(_){}return true}
  if(d.gpguide){if(!isQT())return true;$('#drawer').innerHTML=gptGuide();$('#drawer').classList.add('on','wide');$('#scrim').classList.add('on');$('#drawer').scrollTop=0;return true}
- if(d.gpdone){S.gk.open=1;S.gk.newKey='';render();return true}
+ if(d.gpdone){S.gk.open=1;S.gk.newFor='';S.gk.newKey='';render();return true}
  if(d.gprevoke){if(!confirm('Thu hồi mã này? ChatGPT dùng mã này sẽ mất quyền đọc ngay.'))return true;try{await api('gpt_revoke',{id:d.gprevoke});const j=await api('gpt_list');S.gk.l=j.keys;render();toast('Đã thu hồi mã')}catch(err){toast(err.message,true)}return true}
  if(d.copyck){try{await navigator.clipboard.writeText(d.copyck);toast('Đã sao chép nội dung chuyển khoản')}catch(_){toast('Bôi đen để sao chép giúp em',true)}return true}
  if(d.qrsave){const svg=$('#qrBox svg');if(!svg)return true;const x=S.real.find(r=>r.id===d.qrsave)||{};const img=new Image(),u=URL.createObjectURL(new Blob([svg.outerHTML.replace('<svg','<svg xmlns="http://www.w3.org/2000/svg"')],{type:'image/svg+xml'}));img.onload=()=>{const c=document.createElement('canvas');c.width=c.height=720;const g=c.getContext('2d');g.imageSmoothingEnabled=false;g.drawImage(img,0,0,720,720);URL.revokeObjectURL(u);const a=document.createElement('a');a.href=c.toDataURL('image/png');a.download=`QR-${code(x.hoTen||'hoc-vien',30)}.png`;a.click()};img.src=u;return true}
@@ -2334,6 +2381,7 @@ function ktChange(e){
  if(t.id==='ktFile'){const f=t.files[0];if(!f)return true;readStatement(f).then(rows=>ktLoad(rows,f.name)).catch(err=>toast(err.message||'Không đọc được file',true));return true}
  if(t.id==='ktTk'){S.kt.tk=t.value;return true}
  if(t.dataset.regjump){openDrawer(t.value);return true}
+ if(t.name==='aiWho'){S.gk.who=t.value;document.querySelectorAll('.aiopt').forEach(x=>x.classList.toggle('on',x.contains(t)));return true}
  if(t.id==='mkCD'){S.mk.cd=t.value;render();return true}
  if(t.id==='mkD'){if(t.value)S.mk.d=t.value.length===7?t.value+'-01':t.value;render();return true}
  if(t.id==='hdM'){S.kt.hdM=t.value;render();return true}
@@ -2408,6 +2456,7 @@ document.addEventListener('click',async e=>{
 document.addEventListener('submit',async e=>{
  e.preventDefault();const f=e.target;
  if(f.id==='loginForm'){const b=f.querySelector('button');b.disabled=true;try{const j=await api('login',{u:$('#lu').value.trim(),p:$('#lp').value});setTok(j.tok);setMe(j.me);await boot()}catch(err){$('#lerr').textContent=err.message;b.disabled=false}return}
+ if(f.id==='aiForm'){const b=f.querySelector('button.btn');const w=(f.querySelector('input[name=aiWho]:checked')||{}).value||'crmtkt';const lab=w==='crmtkt'?'Tôi – xem toàn bộ CRM':((S.users||[]).find(u=>u.id===w)||{}).hoTen||w;b.disabled=true;try{const j=await api('gpt_create',{uid:w,ten:'Link AI – '+lab,pw:$('#aiPw').value});const l=await api('gpt_list');S.gk.l=l.keys;S.gk.newKey=j.key;S.gk.newFor=lab;render()}catch(err){toast(err.message,true);b.disabled=false}return}
  if(f.id==='gpForm'){const b=f.querySelector('button.btn');b.disabled=true;try{const u=$('#gpU'),un=u.options[u.selectedIndex].text;if(!confirm('Tạo mã cho ChatGPT đọc dữ liệu CRM với quyền: '+un+'?'))throw new Error('Đã hủy, chưa tạo mã.');const j=await api('gpt_create',{uid:u.value,ten:$('#gpTen').value,pw:$('#gpPw').value});const l=await api('gpt_list');S.gk.l=l.keys;S.gk.newKey=j.key;render();setTimeout(()=>$('#gptBox')&&$('#gptBox').scrollIntoView({block:'start'}),50)}catch(err){toast(err.message,true);b.disabled=false}return}
  if(f.id==='infoEdit'){const b=f.querySelector('button.btn');b.disabled=true;try{await infoSave(f)}catch(err){toast(err.message,true);b.disabled=false}return}
  if(f.id==='hdEdit'){const b=f.querySelector('button.btn');b.disabled=true;try{await hdSave([f.dataset.id],{tt:$('#hTT').value,so:$('#hSo').value.trim(),loai:$('#hLoai').value,ngay:$('#hNg').value,ten:$('#hTen').value.trim(),mst:$('#hMst').value.trim(),dc:$('#hDc').value.trim(),email:$('#hEm').value.trim(),ghiChu:$('#hGc').value.trim()});closeDrawer();render();toast('Đã lưu hóa đơn')}catch(err){toast(err.message,true);b.disabled=false}return}

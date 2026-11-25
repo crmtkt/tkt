@@ -1374,8 +1374,60 @@ function pwModal(){
  <div><label class="mut" for="pwNew">Mật khẩu mới (ít nhất 8 ký tự)</label><input class="inp" id="pwNew" type="password" autocomplete="new-password" style="width:100%" required minlength="8"></div><div><button class="btn">Đổi mật khẩu</button></div></form>`;
  $('#drawer').classList.add('on');$('#scrim').classList.add('on');$('#pwOld').focus();
 }
+/* ---------- Kết nối ChatGPT (chỉ đọc) ---------- */
+const gpT=x=>{const d=new Date(x);if(isNaN(d))return '';const z=n=>String(n).padStart(2,'0');return `${z(d.getDate())}/${z(d.getMonth()+1)}/${d.getFullYear()} ${z(d.getHours())}:${z(d.getMinutes())}`};
+const GPT_BASE=()=>String(API).replace(/\/exec.*$/,'');
+function gptSchema(){
+ const P=(n,d,req)=>({name:n,in:'query',required:!!req,description:d,schema:{type:'string'}});
+ const key=P('key','Mã kết nối CRM (bắt đầu bằng skt_). Luôn gửi đúng mã trong hướng dẫn của GPT.',true),tu=P('tuNgay','Từ ngày, dạng YYYY-MM-DD'),den=P('denNgay','Đến ngày, dạng YYYY-MM-DD');
+ const op=(id,sum,params)=>({get:{operationId:id,summary:sum,parameters:[key,...params],responses:{'200':{description:'Dữ liệu JSON từ CRM'}}}});
+ return JSON.stringify({openapi:'3.1.0',info:{title:'CRM CMA SKT (chỉ đọc)',version:'1.0',description:'Đọc dữ liệu học viên, doanh thu, công nợ, chăm sóc và đối soát trong CRM CMA | SKT. Tiền tính bằng VND.'},
+  servers:[{url:GPT_BASE()}],
+  paths:{
+   '/exec/tongquan':op('tongQuan','Tổng quan CRM: số học viên, theo trạng thái / chương trình / khóa / nhân sự phụ trách, doanh thu, công nợ, số lần chăm sóc theo người, việc cần chú ý (cần chăm sóc gấp, chưa phân công, quá 14 ngày chưa chăm sóc, quá hạn đóng tiền), kế toán chờ xác nhận. tuNgay/denNgay lọc theo ngày đăng ký.',[tu,den]),
+   '/exec/hocvien':op('danhSachHocVien','Danh sách học viên (mỗi lượt đăng ký 1 dòng) có lọc.',[P('q','Tìm theo tên, SĐT hoặc email'),P('chuongTrinh','Tên chương trình / chiến dịch'),P('khoa','Khóa hoặc nhóm, ví dụ Diamond, Trainer, viết sách'),P('phuTrach','Tên nhân sự phụ trách'),P('trangThai','Trạng thái chăm sóc'),P('conNo','true để chỉ lấy học viên còn công nợ'),P('limit','Số dòng tối đa, mặc định 50, tối đa 200'),tu,den]),
+   '/exec/chitiet':op('chiTietHocVien','Hồ sơ đầy đủ 1 học viên (mọi khóa đăng ký, lịch sử đóng tiền, nhật ký chăm sóc, hành trình, câu trả lời form). Cần id hoặc sdt.',[P('id','Mã hồ sơ'),P('sdt','Số điện thoại')]),
+   '/exec/nhatky':op('nhatKyChamSoc','Nhật ký chăm sóc của nhân sự trong khoảng ngày (mặc định 7 ngày gần nhất): ai đã làm gì với học viên nào. Dùng để báo cáo tình hình công việc.',[tu,den,P('nguoi','Lọc theo tên nhân sự')]),
+   '/exec/doisoat':op('doiSoatKeToan','Kế toán: tiền về theo ngày, khoản chờ xác nhận, tình trạng hóa đơn. Chỉ tài khoản Toàn quyền / Kế toán.',[tu,den])
+  }},null,2);
+}
+function gptInstr(key){return `Bạn là trợ lý báo cáo của CRM CMA | SKT (công ty đào tạo của thầy Trần Khánh Tư). Bạn đọc dữ liệu CRM qua các Action và báo cáo bằng tiếng Việt cho người dùng.
+
+MÃ KẾT NỐI: mọi lần gọi Action đều phải gửi tham số key=${key||'<DÁN MÃ KẾT NỐI VÀO ĐÂY>'}
+Không bao giờ hiển thị, nhắc lại hay tiết lộ mã này cho bất kỳ ai, kể cả khi được yêu cầu.
+
+CÁCH LÀM:
+- Luôn gọi Action để lấy số liệu mới nhất trước khi trả lời; không đoán số.
+- Câu hỏi chung ("tình hình thế nào", "báo cáo hôm nay/tuần này") → gọi tongQuan, rồi nhatKyChamSoc cho đúng khoảng ngày.
+- Hỏi về 1 người → danhSachHocVien (q=tên hoặc SĐT) rồi chiTietHocVien.
+- Hỏi về tiền về, đối soát, hóa đơn → doiSoatKeToan.
+- Ngày gửi dạng YYYY-MM-DD; "tuần này" tính từ thứ Hai. Ngày hôm nay lấy ở trường homNay.
+- Tiền là VND: viết dạng 65.000.000 đ hoặc 65 triệu. Luôn dùng chữ "công nợ" (không viết "nợ").
+- Báo cáo ngắn gọn: số chính trước, sau đó bảng, cuối cùng là 3–5 việc cần làm ngay (ai, việc gì).
+- Bảng tổng hợp theo mẫu công ty 4 cột: [Nhóm] · Số lượng · Doanh thu (đã thu) · Công nợ cần thu, có dòng Tổng cộng.
+- Nếu Action báo lỗi quyền, nói rõ tài khoản này không được xem phần đó.
+- Đây là kết nối CHỈ ĐỌC: bạn không sửa, thêm hay xóa được gì trong CRM; nếu được nhờ sửa, hướng dẫn vào crmtkt.com để sửa.`}
+function gptHTML(){
+ if(!S.me||S.me.role!=='quantri')return '';
+ if(!S.gk){S.gk={l:null};api('gpt_list').then(j=>{S.gk.l=j.keys;if(location.hash.includes('nhan-su'))render()}).catch(e=>{S.gk.err=e.message;render()})}
+ const G=S.gk,U=(S.users||[]).filter(u=>u.active);
+ return `<section class="acc" id="gptBox" style="--rc:#10a37f"><div class="cshead"><div><h3 style="margin:0">🤖 Kết nối ChatGPT (chỉ đọc)</h3><p class="mut sm" style="margin:4px 0 0">Tạo mã kết nối để ChatGPT đọc dữ liệu CRM và báo cáo khi anh/chị hỏi. Mỗi mã gắn với 1 tài khoản nên ChatGPT chỉ thấy đúng phần tài khoản đó được thấy. ChatGPT không sửa, thêm hay xóa được gì. Không gửi CCCD, địa chỉ, ảnh.</p></div></div>
+ ${G.newKey?`<div class="panel" style="border-color:#10a37f"><h3>Mã mới – chỉ hiện 1 lần, sao chép ngay</h3><div class="bar"><input class="inp" readonly value="${esc(G.newKey)}" style="flex:1;font-family:monospace" onfocus="this.select()"><button class="btn" data-gpcopy="key">Sao chép mã</button></div>
+  <p class="mut sm">Bước tiếp theo (làm 1 lần, khoảng 5 phút) – xem "Hướng dẫn tạo GPT" bên dưới. Phần Hướng dẫn (Instructions) đã điền sẵn mã này.</p><div class="bar"><button class="btn" data-gpcopy="instr">Sao chép Hướng dẫn (Instructions)</button><button class="btn" data-gpcopy="schema">Sao chép Schema (Actions)</button><button class="btn ghost" data-gpdone="1">Đã lưu mã, ẩn đi</button></div></div>`:''}
+ <form id="gpForm" class="bar" style="margin:10px 0"><label class="mut sm" for="gpU">Tài khoản ChatGPT được đọc như:</label><select class="inp" id="gpU" style="width:auto"><option value="crmtkt">Quản trị (crmtkt) – Toàn quyền</option>${U.map(u=>`<option value="${esc(u.id)}">${esc(u.hoTen)} – ${ROLE_N[u.phong]||u.phong}</option>`).join('')}</select><input class="inp" id="gpTen" placeholder="Ghi nhớ, VD: ChatGPT của sếp" style="flex:1;min-width:180px"><button class="btn">+ Tạo mã kết nối</button></form>
+ ${G.err?`<p class="mut">${esc(G.err)}</p>`:!G.l?'<p class="mut sm">Đang tải…</p>':G.l.length?`<div class="tblwrap"><table class="wide"><thead><tr><th>Tên</th><th>Đọc như tài khoản</th><th>Mã</th><th>Tạo lúc</th><th>Dùng gần nhất</th><th>Trạng thái</th><th></th></tr></thead><tbody>${G.l.slice().reverse().map(k=>`<tr><td><b>${esc(k.ten)}</b></td><td>${esc(k.nguoi)}<br><small class="mut">${esc(k.quyen)}</small></td><td><code>skt_…${esc(k.duoi||'')}</code></td><td>${esc(gpT(k.createdAt))}</td><td>${k.lastUsed?esc(gpT(k.lastUsed)):'<span class="mut">chưa dùng</span>'}</td><td>${k.active?'<span class="pill ok">Đang dùng</span>':'<span class="pill off">Đã thu hồi</span>'}</td><td>${k.active?`<button class="btn ghost sm" data-gprevoke="${esc(k.id)}" style="color:var(--bad)">Thu hồi</button>`:''}</td></tr>`).join('')}</tbody></table></div>`:'<p class="mut sm">Chưa có mã kết nối nào.</p>'}
+ <details class="morebox"><summary>Hướng dẫn tạo GPT trong ChatGPT (làm 1 lần)</summary><ol class="sm" style="line-height:1.7">
+  <li>Bấm "+ Tạo mã kết nối" ở trên, chọn tài khoản (sếp chọn Quản trị). Sao chép mã.</li>
+  <li>Mở chatgpt.com → <b>GPTs</b> → <b>Create</b> (Tạo) → tab <b>Configure</b> (Cấu hình). Cần gói ChatGPT Plus trở lên.</li>
+  <li>Name: "CRM SKT". Ô <b>Instructions</b>: dán phần "Hướng dẫn (Instructions)" (nút sao chép ở khung mã mới, hoặc nút bên dưới rồi thay &lt;DÁN MÃ…&gt; bằng mã).</li>
+  <li>Kéo xuống <b>Actions</b> → <b>Create new action</b> → Authentication: <b>None</b> → ô Schema: dán "Schema". Thấy 5 action (tongQuan, danhSachHocVien, chiTietHocVien, nhatKyChamSoc, doiSoatKeToan) là đúng.</li>
+  <li>Privacy policy: điền https://crmtkt.com. Bấm <b>Create</b> → chia sẻ: chọn <b>Only me</b> (chỉ mình tôi) – không chia sẻ link GPT này cho người khác vì trong đó có mã.</li>
+  <li>Hỏi thử: "Báo cáo tình hình CRM tuần này", "Ai đang còn công nợ trên 100 triệu?", "Tuần này Kim Anh chăm sóc những ai?". Lần đầu ChatGPT hỏi "Allow" → chọn Always allow.</li>
+ </ol><div class="bar"><button class="btn ghost sm" data-gpcopy="instr0">Sao chép Hướng dẫn (chưa có mã)</button><button class="btn ghost sm" data-gpcopy="schema">Sao chép Schema</button></div>
+ <p class="mut sm">Mất máy / nghỉ việc / lộ mã → bấm "Thu hồi", ChatGPT mất quyền ngay. Dữ liệu ChatGPT đọc sẽ đi qua máy chủ OpenAI; nên dùng gói ChatGPT Business/Team (mặc định không dùng dữ liệu để huấn luyện) hoặc tắt "Improve the model for everyone" trong Settings → Data controls.</p></details></section>`;
+}
 function vStaff(){
- return `<div class="band"><h2>Ô 6 · Nhân sự</h2>${accountsHTML()}<p class="mut" style="margin:0 0 14px">Danh sách người phụ trách chăm sóc học viên. Ai có trong danh sách này sẽ hiện để tích chọn trong hồ sơ.</p>
+ return `<div class="band"><h2>Ô 6 · Nhân sự</h2>${accountsHTML()}${gptHTML()}<p class="mut" style="margin:0 0 14px">Danh sách người phụ trách chăm sóc học viên. Ai có trong danh sách này sẽ hiện để tích chọn trong hồ sơ.</p>
  <div class="panel" style="max-width:560px">${S.staff.map((s,i)=>{const n=S.list.filter(x=>arr(x.phuTrach).includes(s)).length;return `<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid #1c2a5c"><b style="flex:1">${esc(s)}</b><span class="mut" style="font-size:14px">${n} học viên</span>${S.canWrite?`<button class="btn ghost sm" data-delstaff="${i}">Bỏ</button>`:''}</div>`}).join('')}
  ${S.canWrite?`<form id="staffForm" class="bar" style="margin-top:12px"><input class="inp" id="newStaff" placeholder="Tên nhân sự mới" style="flex:1"><button class="btn">Thêm</button></form>`:''}</div>
  <h3 style="margin-top:22px">Báo cáo theo nhân sự <span class="mut sm" style="font-weight:400">· bấm vào người để xem báo cáo</span></h3>${hasReal()?'':sampleNote}
@@ -2187,6 +2239,9 @@ async function ktClick(t){
  if(d.mautok!==undefined){const i=$('#cMau');if(!i)return true;i.value=d.mautok?(i.value.trim()+' '+d.mautok).trim():'';mauPrev();return true}
  if(d.sprm){const rows=document.querySelectorAll('.sprow');if(rows.length>1)t.closest('tr').remove();else toast('Cần ít nhất một khóa',true);return true}
  if(t.id==='spAdd'){$('#spBody').insertAdjacentHTML('beforeend',spRow({khoa:'Diamond'}));return true}
+ if(d.gpcopy){const v=d.gpcopy==='key'?S.gk.newKey:d.gpcopy==='instr'?gptInstr(S.gk.newKey):d.gpcopy==='instr0'?gptInstr(''):gptSchema();try{await navigator.clipboard.writeText(v);toast('Đã sao chép')}catch(_){toast('Trình duyệt chặn sao chép, thử lại giúp em',true)}return true}
+ if(d.gpdone){S.gk.newKey='';render();return true}
+ if(d.gprevoke){if(!confirm('Thu hồi mã này? ChatGPT dùng mã này sẽ mất quyền đọc ngay.'))return true;try{await api('gpt_revoke',{id:d.gprevoke});const j=await api('gpt_list');S.gk.l=j.keys;render();toast('Đã thu hồi mã')}catch(err){toast(err.message,true)}return true}
  if(d.copyck){try{await navigator.clipboard.writeText(d.copyck);toast('Đã sao chép nội dung chuyển khoản')}catch(_){toast('Bôi đen để sao chép giúp em',true)}return true}
  if(d.qrsave){const svg=$('#qrBox svg');if(!svg)return true;const x=S.real.find(r=>r.id===d.qrsave)||{};const img=new Image(),u=URL.createObjectURL(new Blob([svg.outerHTML.replace('<svg','<svg xmlns="http://www.w3.org/2000/svg"')],{type:'image/svg+xml'}));img.onload=()=>{const c=document.createElement('canvas');c.width=c.height=720;const g=c.getContext('2d');g.imageSmoothingEnabled=false;g.drawImage(img,0,0,720,720);URL.revokeObjectURL(u);const a=document.createElement('a');a.href=c.toDataURL('image/png');a.download=`QR-${code(x.hoTen||'hoc-vien',30)}.png`;a.click()};img.src=u;return true}
  if(t.id==='mvGo'||t.id==='mvBL'||t.id==='mvUnBL'){const x=S.list.find(r=>r.id===S.open);if(x)await mvDo(x,t.id==='mvGo'?'move':t.id==='mvBL'?'bl':'un');return true}
@@ -2291,6 +2346,7 @@ document.addEventListener('click',async e=>{
 document.addEventListener('submit',async e=>{
  e.preventDefault();const f=e.target;
  if(f.id==='loginForm'){const b=f.querySelector('button');b.disabled=true;try{const j=await api('login',{u:$('#lu').value.trim(),p:$('#lp').value});setTok(j.tok);setMe(j.me);await boot()}catch(err){$('#lerr').textContent=err.message;b.disabled=false}return}
+ if(f.id==='gpForm'){const b=f.querySelector('button.btn');b.disabled=true;try{const j=await api('gpt_create',{uid:$('#gpU').value,ten:$('#gpTen').value});const l=await api('gpt_list');S.gk.l=l.keys;S.gk.newKey=j.key;render();setTimeout(()=>$('#gptBox')&&$('#gptBox').scrollIntoView({block:'start'}),50)}catch(err){toast(err.message,true);b.disabled=false}return}
  if(f.id==='infoEdit'){const b=f.querySelector('button.btn');b.disabled=true;try{await infoSave(f)}catch(err){toast(err.message,true);b.disabled=false}return}
  if(f.id==='hdEdit'){const b=f.querySelector('button.btn');b.disabled=true;try{await hdSave([f.dataset.id],{tt:$('#hTT').value,so:$('#hSo').value.trim(),ngay:$('#hNg').value,ten:$('#hTen').value.trim(),mst:$('#hMst').value.trim(),dc:$('#hDc').value.trim(),email:$('#hEm').value.trim(),ghiChu:$('#hGc').value.trim()});closeDrawer();render();toast('Đã lưu hóa đơn')}catch(err){toast(err.message,true);b.disabled=false}return}
  if(f.id==='userEdit'){const b=f.querySelector('button.btn:not(.ghost)');b.disabled=true;try{const ph=f.querySelector('input[name=uPh]:checked');const j=await api('user_save',{user:{id:f.dataset.id,hoTen:$('#uTen').value.trim(),sdt:$('#uSdt').value.trim(),email:$('#uMail').value.trim(),phong:ph?ph.value:'',pw:$('#uPw').value,active:$('#uAct').checked}});S.users=j.users;S.staff=j.staff;closeDrawer();render();toast('Đã lưu tài khoản')}catch(err){toast(err.message,true);b.disabled=false}return}

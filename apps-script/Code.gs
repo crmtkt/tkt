@@ -591,10 +591,12 @@ const US_ = {
    Mã lưu dạng băm trong Script Properties; quản trị tạo / thu hồi ở ô Nhân sự. */
 function gkLoad_() { try { return JSON.parse(PropertiesService.getScriptProperties().getProperty('GPTKEYS') || '[]'); } catch (e) { return []; } }
 function gkSave_(l) { PropertiesService.getScriptProperties().setProperty('GPTKEYS', JSON.stringify(l.slice(-50))); }
-function gkOut_(k) { const u = who_(k.uid); return {id: k.id, ten: k.ten, uid: k.uid, nguoi: u ? u.ten : '(tài khoản không còn)', quyen: u ? ROLES_[u.role] : '', active: !!k.active && !!u, createdAt: k.createdAt, lastUsed: k.lastUsed || '', dem: k.dem || 0, duoi: k.duoi}; }
+function gkOut_(k) { const u = who_(k.uid); return {id: k.id, ten: k.ten, uid: k.uid, nguoi: u ? u.ten : '(tài khoản không còn)', quyen: u ? ROLES_[u.role] : '', active: !!k.active && !!u, createdAt: k.createdAt, lastUsed: k.lastUsed || '', dem: k.dem || 0, duoi: k.duoi, by: k.by || ''}; }
 const GP_ = {
   gpt_list: () => out_({ok: true, keys: gkLoad_().map(gkOut_)}),
   gpt_create: (b, ME) => {
+    const pw = String(b.pw || '');
+    if (ME.uid === ADMIN_USER ? !passOk_(pw) : !(rows_('users').filter(x => x.id === ME.uid && x.hash && pwHash_(x.salt, pw) === x.hash)[0])) return fail_('Mật khẩu xác nhận chưa đúng, chưa tạo mã.', 403);
     const uid = str_(b.uid, 40) || ADMIN_USER; if (!who_(uid)) return fail_('Tài khoản này đã khóa hoặc không còn.');
     const key = 'skt_' + (Utilities.getUuid() + Utilities.getUuid()).replace(/-/g, '').slice(0, 40);
     const l = gkLoad_(), k = {id: uid_(), h: sha_(key), uid: uid, ten: str_(b.ten, 80) || 'ChatGPT', active: true, createdAt: now_(), by: ME.ten, duoi: key.slice(-4), dem: 0};

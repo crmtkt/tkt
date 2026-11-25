@@ -508,7 +508,8 @@ const KT_ = {
       const tx = all.filter(x => x.id === id)[0]; if (!tx || tx.trangThai !== 'da') return;
       let h = {}; try { h = tx.hd ? JSON.parse(tx.hd) : {}; } catch (e) {}
       const ch = [];
-      ['tt', 'so', 'ngay', 'ten', 'mst', 'dc', 'email', 'ghiChu'].forEach(k => { if (k in P) { const v = k === 'ngay' ? day_(P[k]) : str_(P[k], k === 'dc' || k === 'ghiChu' ? 500 : 160); if (v !== (h[k] || '')) { ch.push(k); h[k] = v; } } });
+      if (P.loai && ['canhan', 'congty'].indexOf(P.loai) < 0) delete P.loai;
+      ['tt', 'so', 'loai', 'ngay', 'ten', 'mst', 'dc', 'email', 'ghiChu'].forEach(k => { if (k in P) { const v = k === 'ngay' ? day_(P[k]) : str_(P[k], k === 'dc' || k === 'ghiChu' ? 500 : 160); if (v !== (h[k] || '')) { ch.push(k); h[k] = v; } } });
       if (!ch.length) return;
       h.nguoi = me; h.capNhat = now_(); h.lichSu = (h.lichSu || []).concat([{luc: h.capNhat, nguoi: me, tt: h.tt || 'cho', so: h.so || '', thay: ch.join(',')}]).slice(-30);
       tx.hd = JSON.stringify(h); put_('txns', tx); out.push(txnOut_(tx));

@@ -573,6 +573,20 @@ tr.dayrow td{background:#1b2c6b!important;color:var(--gold2);font-weight:700;fon
 .aigrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:12px}.aicap{font-size:14.5px;line-height:1.5;min-height:44px}.aicap a,.aiol a{color:#6ee7b7}.aiol{font-size:15px;line-height:1.8}
 .aiq{display:flex;flex-wrap:wrap;gap:8px}.chipq{border:1px solid #334a8a;background:#13225a;color:#e2e8f0;border-radius:999px;padding:7px 12px;cursor:pointer;font-size:14px}.chipq:hover{border-color:#10a37f}
 .aicard{display:block;margin:0 0 14px;padding:12px 14px;border:1.5px solid #10a37f;border-radius:12px;background:#10a37f1a;color:#d1fae5;text-decoration:none}
+.zwrap{padding-bottom:10px}.zhead{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:8px}.zhead h2{margin:0}
+.zbox{display:grid;grid-template-columns:330px 1fr;height:calc(100vh - 190px);min-height:480px;border:1px solid #2a3b78;border-radius:14px;overflow:hidden;background:#fff;color:#081c36}
+.zleft{display:flex;flex-direction:column;border-right:1px solid #dfe2e7;padding:8px;min-height:0;background:#fff}.zleft .inp{background:#eaedf0;color:#081c36;border-color:#eaedf0}.zleft .mut{color:#5a6981}
+.znicks{display:flex;gap:4px;flex-wrap:wrap}.znicks button{display:inline-flex;align-items:center;gap:4px;border:1px solid #dfe2e7;background:#fff;color:#081c36;border-radius:999px;padding:3px 10px 3px 4px;font-size:13px;cursor:pointer}.znicks button.on{background:#0068ff;color:#fff;border-color:#0068ff}.znicks .zav{width:20px;height:20px;font-size:11px}
+.zthreads{overflow:auto;flex:1;margin-top:6px}.zth{display:flex;gap:10px;align-items:center;width:100%;text-align:left;border:0;background:none;padding:9px 8px;border-radius:8px;cursor:pointer;color:#081c36}.zth:hover{background:#f3f5f6}.zth.on{background:#e5efff}
+.zthb{flex:1;min-width:0;display:flex;flex-direction:column}.zthb b{font-size:14.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.zthb small{color:#7589a3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:13px}.zthb .znk{color:#0068ff;font-size:11.5px}.zthd{color:#7589a3;font-size:11.5px;align-self:flex-start;margin-top:3px}
+.zav{width:44px;height:44px;border-radius:50%;object-fit:cover;flex:none;background:#c8d8f0}.zavt{display:inline-grid;place-items:center;color:#fff;background:linear-gradient(135deg,#4f8ff7,#0068ff);font-weight:700}
+.zchat{display:flex;flex-direction:column;min-width:0;min-height:0;background:#e2e9f1}.zchead{display:flex;gap:10px;align-items:center;background:#fff;padding:10px 14px;border-bottom:1px solid #dfe2e7}.zchead .mut{color:#7589a3}
+.zmsgs{flex:1;overflow:auto;padding:14px 16px;display:flex;flex-direction:column;gap:4px}.zday{align-self:center;background:#0000002a;color:#fff;font-size:12px;border-radius:999px;padding:2px 10px;margin:8px 0}
+.zm{display:flex;flex-direction:column;align-items:flex-start;max-width:72%}.zm.me{align-self:flex-end;align-items:flex-end}.zfrom{color:#7589a3;font-size:12px;margin:4px 0 2px 4px}
+.zbub{background:#fff;border-radius:10px;padding:8px 12px;box-shadow:0 1px 1px #0000000d;color:#081c36;font-size:15px;line-height:1.45;word-wrap:break-word;max-width:100%}.zm.me .zbub{background:#e5efff}
+.zbub img{display:block;max-width:320px;max-height:360px;border-radius:8px;margin-bottom:4px}.ztime{display:block;color:#7589a3;font-size:11px;margin-top:3px}.zfile a{color:#0068ff}
+.zempty{margin:auto;color:#5a6981}.zadm h3{margin:16px 0 6px}.zperm td,.zperm th{text-align:center}.zperm td:first-child,.zperm th:first-child{text-align:left}.zperm input{width:18px;height:18px}
+@media(max-width:800px){.zbox{grid-template-columns:1fr;height:auto}.zleft{max-height:42vh}.zchat{min-height:60vh}}
 </style>
 <script>new MutationObserver(()=>{for(const c of document.querySelectorAll('.stack td:not([data-l])')){let i=0,p=c;while(p=p.previousElementSibling)i+=p.colSpan;c.dataset.l=c.closest('table').rows[0].cells[i]?.textContent||''}}).observe(document,{childList:true,subtree:true})</script>
 </head>
@@ -653,6 +667,7 @@ const IC={
  team:'<circle cx="12" cy="8" r="4"/><path d="M4 21v-1a6 6 0 0 1 6-6h4a6 6 0 0 1 6 6v1"/>',
  cal:'<rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01"/>',
  hand:'<path d="m11 17 2 2a1 1 0 1 0 3-3"/><path d="m14 14 2.5 2.5a1 1 0 1 0 3-3l-3.9-3.9a2 2 0 0 0-2.8 0l-.9.9a1 1 0 1 1-3-3l2.8-2.8a5 5 0 0 1 5.7-1L21 4l1 1v7l-2 2M3 4l-1 1v7l6.5 6.5a1 1 0 1 0 3-3"/>',
+ chat:'<path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/><path d="M8 11h8M8 14h5"/>',
  spark:'<path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z"/><path d="M19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8z"/>',
  calc:'<rect x="4" y="2" width="16" height="20" rx="2"/><path d="M8 6h8M8 10h.01M12 10h.01M16 10h.01M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01M16 18h.01"/>',
  form:'<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M8 13h8M8 17h5"/>',
@@ -741,6 +756,7 @@ function renderNav(route){
   MODS.filter(m=>canSee(m.id)).map(m=>`<a href="#${m.id}" style="--c:${m.c}" class="${route===m.id?'on':''}" data-tip="${m.name}">${svgI(m.ic)}<span class="lbl">${m.name}</span></a>`).join('')+
   (canSee('form')?`<a class="home ${route==='form'?'on':''}" href="#form" data-tip="Form thu thập" style="border-color:#a43be6;color:#f0d9ff">${svgI('form')}<span class="lbl">Form thu thập</span></a>`:'')+
   (can('txn_confirm')&&canSee('ke-toan')?`<a class="home ${route==='ke-toan'?'on':''}" href="#ke-toan" data-tip="Kế toán · Đối soát" style="border-color:#16a34a;color:#d9ffe9">${svgI('calc')}<span class="lbl">Kế toán · Đối soát</span></a>`:'')+
+  ((isQT()||S.zaloOk)?`<a class="home ${route==='zalo'?'on':''}" href="#zalo" data-tip="Zalo" style="border-color:#0068ff;color:#dbeafe">${svgI('chat')}<span class="lbl">Zalo</span></a>`:'')+
   (isQT()?`<a class="home ${route==='ket-noi-ai'?'on':''}" href="#ket-noi-ai" data-tip="Kết nối ChatGPT" style="border-color:#10a37f;color:#d1fae5">${svgI('spark')}<span class="lbl">Kết nối ChatGPT</span></a>`:'');
  $('#bnav').innerHTML=[['tong-quan','home','Tổng quan'],['san-pham','box','Sản phẩm'],['khach-hang','users','Khách hàng'],['form','form','Form']].filter(([h])=>canSee(h)).map(([h,ic,t])=>`<a href="#${h}" class="${route===h?'on':''}">${svgI(ic)}<span>${t}</span></a>`).join('');
 }
@@ -1466,6 +1482,39 @@ function gptGuide(){
  <ul class="gtxt"><li><b>"Mã kết nối không hợp lệ hoặc đã bị thu hồi"</b>: mã sai hoặc đã thu hồi → tạo mã mới, sao chép lại Hướng dẫn, dán đè ở bước 5.</li><li><b>Không hiện 5 hành động ở bước 7</b>: dán thiếu – bấm lại "Sao chép Schema" và dán đè toàn bộ.</li><li><b>Không thấy nút Tạo GPT</b>: tài khoản ChatGPT đang là gói miễn phí.</li><li>Bảng mã có cột <b>"Dùng gần nhất"</b> để biết ChatGPT đã gọi được CRM chưa.</li></ul>
  </div>`;
 }
+/* ---------- Mục Zalo: xem tin nhắn Zalo cá nhân của nhân sự (đồng bộ bằng tiện ích Chrome) ---------- */
+const ZST={b:'font-weight:700',i:'font-style:italic',u:'text-decoration:underline',s:'text-decoration:line-through',big:'font-size:1.25em',small:'font-size:.85em'};
+function zRich(text,kieu){let st=[];try{st=kieu?JSON.parse(kieu):[]}catch(_){}if(!Array.isArray(st)||!st.length)return esc(text).replace(/\n/g,'<br>');
+ const n=text.length,css=Array.from({length:n},()=>[]);st.forEach(r=>{const a=Math.max(0,+r.start||0),b=Math.min(n,a+(+r.len||0)),v=String(r.st||'');const c=v.startsWith('c_')?'color:#'+v.slice(2).replace(/[^0-9a-f]/gi,'').slice(0,6):ZST[v];if(c)for(let i=a;i<b;i++)css[i].push(c)});
+ let out='',cur=null,buf='';const flush=()=>{if(!buf)return;out+=cur?`<span style="${cur}">${esc(buf)}</span>`:esc(buf);buf=''};
+ for(let i=0;i<n;i++){const k=css[i].join(';')||null;if(k!==cur){flush();cur=k}buf+=text[i]}flush();return out.replace(/\n/g,'<br>')}
+const zT=ts=>{const d=new Date(+ts);if(isNaN(d))return '';const z=n=>String(n).padStart(2,'0'),t=new Date();return d.toDateString()===t.toDateString()?`${z(d.getHours())}:${z(d.getMinutes())}`:`${z(d.getDate())}/${z(d.getMonth()+1)} ${z(d.getHours())}:${z(d.getMinutes())}`};
+const zAv=(n,u)=>u?`<img class="zav" src="${esc(u)}" alt="" referrerpolicy="no-referrer" onerror="this.replaceWith(Object.assign(document.createElement('span'),{className:'zav zavt',textContent:'${esc((n||'?').trim().split(/\s+/).pop()[0]||'?')}'}))">`:`<span class="zav zavt">${esc((n||'?').trim().split(/\s+/).pop()[0]||'?')}</span>`;
+async function zLoad(force){const Z=S.z||(S.z={});if(Z.busy)return;Z.busy=1;try{const j=await api('zl_threads');Z.accs=j.accs;Z.threads=j.threads;Z.err='';if(Z.open){const m=await api('zl_msgs',{nick:Z.open.nick,thread:Z.open.thread});Z.msgs=m.msgs}}catch(e){Z.err=e.message}Z.busy=0;Z.at=Date.now();if(S.route==='zalo'){const sc=$('#zmsgs'),bot=sc&&sc.scrollHeight-sc.scrollTop-sc.clientHeight<60;render();const s2=$('#zmsgs');if(s2&&(bot||force==='bottom'))s2.scrollTop=s2.scrollHeight}}
+function zAdmin(){const A=S.za||{};if(!A.loaded){A.loaded=1;S.za=A;api('zl_dev_list').then(j=>{Object.assign(A,j);if(S.route==='zalo')render()}).catch(e=>{A.err=e.message;render()})}
+ const U=(S.users||[]).filter(u=>u.active&&u.phong!=='quantri'),accs=A.accs||[],P=A.perm||{};
+ return `<section class="zadm"><h3>1 · Kết nối nick Zalo</h3><p class="mut sm">Mỗi nick cần 1 mã kết nối. Bạn CSKH cài tiện ích Chrome "CRM SKT – Zalo" trên máy mình, mở chat.zalo.me, dán mã vào tiện ích là tin nhắn tự về CRM khi Zalo Web đang mở.</p>
+ ${A.newCode?`<div class="ailink"><div class="mut sm">✅ Mã cho <b>${esc(A.newFor)}</b> (chỉ hiện 1 lần):</div><div class="bar"><input class="inp" readonly value="${esc(A.newCode)}" onfocus="this.select()" style="flex:1;font-family:monospace"><button class="btn big" data-zlcopy="1">📋 Sao chép mã</button></div><button class="btn ghost sm" data-zldone="1">Xong</button></div>`:
+ `<form id="zlDevForm" class="bar"><input class="inp" id="zlTen" placeholder="Tên gợi nhớ, VD: Zalo Kim Anh" required style="flex:1;min-width:200px"><select class="inp" id="zlChu" style="width:auto"><option value="">Chủ nick (nhân sự)…</option>${(S.staff||[]).map(n=>`<option>${esc(n)}</option>`).join('')}</select><button class="btn big">+ Tạo mã kết nối</button></form>`}
+ ${(A.devs||[]).length?`<div class="tblwrap"><table class="wide"><thead><tr><th>Tên</th><th>Chủ nick</th><th>Nick Zalo đã gắn</th><th>Đồng bộ gần nhất</th><th>Trạng thái</th><th></th></tr></thead><tbody>${A.devs.slice().reverse().map(d=>`<tr><td><b>${esc(d.ten)}</b><br><small class="mut">…${esc(d.duoi)}</small></td><td>${esc(d.chuNick||'')}</td><td>${d.nickTen?esc(d.nickTen):'<span class="mut">chưa dán mã</span>'}</td><td>${d.lastUsed?esc(gpT(d.lastUsed)):'—'}</td><td>${d.active?'<span class="pill ok">Đang dùng</span>':'<span class="pill off">Đã thu hồi</span>'}</td><td>${d.active?`<button class="btn ghost sm" data-zlrevoke="${esc(d.id)}" style="color:var(--bad)">Thu hồi</button>`:''}</td></tr>`).join('')}</tbody></table></div>`:''}
+ <details class="morebox"><summary>Cách cài tiện ích cho máy bạn CSKH (làm 1 lần, 2 phút)</summary><ol class="aiol"><li>Tải <a href="/zalo-ext.zip" download>tiện ích CRM SKT – Zalo (.zip)</a> và giải nén ra 1 thư mục. <span class="mut">(Tiện ích đang được hoàn thiện, sẽ có link tải sớm.)</span></li><li>Mở Chrome, vào địa chỉ <b>chrome://extensions</b>, bật <b>Chế độ dành cho nhà phát triển</b> (góc phải trên).</li><li>Bấm <b>Tải tiện ích đã giải nén</b> → chọn thư mục vừa giải nén.</li><li>Mở <b>chat.zalo.me</b>, đăng nhập nick bằng QR như bình thường.</li><li>Bấm biểu tượng tiện ích 🧩 → <b>CRM SKT – Zalo</b> → dán mã kết nối → <b>Lưu</b>. Thấy "Đã đồng bộ" là xong. Để tab Zalo Web mở trong giờ làm việc.</li></ol></details>
+ <h3>2 · Ai được xem nick nào</h3><p class="mut sm">Quản trị viên luôn xem được tất cả. Tích để cho nhân sự xem; không tích = không thấy mục Zalo.</p>
+ ${!accs.length?'<p class="mut sm">Chưa có nick nào đồng bộ về.</p>':U.length?`<div class="tblwrap"><table class="wide zperm"><thead><tr><th>Nhân sự</th><th>Tất cả nick</th>${accs.map(a=>`<th>${esc(a.ten)}</th>`).join('')}</tr></thead><tbody>${U.map(u=>{const p=P[u.id]||[];return `<tr><td><b>${esc(u.hoTen)}</b><br><small class="mut">${ROLE_N[u.phong]||u.phong}</small></td><td><input type="checkbox" data-zp="${esc(u.id)}" value="*" ${p.includes('*')?'checked':''}></td>${accs.map(a=>`<td><input type="checkbox" data-zp="${esc(u.id)}" value="${esc(a.id)}" ${p.includes('*')||p.includes(String(a.id))?'checked':''} ${p.includes('*')?'disabled':''}></td>`).join('')}</tr>`}).join('')}</tbody></table></div><button class="btn" data-zpsave="1">Lưu phân quyền</button>`:'<p class="mut sm">Chưa có tài khoản nhân sự.</p>'}
+ </section>`}
+function vZalo(){
+ if(!isQT()&&!S.zaloOk)return '<div class="band"><h2>Zalo</h2><p class="mut">Anh/chị chưa được quản trị viên cấp quyền xem Zalo.</p></div>';
+ const Z=S.z||(S.z={});if(!Z.at&&!Z.busy)setTimeout(()=>zLoad('bottom'),0);
+ const accs=Z.accs||[],nk=Z.nick||'',q=(Z.q||'').toLowerCase(),TH=(Z.threads||[]).filter(t=>(!nk||t.nick===nk)&&(!Z.hideGroup||!t.nhom)&&(!q||(t.ten||'').toLowerCase().includes(q)||(t.lastText||'').toLowerCase().includes(q)));
+ const accN=id=>(accs.find(a=>a.id===id)||{}).ten||'';
+ const O=Z.open,ot=O&&(Z.threads||[]).find(t=>t.key===O.key);
+ return `<div class="band zwrap"><div class="zhead"><h2>Zalo</h2><span class="mut sm">Tin nhắn Zalo cá nhân của nhân sự · cập nhật khi Zalo Web của bạn đó đang mở${Z.at?' · tải lúc '+zT(Z.at):''}</span><span style="flex:1"></span><button class="btn ghost sm" data-zreload="1">↻ Tải lại</button>${isQT()?`<button class="btn ghost sm" data-zadm="1">${Z.adm?'← Về hộp thư':'⚙ Kết nối & phân quyền'}</button>`:''}</div>
+ ${Z.err?`<p class="mut">${esc(Z.err)}</p>`:''}
+ ${Z.adm&&isQT()?zAdmin():`<div class="zbox"><aside class="zleft"><div class="znicks"><button class="${!nk?'on':''}" data-znick="">Tất cả nick</button>${accs.map(a=>`<button class="${nk===a.id?'on':''}" data-znick="${esc(a.id)}" title="${esc(a.chuNick||'')} · đồng bộ ${esc(gpT(a.lastSync))}">${zAv(a.ten,a.anh)} ${esc(a.ten)}</button>`).join('')}</div>
+  <input class="inp" id="zq" placeholder="Tìm hội thoại…" value="${esc(Z.q||'')}" style="margin:6px 0"><label class="mut sm"><input type="checkbox" id="zhg" ${Z.hideGroup?'checked':''}> Ẩn nhóm</label>
+  <div class="zthreads">${TH.length?TH.map(t=>`<button class="zth ${O&&O.key===t.key?'on':''}" data-zth="${esc(t.key)}">${zAv(t.ten,t.anh)}<span class="zthb"><b>${t.nhom?'👥 ':''}${esc(t.ten||t.thread)}</b><small>${esc(t.lastText||'')}</small>${!nk&&accs.length>1?`<small class="znk">${esc(accN(t.nick))}</small>`:''}</span><small class="zthd">${zT(t.lastTs)}</small></button>`).join(''):`<p class="mut sm" style="padding:10px">${Z.at?(accs.length?'Không có hội thoại.':'Chưa có nick nào đồng bộ. Quản trị viên vào "⚙ Kết nối & phân quyền" để tạo mã.'):'Đang tải…'}</p>`}</div></aside>
+  <section class="zchat">${O?`<div class="zchead">${zAv(ot&&ot.ten,ot&&ot.anh)}<div><b>${esc((ot&&ot.ten)||O.thread)}</b><br><small class="mut">Nick: ${esc(accN(O.nick))} · chỉ xem</small></div></div>
+  <div class="zmsgs" id="zmsgs">${(Z.msgs||[]).length?Z.msgs.map((m,i,a)=>{const pd=i&&new Date(+a[i-1].ts).toDateString()!==new Date(+m.ts).toDateString();return `${!i||pd?`<div class="zday">${new Date(+m.ts).toLocaleDateString('vi-VN')}</div>`:''}<div class="zm ${m.me?'me':''}">${!m.me&&ot&&ot.nhom?`<small class="zfrom">${esc(m.nguoiGui)}</small>`:''}<div class="zbub">${m.loai==='photo'&&m.url?`<a href="${esc(m.url)}" target="_blank" rel="noopener"><img src="${esc(m.url)}" alt="Ảnh" loading="lazy" referrerpolicy="no-referrer"></a>`:''}${m.loai==='file'?`<div class="zfile">📎 ${m.url?`<a href="${esc(m.url)}" target="_blank" rel="noopener">${esc(m.tep||'Tệp')}</a>`:esc(m.tep||'Tệp')}</div>`:''}${m.loai==='sticker'?'<span class="mut">[Sticker]</span>':''}${m.loai==='voice'?'<span class="mut">🎤 Tin nhắn thoại</span>':''}${m.noiDung?`<div class="ztxt">${zRich(m.noiDung,m.kieu)}</div>`:''}<small class="ztime">${zT(m.ts)}</small></div></div>`}).join(''):'<p class="mut sm" style="padding:16px">Đang tải tin nhắn…</p>'}</div>`:'<div class="zempty">Chọn một hội thoại bên trái để xem tin nhắn.</div>'}</section></div>`}
+ </div>`}
 /* ---------- Mục "Kết nối AI" (chỉ quản trị): link MCP cho ChatGPT / Claude ---------- */
 const MCP_URL=k=>String(API).replace(/[?#].*$/,'')+'?mcp=1&key='+k;
 function aiPics(){
@@ -1665,7 +1714,7 @@ function showLogin(msg){
 }
 
 /* ---------- Router ---------- */
-const TITLES={'ket-noi-ai':'Kết nối ChatGPT / Claude','tong-quan':'Tổng quan','form':'Form thu thập','ke-toan':'Kế toán · Đối soát sao kê'};
+const TITLES={'zalo':'Zalo – tin nhắn nhân sự','ket-noi-ai':'Kết nối ChatGPT / Claude','tong-quan':'Tổng quan','form':'Form thu thập','ke-toan':'Kế toán · Đối soát sao kê'};
 function route(){
  document.body.classList.remove('menu-open');
  if(!S.loaded)return;
@@ -1679,7 +1728,7 @@ function route(){
 function render(full){
  if(!S.loaded||!S.route)return;
  const r=S.route,y=scrollY;
- $('#view').innerHTML=r==='tong-quan'?vHome():r==='san-pham'?vProducts():r==='khach-hang'?vCustomers():r==='nhan-su'?vStaff():r==='form'?vForms():r==='ket-noi-ai'?vAI():r==='ke-toan'?(can('txn_confirm')?vKeToan():'<div class="band"><h2>Kế toán</h2><p class="mut">Tài khoản của anh/chị không có quyền vào mục Kế toán.</p></div>'):vModule(MODS.find(x=>x.id===r));
+ $('#view').innerHTML=r==='tong-quan'?vHome():r==='san-pham'?vProducts():r==='khach-hang'?vCustomers():r==='nhan-su'?vStaff():r==='form'?vForms():r==='ket-noi-ai'?vAI():r==='zalo'?vZalo():r==='ke-toan'?(can('txn_confirm')?vKeToan():'<div class="band"><h2>Kế toán</h2><p class="mut">Tài khoản của anh/chị không có quyền vào mục Kế toán.</p></div>'):vModule(MODS.find(x=>x.id===r));
  scrollTo(0,full?0:y);
  const fo=document.querySelector('.fam.on');if(fo){const c=fo.parentElement;c.scrollLeft=fo.offsetLeft-c.clientWidth/2+fo.clientWidth/2}
  setTimeout(loadPhotos,50);
@@ -2344,6 +2393,14 @@ async function ktClick(t){
  if(d.sprm){const rows=document.querySelectorAll('.sprow');if(rows.length>1)t.closest('tr').remove();else toast('Cần ít nhất một khóa',true);return true}
  if(t.id==='spAdd'){$('#spBody').insertAdjacentHTML('beforeend',spRow({khoa:'Diamond'}));return true}
  if(d.gpcopy){const v=d.gpcopy==='key'?S.gk.newKey:d.gpcopy==='instr'?gptInstr(S.gk.newKey):d.gpcopy==='instr0'?gptInstr(''):gptSchema();try{await navigator.clipboard.writeText(v);toast('Đã sao chép')}catch(_){toast('Trình duyệt chặn sao chép, thử lại giúp em',true)}return true}
+ if(d.znick!==undefined){S.z.nick=d.znick;render();return true}
+ if(d.zth){const t=(S.z.threads||[]).find(x=>x.key===d.zth);S.z.open=t?{key:t.key,nick:t.nick,thread:t.thread}:null;S.z.msgs=[];render();zLoad('bottom');return true}
+ if(d.zreload){zLoad();return true}
+ if(d.zadm){S.z.adm=!S.z.adm;if(S.z.adm&&S.za)S.za.loaded=0;render();return true}
+ if(d.zlcopy){try{await navigator.clipboard.writeText(S.za.newCode);toast('Đã sao chép mã – gửi riêng cho bạn CSKH')}catch(_){toast('Bấm vào ô mã rồi Ctrl+C',true)}return true}
+ if(d.zldone){S.za.newCode='';render();return true}
+ if(d.zlrevoke){if(!confirm('Thu hồi mã này? Tiện ích dùng mã này sẽ ngừng đồng bộ.'))return true;try{await api('zl_dev_revoke',{id:d.zlrevoke});S.za.loaded=0;render()}catch(e){toast(e.message,true)}return true}
+ if(d.zpsave){const P={};document.querySelectorAll('[data-zp]').forEach(c=>{if(c.checked&&!c.disabled){(P[c.dataset.zp]=P[c.dataset.zp]||[]).push(c.value)}});Object.keys(P).forEach(k=>{if(P[k].includes('*'))P[k]=['*']});try{const j=await api('zl_perm_set',{perm:P});S.za.perm=j.perm;toast('Đã lưu phân quyền Zalo');render()}catch(e){toast(e.message,true)}return true}
  if(d.aicopy){try{await navigator.clipboard.writeText(MCP_URL(S.gk.newKey));toast('Đã sao chép link – dán vào ChatGPT ở bước 2')}catch(_){toast('Trình duyệt chặn sao chép: bấm vào ô link, Ctrl+C',true)}return true}
  if(d.aiapp){S.aiApp=d.aiapp;render();return true}
  if(d.aiq){try{await navigator.clipboard.writeText(d.aiq);toast('Đã sao chép câu hỏi')}catch(_){}return true}
@@ -2381,6 +2438,8 @@ function ktChange(e){
  if(t.id==='ktFile'){const f=t.files[0];if(!f)return true;readStatement(f).then(rows=>ktLoad(rows,f.name)).catch(err=>toast(err.message||'Không đọc được file',true));return true}
  if(t.id==='ktTk'){S.kt.tk=t.value;return true}
  if(t.dataset.regjump){openDrawer(t.value);return true}
+ if(t.id==='zhg'){S.z.hideGroup=t.checked;render();return true}
+ if(t.dataset&&t.dataset.zp&&t.value==='*'){document.querySelectorAll(`[data-zp="${t.dataset.zp}"]`).forEach(c=>{if(c!==t){c.disabled=t.checked;if(t.checked)c.checked=true}});return true}
  if(t.name==='aiWho'){S.gk.who=t.value;document.querySelectorAll('.aiopt').forEach(x=>x.classList.toggle('on',x.contains(t)));return true}
  if(t.id==='mkCD'){S.mk.cd=t.value;render();return true}
  if(t.id==='mkD'){if(t.value)S.mk.d=t.value.length===7?t.value+'-01':t.value;render();return true}
@@ -2405,6 +2464,7 @@ function ktInput(e){
 }
 
 /* ---------- Sự kiện ---------- */
+document.addEventListener('input',e=>{if(e.target&&e.target.id==='zq'){S.z.q=e.target.value;clearTimeout(S.z.qt);S.z.qt=setTimeout(()=>{const p=e.target.selectionStart;render();const i=$('#zq');if(i){i.focus();i.setSelectionRange(p,p)}},250)}});
 document.addEventListener('toggle',e=>{if(e.target&&e.target.id==='gptBox'&&S.gk)S.gk.open=e.target.open},true);
 document.addEventListener('click',async e=>{
  const t=e.target.closest('button,[data-open],a.f');if(!t)return;
@@ -2456,6 +2516,7 @@ document.addEventListener('click',async e=>{
 document.addEventListener('submit',async e=>{
  e.preventDefault();const f=e.target;
  if(f.id==='loginForm'){const b=f.querySelector('button');b.disabled=true;try{const j=await api('login',{u:$('#lu').value.trim(),p:$('#lp').value});setTok(j.tok);setMe(j.me);await boot()}catch(err){$('#lerr').textContent=err.message;b.disabled=false}return}
+ if(f.id==='zlDevForm'){const b=f.querySelector('button.btn');b.disabled=true;try{const j=await api('zl_dev_create',{ten:$('#zlTen').value,chuNick:$('#zlChu').value});S.za.newCode=j.code;S.za.newFor=$('#zlTen').value;S.za.loaded=0;render()}catch(e){toast(e.message,true);b.disabled=false}return}
  if(f.id==='aiForm'){const b=f.querySelector('button.btn');const w=(f.querySelector('input[name=aiWho]:checked')||{}).value||'crmtkt';const lab=w==='crmtkt'?'Tôi – xem toàn bộ CRM':((S.users||[]).find(u=>u.id===w)||{}).hoTen||w;b.disabled=true;try{const j=await api('gpt_create',{uid:w,ten:'Link AI – '+lab,pw:$('#aiPw').value});const l=await api('gpt_list');S.gk.l=l.keys;S.gk.newKey=j.key;S.gk.newFor=lab;render()}catch(err){toast(err.message,true);b.disabled=false}return}
  if(f.id==='gpForm'){const b=f.querySelector('button.btn');b.disabled=true;try{const u=$('#gpU'),un=u.options[u.selectedIndex].text;if(!confirm('Tạo mã cho ChatGPT đọc dữ liệu CRM với quyền: '+un+'?'))throw new Error('Đã hủy, chưa tạo mã.');const j=await api('gpt_create',{uid:u.value,ten:$('#gpTen').value,pw:$('#gpPw').value});const l=await api('gpt_list');S.gk.l=l.keys;S.gk.newKey=j.key;render();setTimeout(()=>$('#gptBox')&&$('#gptBox').scrollIntoView({block:'start'}),50)}catch(err){toast(err.message,true);b.disabled=false}return}
  if(f.id==='infoEdit'){const b=f.querySelector('button.btn');b.disabled=true;try{await infoSave(f)}catch(err){toast(err.message,true);b.disabled=false}return}
@@ -2521,7 +2582,7 @@ async function saveStaff(list){
 }
 async function reload(quiet){
  const j=await api('bootstrap');saveCache(j);
- S.forms=j.forms;S.real=j.records;S.camps=j.camps||[];S.txns=j.txns||[];S.uploads=j.uploads||[];S.users=j.users||[];if(j.me){const ch=!S.me||S.me.role!==j.me.role;setMe(j.me);if(ch&&S.route)route()}mergeList();S.staff=j.staff&&j.staff.length?j.staff:DEFAULT_STAFF.slice();S.loaded=true;
+ S.forms=j.forms;S.real=j.records;S.camps=j.camps||[];S.txns=j.txns||[];S.uploads=j.uploads||[];S.users=j.users||[];S.zaloOk=!!j.zaloOk;if(j.me){const ch=!S.me||S.me.role!==j.me.role;setMe(j.me);if(ch&&S.route)route()}mergeList();S.staff=j.staff&&j.staff.length?j.staff:DEFAULT_STAFF.slice();S.loaded=true;
  setConn(`Đã đồng bộ · ${S.real.length} học viên`,'ok');
  if(quiet&&($('#drawer').classList.contains('on')||EDITING))return; // không làm mất chữ đang gõ trong hồ sơ
  if(quiet&&S.route==='san-pham'&&document.activeElement&&document.activeElement.id==='q')return;
@@ -2540,7 +2601,7 @@ async function boot(){
  if(c&&Array.isArray(c.records)){S.forms=c.forms||[];S.real=c.records;S.camps=c.camps||[];S.txns=c.txns||[];S.uploads=c.uploads||[];mergeList();S.staff=c.staff&&c.staff.length?c.staff:DEFAULT_STAFF.slice();S.loaded=true;route();setConn('Đang cập nhật…','')}
  try{await reload(!!c)}catch(err){if(!TOK)return;setConn(c?'Đang xem dữ liệu đã lưu · chưa cập nhật được':'Chưa tải được dữ liệu','warn');toast(err.message,true);if(!c)return}
  if(!c)route();
- clearInterval(poll);poll=setInterval(()=>{if(document.visibilityState==='visible')reload(true).catch(()=>{})},30000);
+ clearInterval(poll);poll=setInterval(()=>{if(document.visibilityState==='visible'){reload(true).catch(()=>{});if(S.route==='zalo'&&!(S.z&&S.z.adm))zLoad()}},30000);
 }
 try{if(localStorage.getItem('crm_mini'))document.body.classList.add('side-mini')}catch(_){}
 boot();

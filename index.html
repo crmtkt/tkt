@@ -550,6 +550,7 @@ tr.dayrow td{background:#1b2c6b!important;color:var(--gold2);font-weight:700;fon
 .dregs{padding:10px 20px 12px;border-bottom:1px solid var(--line);background:#0b1636;display:flex;flex-direction:column;gap:6px}
 .regdd summary{list-style:none;cursor:pointer;display:inline-flex;align-items:center;gap:8px;font-size:13px;padding:3px 8px 3px 3px;border-radius:99px;border:1px solid #2c3f86;background:#0f1c4a;width:max-content}.regdd summary::-webkit-details-marker{display:none}.regdd[open] summary{border-color:var(--gold)}.regdd .regchips{margin-top:6px;flex-direction:column;align-items:flex-start}.rdots{display:inline-flex;gap:3px}.rdots i{width:8px;height:8px;border-radius:50%}
 .mkbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:0 0 14px;padding:10px 12px;background:#0f1c4a;border:1px solid var(--line);border-radius:14px}
+.gptd>summary::-webkit-details-marker{display:none}.gptd:not([open]) .cshead p{margin:0}
 </style>
 <script>new MutationObserver(()=>{for(const c of document.querySelectorAll('.stack td:not([data-l])')){let i=0,p=c;while(p=p.previousElementSibling)i+=p.colSpan;c.dataset.l=c.closest('table').rows[0].cells[i]?.textContent||''}}).observe(document,{childList:true,subtree:true})</script>
 </head>
@@ -637,15 +638,15 @@ const IC={
 const svgI=k=>`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${IC[k]}</svg>`;
 
 const MODS=[
- {id:'khach-hang',n:1,name:'Khách Hàng',ic:'users',c:'linear-gradient(90deg,#2453d6,#2f6bf0)',cc:'#2f6bf0',subs:[['Chân dung khách hàng','Chủ yếu từ 40 tuổi, yếu công nghệ, thích bình an, vui vẻ, trải nghiệm.'],['Nhóm tệp khách hàng','Mỗi thời điểm một chiến dịch tập trung vào một nhóm.'],['Nguồn khách','Khách đến từ phễu nào, kênh nào.'],['Hành trình khách hàng','Nhập số điện thoại → ra hết khóa đã học. (Đã chạy ở trên.)'],['Trợ lý chat AI','Dán tin nhắn khách, AI hỏi thêm rồi gợi ý 3 hướng trả lời.']]},
- {id:'san-pham',n:2,name:'Sản Phẩm',ic:'box',c:'linear-gradient(90deg,#4b2bd1,#6a3cf0)',cc:'#6a3cf0'},
+ {id:'khach-hang',n:1,name:'Khách hàng',ic:'users',c:'linear-gradient(90deg,#2453d6,#2f6bf0)',cc:'#2f6bf0',subs:[['Chân dung khách hàng','Chủ yếu từ 40 tuổi, yếu công nghệ, thích bình an, vui vẻ, trải nghiệm.'],['Nhóm tệp khách hàng','Mỗi thời điểm một chiến dịch tập trung vào một nhóm.'],['Nguồn khách','Khách đến từ phễu nào, kênh nào.'],['Hành trình khách hàng','Nhập số điện thoại → ra hết khóa đã học. (Đã chạy ở trên.)'],['Trợ lý chat AI','Dán tin nhắn khách, AI hỏi thêm rồi gợi ý 3 hướng trả lời.']]},
+ {id:'san-pham',n:2,name:'Sản phẩm',ic:'box',c:'linear-gradient(90deg,#4b2bd1,#6a3cf0)',cc:'#6a3cf0'},
  {id:'marketing',n:3,name:'Marketing',ic:'mega',c:'linear-gradient(90deg,#9b2bc9,#c13ad8)',cc:'#c13ad8',subs:[['Chiến dịch đang chạy','Phễu, truyền thông lớp học, xây kênh, làm video.'],['Theo kênh','Bấm vào từng kênh (Facebook, TikTok, YouTube, Zalo) thấy rõ việc cần làm.'],['Sản phẩm "xây kênh"','Kênh không lộ mặt, đội làm video, khách chỉ cần đăng.']]},
- {id:'quy-trinh',n:4,name:'Quy Trình Vận Hành',ic:'flow',c:'linear-gradient(90deg,#c2412d,#e0603a)',cc:'#e0603a',subs:[['Sự kiện Zoom','Từng bước trước, trong, sau buổi Zoom.'],['Sự kiện offline','Sài Gòn, Hà Nội: hậu cần, MC, giảng viên.'],['Tuyển nhân sự','Marketing, chăm sóc khách hàng.'],['Chăm sóc học viên Diamond','Họ cần gì, mình làm gì, từng bước.']]},
- {id:'doanh-thu',n:5,name:'Nguồn Doanh Thu',ic:'coins',c:'linear-gradient(90deg,#b98612,#d9a521)',cc:'#d9a521',subs:[['Theo khóa học','Doanh thu đến từ khóa nào (F1–F5, Diamond, Trainer).'],['Theo chiến dịch','Mỗi chiến dịch bán gì, thu bao nhiêu.']]},
- {id:'nhan-su',n:6,name:'Nhân Sự',ic:'team',c:'linear-gradient(90deg,#17914f,#22b062)',cc:'#22b062'},
- {id:'ke-hoach',n:7,name:'Kế Hoạch Triển Khai',ic:'cal',c:'linear-gradient(90deg,#11966f,#18b386)',cc:'#18b386',subs:[['12 tháng','Bấm vào tháng: sự kiện, việc cần làm, mục tiêu doanh thu, chi phí, giảng viên, MC.'],['Chiếu khi họp nhân sự','Một màn hình tổng cho cả đội.']]},
- {id:'doi-tac',n:8,name:'Đối Tác',ic:'hand',c:'linear-gradient(90deg,#1d4fc4,#2b66de)',cc:'#2b66de',subs:[['Nguồn lực sẵn có','Hợp tác với nguồn lực ngoài xã hội (bổ sung dần).'],['Giảng viên trong hệ sinh thái','SKT đồng hành cùng giảng viên.']]},
- {id:'chi-phi',n:9,name:'Chi Phí Cứng',ic:'calc',c:'linear-gradient(90deg,#3730a3,#4f46e5)',cc:'#4f46e5',subs:[['Chi phí cứng theo tháng','Công cụ, nhân sự, mặt bằng…'],['Chi phí phát sinh','Theo sự kiện, chiến dịch.']]}
+ {id:'quy-trinh',n:4,name:'Quy trình vận hành',ic:'flow',c:'linear-gradient(90deg,#c2412d,#e0603a)',cc:'#e0603a',subs:[['Sự kiện Zoom','Từng bước trước, trong, sau buổi Zoom.'],['Sự kiện offline','Sài Gòn, Hà Nội: hậu cần, MC, giảng viên.'],['Tuyển nhân sự','Marketing, chăm sóc khách hàng.'],['Chăm sóc học viên Diamond','Họ cần gì, mình làm gì, từng bước.']]},
+ {id:'doanh-thu',n:5,name:'Nguồn doanh thu',ic:'coins',c:'linear-gradient(90deg,#b98612,#d9a521)',cc:'#d9a521',subs:[['Theo khóa học','Doanh thu đến từ khóa nào (F1–F5, Diamond, Trainer).'],['Theo chiến dịch','Mỗi chiến dịch bán gì, thu bao nhiêu.']]},
+ {id:'nhan-su',n:6,name:'Nhân sự',ic:'team',c:'linear-gradient(90deg,#17914f,#22b062)',cc:'#22b062'},
+ {id:'ke-hoach',n:7,name:'Kế hoạch triển khai',ic:'cal',c:'linear-gradient(90deg,#11966f,#18b386)',cc:'#18b386',subs:[['12 tháng','Bấm vào tháng: sự kiện, việc cần làm, mục tiêu doanh thu, chi phí, giảng viên, MC.'],['Chiếu khi họp nhân sự','Một màn hình tổng cho cả đội.']]},
+ {id:'doi-tac',n:8,name:'Đối tác',ic:'hand',c:'linear-gradient(90deg,#1d4fc4,#2b66de)',cc:'#2b66de',subs:[['Nguồn lực sẵn có','Hợp tác với nguồn lực ngoài xã hội (bổ sung dần).'],['Giảng viên trong hệ sinh thái','SKT đồng hành cùng giảng viên.']]},
+ {id:'chi-phi',n:9,name:'Chi phí cứng',ic:'calc',c:'linear-gradient(90deg,#3730a3,#4f46e5)',cc:'#4f46e5',subs:[['Chi phí cứng theo tháng','Công cụ, nhân sự, mặt bằng…'],['Chi phí phát sinh','Theo sự kiện, chiến dịch.']]}
 ];
 const ECO=[['CMA F1','Công nghệ','Thành thạo AI, Agent','#2f8bff'],['CMA F2','Sale Marketing','','#8b5cf6'],['CMA F3','Tài chính','','#e3a826'],['CMA F4','Vận hành','BMC','#22c55e'],['CMA F5','Đóng gói di sản','CMA Trainer · Diamond','#d946ef']];
 const STATUS=[['Mới đăng ký','#60a5fa'],['Đã liên hệ','#a78bfa'],['Đã vào nhóm Zalo','#22d3ee'],['Đang học','#34d399'],['Cần chăm sóc gấp','#fb923c'],['Tạm dừng','#94a3b8'],['Hoàn thành','#f5c451']];
@@ -714,7 +715,7 @@ function applyPerms(root){root=root||document;
 }
 function renderNav(route){
  $('#nav').innerHTML=`<a class="home ${route==='tong-quan'?'on':''}" href="#tong-quan" data-tip="Tổng quan">${svgI('home')}<span class="lbl">Tổng quan</span></a>`+
-  MODS.filter(m=>canSee(m.id)).map(m=>`<a href="#${m.id}" style="--c:${m.c}" class="${route===m.id?'on':''}" data-tip="${m.n}. ${m.name}">${svgI(m.ic)}<span class="lbl">${m.n}. ${m.name}</span></a>`).join('')+
+  MODS.filter(m=>canSee(m.id)).map(m=>`<a href="#${m.id}" style="--c:${m.c}" class="${route===m.id?'on':''}" data-tip="${m.name}">${svgI(m.ic)}<span class="lbl">${m.name}</span></a>`).join('')+
   (canSee('form')?`<a class="home ${route==='form'?'on':''}" href="#form" data-tip="Form thu thập" style="border-color:#a43be6;color:#f0d9ff">${svgI('form')}<span class="lbl">Form thu thập</span></a>`:'')+
   (can('txn_confirm')&&canSee('ke-toan')?`<a class="home ${route==='ke-toan'?'on':''}" href="#ke-toan" data-tip="Kế toán · Đối soát" style="border-color:#16a34a;color:#d9ffe9">${svgI('calc')}<span class="lbl">Kế toán · Đối soát</span></a>`:'');
  $('#bnav').innerHTML=[['tong-quan','home','Tổng quan'],['san-pham','box','Sản phẩm'],['khach-hang','users','Khách hàng'],['form','form','Form']].filter(([h])=>canSee(h)).map(([h,ic,t])=>`<a href="#${h}" class="${route===h?'on':''}">${svgI(ic)}<span>${t}</span></a>`).join('');
@@ -901,7 +902,7 @@ function vProducts(){
  const base=S.list.filter(x=>x.khoa===f.khoa&&(f.nam==='all'||String(x.nam||'2026')===f.nam));
  const rows=filtered();
  return `<div class="band">
- <h2>Ô 2 · Sản phẩm</h2><p class="mut" style="margin:0">Hệ sinh thái CMA F1 → F5. Chọn nhóm sản phẩm → khóa → năm → nhóm lớp để ra danh sách học viên.</p>
+ <h2>Sản phẩm</h2><p class="mut" style="margin:0">Hệ sinh thái CMA F1 → F5. Chọn nhóm sản phẩm → khóa → năm → nhóm lớp để ra danh sách học viên.</p>
  <div class="fams" role="group" aria-label="Nhóm sản phẩm">${ECO.map(([a,b,cc,col],i)=>{const k='F'+(i+1),n=k==='F5'?S.list.filter(x=>x.khoa==='Diamond'||x.khoa==='Trainer').length:0;return `<button class="fam ${f.fam===k?'on':''}" data-fam="${k}" style="--c:${col}"><b>${a}</b><span>${b}</span><small>${k==='F5'?'2 khóa · '+n+' học viên':'Chưa có khóa'}</small></button>`}).join('')}</div>
  ${f.fam!=='F5'?(()=>{const e=ECO[+f.fam.slice(1)-1];return `<div class="panel empty" style="margin-top:16px;text-align:left"><h3 style="color:${e[3]}">${e[0]} · ${e[1]}${e[2]?' <small class="mut">('+e[2]+')</small>':''}</h3><p style="margin:0">Nhóm sản phẩm này chưa có khóa học nào trong CRM. Khi mở khóa mới thuộc ${e[0]}, anh/chị bổ sung để em thêm vào đây cùng form thu thập riêng.</p></div></div>`})():`
  <h3 style="margin:18px 0 0">CMA F5 · Đóng gói di sản</h3>
@@ -967,7 +968,7 @@ function vCustomers(){
  const recs=list.flatMap(x=>x.rs);
  const multi=list.filter(x=>x.rs.length>1).length;
  const classChips=rs=>`<div class="hvrow">${rs.map(r=>`<button class="chip chipbtn ${isDia(r)?'dia':''}" data-open="${esc(r.id)}" title="Mở hồ sơ lớp này"><i style="background:${stColor(r.trangThai)}"></i>${esc(courseTxt(r))} · ${esc(r.nam||'')}${hasPay(r)?' · '+esc(payName(payKey(r)).toLowerCase())+(congNo(r)?' · công nợ '+TR(congNo(r)):''):''}</button>`).join('')}</div>`;
- return `<div class="band"><h2>Ô 1 · Khách hàng</h2><p class="mut" style="margin:0 0 12px">Toàn bộ khách hàng trong CRM. Mỗi người một thẻ, hiện đủ các lớp đã và đang học. Bấm vào lớp để mở hồ sơ của lớp đó.</p>
+ return `<div class="band"><h2>Khách hàng</h2><p class="mut" style="margin:0 0 12px">Toàn bộ khách hàng trong CRM. Mỗi người một thẻ, hiện đủ các lớp đã và đang học. Bấm vào lớp để mở hồ sơ của lớp đó.</p>
  ${demoBar()}
  <div class="kpis"><div><b>${list.length}</b><span>Khách hàng</span></div><div><b>${recs.length}</b><span>Lượt đăng ký lớp</span></div><div><b>${multi}</b><span>Học từ 2 lớp trở lên</span></div><div><b>${list.filter(x=>x.rs.some(r=>r.trangThai==='Cần chăm sóc gấp')).length}</b><span>Cần chăm sóc gấp</span></div>${recs.some(hasPay)?`<div><b>${TR(recs.reduce((a,r)=>a+n0(r.daDong),0))}</b><span>Đã thu</span></div><div><b style="color:var(--warn)">${TR(recs.reduce((a,r)=>a+congNo(r),0))}</b><span>Công nợ cần thu</span></div>`:''}</div>
  <div class="fbar"><div class="bar">
@@ -1342,7 +1343,7 @@ function personaPanel(){
  ${kpi([[avg?avg+' tuổi':'—','Tuổi trung bình'],[ages.length?Math.round(over40/ages.length*100)+'%':'—','Từ 40 tuổi trở lên'],[L.filter(x=>+x.aiLevel<=2).length,'Mới làm quen AI (cấp 1–2)','#fb923c'],[Object.keys(city).length,'Tỉnh/thành']])}
  <div class="grid2"><div class="panel"><h3>Mức độ dùng AI</h3>${hbars(ai,'#6366f1',v=>v+' người')}</div><div class="panel"><h3>Vai trò công việc</h3>${hbars(Object.entries(role).sort((a,b)=>b[1]-a[1]).slice(0,6).map(([k,v])=>[k,v,'#3b82f6']),'#3b82f6',v=>v+' người')}</div></div>`;
 }
-function vModule(m){const d=MOD_DEMO[m.id],rl=m.id==='doanh-thu'&&hasReal();return `<div class="band"><h2>Ô ${m.n} · ${m.name}</h2>${m.id==='marketing'?campSection():''}${d?(rl?'':sampleNote)+d():''}<details class="morebox"><summary>Các nhánh của ô này (theo buổi họp 21/11)</summary>${subsHTML(m)}</details></div>`}
+function vModule(m){const d=MOD_DEMO[m.id],rl=m.id==='doanh-thu'&&hasReal();return `<div class="band"><h2>${m.name}</h2>${m.id==='marketing'?campSection():''}${d?(rl?'':sampleNote)+d():''}<details class="morebox"><summary>Các nhánh của ô này (theo buổi họp 21/11)</summary>${subsHTML(m)}</details></div>`}
 
 const PCOL=['#f97316','#22c55e','#38bdf8','#e879f9','#facc15','#fb7185','#2dd4bf','#a78bfa','#60a5fa','#f472b6'];
 const pColor=n=>{const u=(S.users||[]).find(x=>x.hoTen===n);if(u&&!u.__)return PCOL[(S.staff.indexOf(n)+PCOL.length)%PCOL.length];return PCOL[(Math.max(0,S.staff.indexOf(n)))%PCOL.length]};
@@ -1411,11 +1412,11 @@ function gptHTML(){
  if(!S.me||S.me.role!=='quantri')return '';
  if(!S.gk){S.gk={l:null};api('gpt_list').then(j=>{S.gk.l=j.keys;if(location.hash.includes('nhan-su'))render()}).catch(e=>{S.gk.err=e.message;render()})}
  const G=S.gk,U=(S.users||[]).filter(u=>u.active);
- return `<section class="acc" id="gptBox" style="--rc:#10a37f"><div class="cshead"><div><h3 style="margin:0">🤖 Kết nối ChatGPT (chỉ đọc)</h3><p class="mut sm" style="margin:4px 0 0">Tạo mã kết nối để ChatGPT đọc dữ liệu CRM và báo cáo khi anh/chị hỏi. Mỗi mã gắn với 1 tài khoản nên ChatGPT chỉ thấy đúng phần tài khoản đó được thấy. ChatGPT không sửa, thêm hay xóa được gì. Không gửi CCCD, địa chỉ, ảnh.</p></div></div>
+ return `<details class="acc gptd" id="gptBox" style="--rc:#10a37f" ${G.open||G.newKey?'open':''}><summary class="cshead" style="cursor:pointer;list-style:none"><div><h3 style="margin:0">🔒 Kết nối ChatGPT <span class="pill" style="background:#10a37f22;color:#6ee7b7;font-size:12px;vertical-align:middle">chỉ Toàn quyền thấy</span></h3><p class="mut sm" style="margin:4px 0 0">Bấm để mở. Phòng ban khác không thấy mục này; tạo mã phải nhập lại mật khẩu.</p></div><span class="mut">▾</span></summary><div class="cshead"><div><p class="mut sm" style="margin:4px 0 0">Tạo mã kết nối để ChatGPT đọc dữ liệu CRM và báo cáo khi anh/chị hỏi. Mỗi mã gắn với 1 tài khoản nên ChatGPT chỉ thấy đúng phần tài khoản đó được thấy. ChatGPT không sửa, thêm hay xóa được gì. Không gửi CCCD, địa chỉ, ảnh.</p></div></div>
  ${G.newKey?`<div class="panel" style="border-color:#10a37f"><h3>Mã mới – chỉ hiện 1 lần, sao chép ngay</h3><div class="bar"><input class="inp" readonly value="${esc(G.newKey)}" style="flex:1;font-family:monospace" onfocus="this.select()"><button class="btn" data-gpcopy="key">Sao chép mã</button></div>
   <p class="mut sm">Bước tiếp theo (làm 1 lần, khoảng 5 phút) – xem "Hướng dẫn tạo GPT" bên dưới. Phần Hướng dẫn (Instructions) đã điền sẵn mã này.</p><div class="bar"><button class="btn" data-gpcopy="instr">Sao chép Hướng dẫn (Instructions)</button><button class="btn" data-gpcopy="schema">Sao chép Schema (Actions)</button><button class="btn ghost" data-gpdone="1">Đã lưu mã, ẩn đi</button></div></div>`:''}
- <form id="gpForm" class="bar" style="margin:10px 0"><label class="mut sm" for="gpU">Tài khoản ChatGPT được đọc như:</label><select class="inp" id="gpU" style="width:auto"><option value="crmtkt">Quản trị (crmtkt) – Toàn quyền</option>${U.map(u=>`<option value="${esc(u.id)}">${esc(u.hoTen)} – ${ROLE_N[u.phong]||u.phong}</option>`).join('')}</select><input class="inp" id="gpTen" placeholder="Ghi nhớ, VD: ChatGPT của sếp" style="flex:1;min-width:180px"><button class="btn">+ Tạo mã kết nối</button></form>
- ${G.err?`<p class="mut">${esc(G.err)}</p>`:!G.l?'<p class="mut sm">Đang tải…</p>':G.l.length?`<div class="tblwrap"><table class="wide"><thead><tr><th>Tên</th><th>Đọc như tài khoản</th><th>Mã</th><th>Tạo lúc</th><th>Dùng gần nhất</th><th>Trạng thái</th><th></th></tr></thead><tbody>${G.l.slice().reverse().map(k=>`<tr><td><b>${esc(k.ten)}</b></td><td>${esc(k.nguoi)}<br><small class="mut">${esc(k.quyen)}</small></td><td><code>skt_…${esc(k.duoi||'')}</code></td><td>${esc(gpT(k.createdAt))}</td><td>${k.lastUsed?esc(gpT(k.lastUsed)):'<span class="mut">chưa dùng</span>'}</td><td>${k.active?'<span class="pill ok">Đang dùng</span>':'<span class="pill off">Đã thu hồi</span>'}</td><td>${k.active?`<button class="btn ghost sm" data-gprevoke="${esc(k.id)}" style="color:var(--bad)">Thu hồi</button>`:''}</td></tr>`).join('')}</tbody></table></div>`:'<p class="mut sm">Chưa có mã kết nối nào.</p>'}
+ <form id="gpForm" class="bar" style="margin:10px 0"><label class="mut sm" for="gpU">Tài khoản ChatGPT được đọc như:</label><select class="inp" id="gpU" style="width:auto"><option value="crmtkt">Quản trị (crmtkt) – Toàn quyền</option>${U.map(u=>`<option value="${esc(u.id)}">${esc(u.hoTen)} – ${ROLE_N[u.phong]||u.phong}</option>`).join('')}</select><input class="inp" id="gpTen" placeholder="Ghi nhớ, VD: ChatGPT của sếp" style="flex:1;min-width:180px"><input class="inp" id="gpPw" type="password" autocomplete="current-password" placeholder="Nhập lại mật khẩu của anh/chị" required style="width:220px"><button class="btn">+ Tạo mã kết nối</button></form>
+ ${G.err?`<p class="mut">${esc(G.err)}</p>`:!G.l?'<p class="mut sm">Đang tải…</p>':G.l.length?`<div class="tblwrap"><table class="wide"><thead><tr><th>Tên</th><th>Đọc như tài khoản</th><th>Người tạo</th><th>Mã</th><th>Tạo lúc</th><th>Dùng gần nhất</th><th>Trạng thái</th><th></th></tr></thead><tbody>${G.l.slice().reverse().map(k=>`<tr><td><b>${esc(k.ten)}</b></td><td>${esc(k.nguoi)}<br><small class="mut">${esc(k.quyen)}</small></td><td>${esc(k.by||'')}</td><td><code>skt_…${esc(k.duoi||'')}</code></td><td>${esc(gpT(k.createdAt))}</td><td>${k.lastUsed?esc(gpT(k.lastUsed)):'<span class="mut">chưa dùng</span>'}</td><td>${k.active?'<span class="pill ok">Đang dùng</span>':'<span class="pill off">Đã thu hồi</span>'}</td><td>${k.active?`<button class="btn ghost sm" data-gprevoke="${esc(k.id)}" style="color:var(--bad)">Thu hồi</button>`:''}</td></tr>`).join('')}</tbody></table></div>`:'<p class="mut sm">Chưa có mã kết nối nào.</p>'}
  <details class="morebox"><summary>Hướng dẫn tạo GPT trong ChatGPT (làm 1 lần)</summary><ol class="sm" style="line-height:1.7">
   <li>Bấm "+ Tạo mã kết nối" ở trên, chọn tài khoản (sếp chọn Quản trị). Sao chép mã.</li>
   <li>Mở chatgpt.com → <b>GPTs</b> → <b>Create</b> (Tạo) → tab <b>Configure</b> (Cấu hình). Cần gói ChatGPT Plus trở lên.</li>
@@ -1424,10 +1425,10 @@ function gptHTML(){
   <li>Privacy policy: điền https://crmtkt.com. Bấm <b>Create</b> → chia sẻ: chọn <b>Only me</b> (chỉ mình tôi) – không chia sẻ link GPT này cho người khác vì trong đó có mã.</li>
   <li>Hỏi thử: "Báo cáo tình hình CRM tuần này", "Ai đang còn công nợ trên 100 triệu?", "Tuần này Kim Anh chăm sóc những ai?". Lần đầu ChatGPT hỏi "Allow" → chọn Always allow.</li>
  </ol><div class="bar"><button class="btn ghost sm" data-gpcopy="instr0">Sao chép Hướng dẫn (chưa có mã)</button><button class="btn ghost sm" data-gpcopy="schema">Sao chép Schema</button></div>
- <p class="mut sm">Mất máy / nghỉ việc / lộ mã → bấm "Thu hồi", ChatGPT mất quyền ngay. Dữ liệu ChatGPT đọc sẽ đi qua máy chủ OpenAI; nên dùng gói ChatGPT Business/Team (mặc định không dùng dữ liệu để huấn luyện) hoặc tắt "Improve the model for everyone" trong Settings → Data controls.</p></details></section>`;
+ <p class="mut sm">Mất máy / nghỉ việc / lộ mã → bấm "Thu hồi", ChatGPT mất quyền ngay. Dữ liệu ChatGPT đọc sẽ đi qua máy chủ OpenAI; nên dùng gói ChatGPT Business/Team (mặc định không dùng dữ liệu để huấn luyện) hoặc tắt "Improve the model for everyone" trong Settings → Data controls.</p></details></details>`;
 }
 function vStaff(){
- return `<div class="band"><h2>Ô 6 · Nhân sự</h2>${accountsHTML()}${gptHTML()}<p class="mut" style="margin:0 0 14px">Danh sách người phụ trách chăm sóc học viên. Ai có trong danh sách này sẽ hiện để tích chọn trong hồ sơ.</p>
+ return `<div class="band"><h2>Nhân sự</h2>${accountsHTML()}${gptHTML()}<p class="mut" style="margin:0 0 14px">Danh sách người phụ trách chăm sóc học viên. Ai có trong danh sách này sẽ hiện để tích chọn trong hồ sơ.</p>
  <div class="panel" style="max-width:560px">${S.staff.map((s,i)=>{const n=S.list.filter(x=>arr(x.phuTrach).includes(s)).length;return `<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid #1c2a5c"><b style="flex:1">${esc(s)}</b><span class="mut" style="font-size:14px">${n} học viên</span>${S.canWrite?`<button class="btn ghost sm" data-delstaff="${i}">Bỏ</button>`:''}</div>`}).join('')}
  ${S.canWrite?`<form id="staffForm" class="bar" style="margin-top:12px"><input class="inp" id="newStaff" placeholder="Tên nhân sự mới" style="flex:1"><button class="btn">Thêm</button></form>`:''}</div>
  <h3 style="margin-top:22px">Báo cáo theo nhân sự <span class="mut sm" style="font-weight:400">· bấm vào người để xem báo cáo</span></h3>${hasReal()?'':sampleNote}
@@ -1578,7 +1579,7 @@ function route(){
  let m=MODS.find(x=>x.id===r);if(!m&&!TITLES[r])r='tong-quan';
  if(!canSee(r)){toast(`Phòng ban của anh/chị không dùng mục ${VIEW_NAME(r)}.`,true);r='tong-quan';m=null;try{history.replaceState(null,'','#tong-quan')}catch(_){}}
  document.body.classList.remove('solo');
- renderNav(r);$('#title').textContent=m?`${m.n}. ${m.name}`:TITLES[r];
+ renderNav(r);$('#title').textContent=m?m.name:TITLES[r];
  S.route=r;render(true);
 }
 function render(full){
@@ -1871,7 +1872,7 @@ function campSection(){
  return `<section class="campsec"><div class="cshead"><div><h2 style="margin:0">Chiến dịch bán hàng</h2><p class="mut" style="margin:4px 0 0">Mỗi chiến dịch khai báo: bán khóa nào, học phí, cọc, các đợt đóng, tài khoản nhận và <b>cú pháp chuyển khoản</b>. Kế toán duyệt xong thì bảng giá khóa lại; sao kê tải lên ở mục <a href="#ke-toan">Kế toán</a> sẽ tự nhận ra học viên, khóa và đợt.</p></div><button class="btn" data-campedit="">+ Tạo chiến dịch</button></div>
  ${missing.map(n=>`<div class="hintbar">Chương trình <b>${esc(n)}</b> đã có học viên nhưng chưa thiết lập bảng giá và cú pháp chuyển khoản. <button class="btn sm" data-campnew="${esc(n)}">Thiết lập ngay</button></div>`).join('')}
  ${S.camps.map(campCard).join('')||(missing.length?'':'<p class="mut">Chưa có chiến dịch nào.</p>')}
- <p class="mut sm" style="margin-top:6px">Phân vai: Marketing / quản trị viên tạo chiến dịch → Kế toán duyệt bảng giá + tài khoản (khóa lại) → Nhân sự bán theo bảng giá, gửi mã QR cho học viên → Kế toán tải sao kê, đối soát → Ô Nguồn doanh thu tự cập nhật.</p></section>`;
+ <p class="mut sm" style="margin-top:6px">Phân vai: Marketing / quản trị viên tạo chiến dịch → Kế toán duyệt bảng giá + tài khoản (khóa lại) → Nhân sự bán theo bảng giá, gửi mã QR cho học viên → Kế toán tải sao kê, đối soát → mục Nguồn doanh thu tự cập nhật.</p></section>`;
 }
 const dotsStr=d=>arr(d).map(x=>`${VND(n0(x.soTien)).replace(' đ','')}${x.han?' ('+fmtD(x.han)+')':''}`).join('; ');
 function parseDots(s){const out=[];for(const part of String(s||'').split(/[;\n]+/)){const t=part.trim();if(!t)continue;const dm=/(\d{1,2})\/(\d{1,2})\/(\d{4})/.exec(t);const mtxt=t.replace(/\(.*?\)/g,'').replace(/(\d{1,2})\/(\d{1,2})\/(\d{4})/,'').replace(/hạn|han/ig,'').trim();const v=parseMoney(mtxt);if(isNaN(v)||!v)throw new Error(`Không hiểu đợt "${t}". Ví dụ đúng: 10tr; 110tr (15/12/2026)`);out.push({soTien:v,han:dm?`${dm[3]}-${dm[2].padStart(2,'0')}-${dm[1].padStart(2,'0')}`:''})}return out}
@@ -2240,7 +2241,7 @@ async function ktClick(t){
  if(d.sprm){const rows=document.querySelectorAll('.sprow');if(rows.length>1)t.closest('tr').remove();else toast('Cần ít nhất một khóa',true);return true}
  if(t.id==='spAdd'){$('#spBody').insertAdjacentHTML('beforeend',spRow({khoa:'Diamond'}));return true}
  if(d.gpcopy){const v=d.gpcopy==='key'?S.gk.newKey:d.gpcopy==='instr'?gptInstr(S.gk.newKey):d.gpcopy==='instr0'?gptInstr(''):gptSchema();try{await navigator.clipboard.writeText(v);toast('Đã sao chép')}catch(_){toast('Trình duyệt chặn sao chép, thử lại giúp em',true)}return true}
- if(d.gpdone){S.gk.newKey='';render();return true}
+ if(d.gpdone){S.gk.open=1;S.gk.newKey='';render();return true}
  if(d.gprevoke){if(!confirm('Thu hồi mã này? ChatGPT dùng mã này sẽ mất quyền đọc ngay.'))return true;try{await api('gpt_revoke',{id:d.gprevoke});const j=await api('gpt_list');S.gk.l=j.keys;render();toast('Đã thu hồi mã')}catch(err){toast(err.message,true)}return true}
  if(d.copyck){try{await navigator.clipboard.writeText(d.copyck);toast('Đã sao chép nội dung chuyển khoản')}catch(_){toast('Bôi đen để sao chép giúp em',true)}return true}
  if(d.qrsave){const svg=$('#qrBox svg');if(!svg)return true;const x=S.real.find(r=>r.id===d.qrsave)||{};const img=new Image(),u=URL.createObjectURL(new Blob([svg.outerHTML.replace('<svg','<svg xmlns="http://www.w3.org/2000/svg"')],{type:'image/svg+xml'}));img.onload=()=>{const c=document.createElement('canvas');c.width=c.height=720;const g=c.getContext('2d');g.imageSmoothingEnabled=false;g.drawImage(img,0,0,720,720);URL.revokeObjectURL(u);const a=document.createElement('a');a.href=c.toDataURL('image/png');a.download=`QR-${code(x.hoTen||'hoc-vien',30)}.png`;a.click()};img.src=u;return true}
@@ -2296,6 +2297,7 @@ function ktInput(e){
 }
 
 /* ---------- Sự kiện ---------- */
+document.addEventListener('toggle',e=>{if(e.target&&e.target.id==='gptBox'&&S.gk)S.gk.open=e.target.open},true);
 document.addEventListener('click',async e=>{
  const t=e.target.closest('button,[data-open],a.f');if(!t)return;
  if(t.dataset.open){openDrawer(t.dataset.open);return}
@@ -2346,7 +2348,7 @@ document.addEventListener('click',async e=>{
 document.addEventListener('submit',async e=>{
  e.preventDefault();const f=e.target;
  if(f.id==='loginForm'){const b=f.querySelector('button');b.disabled=true;try{const j=await api('login',{u:$('#lu').value.trim(),p:$('#lp').value});setTok(j.tok);setMe(j.me);await boot()}catch(err){$('#lerr').textContent=err.message;b.disabled=false}return}
- if(f.id==='gpForm'){const b=f.querySelector('button.btn');b.disabled=true;try{const j=await api('gpt_create',{uid:$('#gpU').value,ten:$('#gpTen').value});const l=await api('gpt_list');S.gk.l=l.keys;S.gk.newKey=j.key;render();setTimeout(()=>$('#gptBox')&&$('#gptBox').scrollIntoView({block:'start'}),50)}catch(err){toast(err.message,true);b.disabled=false}return}
+ if(f.id==='gpForm'){const b=f.querySelector('button.btn');b.disabled=true;try{const u=$('#gpU'),un=u.options[u.selectedIndex].text;if(!confirm('Tạo mã cho ChatGPT đọc dữ liệu CRM với quyền: '+un+'?'))throw new Error('Đã hủy, chưa tạo mã.');const j=await api('gpt_create',{uid:u.value,ten:$('#gpTen').value,pw:$('#gpPw').value});const l=await api('gpt_list');S.gk.l=l.keys;S.gk.newKey=j.key;render();setTimeout(()=>$('#gptBox')&&$('#gptBox').scrollIntoView({block:'start'}),50)}catch(err){toast(err.message,true);b.disabled=false}return}
  if(f.id==='infoEdit'){const b=f.querySelector('button.btn');b.disabled=true;try{await infoSave(f)}catch(err){toast(err.message,true);b.disabled=false}return}
  if(f.id==='hdEdit'){const b=f.querySelector('button.btn');b.disabled=true;try{await hdSave([f.dataset.id],{tt:$('#hTT').value,so:$('#hSo').value.trim(),ngay:$('#hNg').value,ten:$('#hTen').value.trim(),mst:$('#hMst').value.trim(),dc:$('#hDc').value.trim(),email:$('#hEm').value.trim(),ghiChu:$('#hGc').value.trim()});closeDrawer();render();toast('Đã lưu hóa đơn')}catch(err){toast(err.message,true);b.disabled=false}return}
  if(f.id==='userEdit'){const b=f.querySelector('button.btn:not(.ghost)');b.disabled=true;try{const ph=f.querySelector('input[name=uPh]:checked');const j=await api('user_save',{user:{id:f.dataset.id,hoTen:$('#uTen').value.trim(),sdt:$('#uSdt').value.trim(),email:$('#uMail').value.trim(),phong:ph?ph.value:'',pw:$('#uPw').value,active:$('#uAct').checked}});S.users=j.users;S.staff=j.staff;closeDrawer();render();toast('Đã lưu tài khoản')}catch(err){toast(err.message,true);b.disabled=false}return}

@@ -179,6 +179,7 @@ function doGet(e) {
 }
 
 function doPost(e) {
+  if ((e.parameter || {}).zalo) { let zb = {}; try { zb = JSON.parse(e.postData.contents); } catch (err) { return fail_('Dữ liệu không hợp lệ.'); } try { return zlPush_(zb); } catch (err) { console.error(err); return fail_('Lỗi máy chủ, thử lại sau.', 500); } }
   if ((e.parameter || {}).mcp) { try { return mcp_(e); } catch (err) { console.error(err); return mcpOut_({jsonrpc: '2.0', id: null, error: {code: -32603, message: 'Lỗi máy chủ CRM'}}); } }
   let b = {};
   try { b = JSON.parse(e.postData.contents); } catch (err) { return fail_('Dữ liệu không hợp lệ.'); }
@@ -203,7 +204,7 @@ function route_(b) {
       case 'bootstrap': {
         const recs = rows_('records'), counts = {};
         recs.forEach(r => counts[r.formId] = (counts[r.formId] || 0) + 1);
-        return out_({ok: true, forms: rows_('forms').reverse().map(f => formOut_(f, counts[f.id])), records: recs.reverse().map(recOut_), staff: staff_(), camps: camps_(), txns: txns_(), uploads: ['quantri', 'ketoan'].indexOf(ME.role) >= 0 ? uploads_() : [], me: ME, users: ME.role === 'quantri' ? users_() : []});
+        return out_({ok: true, forms: rows_('forms').reverse().map(f => formOut_(f, counts[f.id])), records: recs.reverse().map(recOut_), zaloOk: zAny_(ME), staff: staff_(), camps: camps_(), txns: txns_(), uploads: ['quantri', 'ketoan'].indexOf(ME.role) >= 0 ? uploads_() : [], me: ME, users: ME.role === 'quantri' ? users_() : []});
       }
       case 'photos': {
         const ids = list_(b.ids, 40, 40), map = {};
@@ -277,6 +278,7 @@ function route_(b) {
     if (KT_[a]) return KT_[a](b);
     if (US_[a]) return US_[a](b, ME);
     if (GP_[a]) return GP_[a](b, ME);
+    if (ZL_[a]) return ZL_[a](b, ME);
     return fail_('Không rõ yêu cầu.', 404);
   } finally { lock.releaseLock(); }
 }
@@ -534,6 +536,7 @@ const PERM_ = {
   camp_save: ['quantri', 'marketing'], camp_approve: ['quantri', 'ketoan'], camp_delete: ['quantri', 'marketing'],
   txn_import: ['quantri', 'ketoan'], txn_confirm: ['quantri', 'ketoan'], txn_undo: ['quantri', 'ketoan'], txn_skip: ['quantri', 'ketoan'], txn_delete: ['quantri', 'ketoan'], txn_newrecs: ['quantri', 'ketoan'], txn_invoice: ['quantri', 'ketoan'],
   user_save: ['quantri'], user_delete: ['quantri'], gpt_list: ['quantri'], gpt_create: ['quantri'], gpt_revoke: ['quantri'],
+  zl_dev_list: ['quantri'], zl_dev_create: ['quantri'], zl_dev_revoke: ['quantri'], zl_perm_set: ['quantri'], zl_threads: ['quantri', 'cskh', 'marketing', 'ketoan'], zl_msgs: ['quantri', 'cskh', 'marketing', 'ketoan'],
 };
 function pwHash_(salt, pw) { let h = sha_(salt + ':' + pw); for (let i = 0; i < 1000; i++) h = sha_(h + salt); return h; }
 function loginKey_(s) { s = String(s || '').trim().toLowerCase(); if (s.indexOf('@') > 0) return s; const p = phone_(s); return p || s; }
@@ -593,7 +596,7 @@ const US_ = {
    Mỗi mã kết nối gắn với 1 tài khoản CRM, nên ChatGPT chỉ thấy đúng phần tài khoản đó được thấy.
    Mã lưu dạng băm trong Script Properties; quản trị tạo / thu hồi ở ô Nhân sự. */
 function gkLoad_() { try { return JSON.parse(PropertiesService.getScriptProperties().getProperty('GPTKEYS') || '[]'); } catch (e) { return []; } }
-function gkSave_(l) { PropertiesService.getScriptProperties().setProperty('GPTKEYS', JSON.stringify(l.slice(-50))); }
+function gkSave_(l) { PropertiesService.getScriptProperties().setProperty('GPTKEYS', JSON.stringify(l.slice(-20))); }
 function gkOut_(k) { const u = who_(k.uid); return {id: k.id, ten: k.ten, uid: k.uid, nguoi: u ? u.ten : '(tài khoản không còn)', quyen: u ? ROLES_[u.role] : '', active: !!k.active && !!u, createdAt: k.createdAt, lastUsed: k.lastUsed || '', dem: k.dem || 0, duoi: k.duoi, by: k.by || ''}; }
 const GP_ = {
   gpt_list: () => out_({ok: true, keys: gkLoad_().map(gkOut_)}),
@@ -737,4 +740,85 @@ function mcp_(e) {
   };
   if (Array.isArray(body)) { const r = body.map(one).filter(x => x); return mcpOut_(r.length ? r : null); }
   return mcpOut_(one(body));
+}
+
+/* ---------- Zalo cá nhân: tiện ích Chrome đọc Zalo Web → CRM (chỉ xem) ----------
+   Mỗi nick có 1 "mã kết nối Zalo" (zl_...) do quản trị tạo; tiện ích dùng mã này để gửi tin nhắn về.
+   Xem tin: quản trị thấy tất cả; nhân sự chỉ thấy nick được quản trị cấp quyền. */
+COLS.zacc = ['id', 'ten', 'anh', 'devId', 'chuNick', 'lastSync', 'createdAt'];
+COLS.zthr = ['key', 'nick', 'thread', 'ten', 'anh', 'nhom', 'lastTs', 'lastText', 'updatedAt'];
+COLS.zmsg = ['key', 'nick', 'thread', 'msgId', 'ts', 'me', 'nguoiGui', 'loai', 'noiDung', 'kieu', 'url', 'tep', 'luc'];
+function zdLoad_() { try { return JSON.parse(PropertiesService.getScriptProperties().getProperty('ZALODEV') || '[]'); } catch (e) { return []; } }
+function zdSave_(l) { PropertiesService.getScriptProperties().setProperty('ZALODEV', JSON.stringify(l.slice(-20))); }
+function zPerm_() { const r = rows_('settings').filter(x => x.k === 'zaloPerm')[0]; try { return r ? JSON.parse(r.v) : {}; } catch (e) { return {}; } }
+function zCan_(ME, nick) { if (ME.role === 'quantri') return true; const p = zPerm_()[ME.uid] || []; return p.indexOf('*') >= 0 || p.indexOf(String(nick)) >= 0; }
+function zAny_(ME) { if (ME.role === 'quantri') return true; return (zPerm_()[ME.uid] || []).length > 0; }
+function zDevOut_(d) { return {id: d.id, ten: d.ten, chuNick: d.chuNick, nick: d.nick || '', nickTen: d.nickTen || '', active: !!d.active, createdAt: d.createdAt, lastUsed: d.lastUsed || '', duoi: d.duoi, by: d.by || ''}; }
+const ZL_ = {
+  zl_dev_list: () => out_({ok: true, devs: zdLoad_().map(zDevOut_), perm: zPerm_(), accs: rows_('zacc')}),
+  zl_dev_create: (b, ME) => {
+    const code = 'zl_' + (Utilities.getUuid() + Utilities.getUuid()).replace(/-/g, '').slice(0, 40);
+    const l = zdLoad_(), d = {id: uid_(), h: sha_(code), ten: str_(b.ten, 80) || 'Zalo', chuNick: str_(b.chuNick, 80), active: true, createdAt: now_(), by: ME.ten, duoi: code.slice(-4)};
+    l.push(d); zdSave_(l); return out_({ok: true, code: code, dev: zDevOut_(d)});
+  },
+  zl_dev_revoke: b => { const l = zdLoad_(), d = l.filter(x => x.id === str_(b.id, 32))[0]; if (!d) return fail_('Không thấy mã.'); d.active = false; zdSave_(l); return out_({ok: true}); },
+  zl_perm_set: b => {
+    const P = {}; Object.keys(b.perm || {}).slice(0, 60).forEach(u => { P[str_(u, 40)] = list_(b.perm[u], 20, 40); });
+    const r = rows_('settings').filter(x => x.k === 'zaloPerm')[0] || {k: 'zaloPerm'}; r.v = JSON.stringify(P); put_('settings', r);
+    return out_({ok: true, perm: P});
+  },
+  zl_threads: (b, ME) => {
+    if (!zAny_(ME)) return fail_('Anh/chị chưa được cấp quyền xem Zalo.', 403);
+    const accs = rows_('zacc').filter(a => zCan_(ME, a.id)), ok = {}; accs.forEach(a => ok[a.id] = 1);
+    const th = rows_('zthr').filter(t => ok[t.nick]).sort((x, y) => Number(y.lastTs) - Number(x.lastTs)).slice(0, 600)
+      .map(t => ({key: t.key, nick: t.nick, thread: t.thread, ten: t.ten, anh: t.anh, nhom: t.nhom === '1', lastTs: Number(t.lastTs) || 0, lastText: t.lastText}));
+    return out_({ok: true, accs: accs.map(a => ({id: a.id, ten: a.ten, anh: a.anh, chuNick: a.chuNick, lastSync: a.lastSync})), threads: th});
+  },
+  zl_msgs: (b, ME) => {
+    const nick = str_(b.nick, 40), thread = str_(b.thread, 60); if (!zCan_(ME, nick)) return fail_('Không có quyền xem nick này.', 403);
+    const s = sheet_('zmsg'), n = s.getLastRow(); if (n < 2) return out_({ok: true, msgs: []});
+    const pre = nick + '|' + thread + '|', cols = COLS.zmsg, lo = Math.max(2, n - 40000), out = [];
+    s.getRange(lo, 1, n - lo + 1, cols.length).getValues().forEach(v => { if (String(v[0]).indexOf(pre) !== 0) return; const o = {}; cols.forEach((c, i) => o[c] = String(v[i])); out.push(o); });
+    out.splice(0, Math.max(0, out.length - 400));
+    out.sort((x, y) => Number(x.ts) - Number(y.ts));
+    return out_({ok: true, msgs: out.map(m => ({id: m.msgId, ts: Number(m.ts) || 0, me: m.me === '1', nguoiGui: m.nguoiGui, loai: m.loai, noiDung: m.noiDung, kieu: m.kieu, url: m.url, tep: m.tep}))});
+  },
+};
+function zlPush_(b) {
+  const code = String(b.code || ''); if (!/^zl_[0-9a-f]{40}$/.test(code)) return fail_('Sai mã kết nối Zalo.', 401);
+  const l = zdLoad_(), d = l.filter(x => x.h === sha_(code))[0]; if (!d || !d.active) return fail_('Mã kết nối Zalo không hợp lệ hoặc đã bị thu hồi.', 401);
+  const acc = b.acc || {}, nick = str_(acc.uid, 40); if (!nick) return fail_('Thiếu thông tin nick Zalo.');
+  if (d.nick && d.nick !== nick) return fail_('Mã này đã gắn với nick Zalo khác (' + (d.nickTen || d.nick) + '). Tạo mã mới cho nick này.', 409);
+  const lock = LockService.getScriptLock(); lock.waitLock(25000);
+  try {
+    if (!d.nick) { d.nick = nick; d.nickTen = str_(acc.name, 80); }
+    d.lastUsed = now_(); zdSave_(l);
+    const A = rows_('zacc').filter(a => a.id === nick)[0] || {id: nick, createdAt: now_()};
+    A.ten = str_(acc.name, 80) || A.ten; A.anh = str_(acc.avatar, 500) || A.anh; A.devId = d.id; A.chuNick = d.chuNick; A.lastSync = now_(); put_('zacc', A);
+    // hội thoại
+    const T = {}, tAll = rows_('zthr'); tAll.forEach(t => T[t.key] = t);
+    (Array.isArray(b.threads) ? b.threads : []).slice(0, 300).forEach(t => {
+      const th = str_(t.id, 60); if (!th) return; const k = nick + '|' + th, o = T[k] || {key: k, nick: nick, thread: th};
+      o.ten = str_(t.name, 120) || o.ten; o.anh = str_(t.avatar, 500) || o.anh; o.nhom = t.group ? '1' : (o.nhom || '0');
+      if (t.lastTs && Number(t.lastTs) >= (Number(o.lastTs) || 0)) { o.lastTs = String(Number(t.lastTs)); o.lastText = str_(t.lastText, 200); }
+      o.updatedAt = now_(); o._dirty = 1; T[k] = o;
+    });
+    // tin nhắn (bỏ trùng theo key)
+    const s = sheet_('zmsg'), n = s.getLastRow(), have = {};
+    const msgs = (Array.isArray(b.msgs) ? b.msgs : []).slice(0, 500);
+    if (msgs.length && n > 1) { const lo = Math.max(2, n - 20000); s.getRange(lo, 1, n - lo + 1, 1).getValues().forEach(v => have[v[0]] = 1); }
+    const add = [];
+    msgs.forEach(m => {
+      const th = str_(m.thread, 60), id = str_(m.id, 80); if (!th || !id) return; const k = nick + '|' + th + '|' + id; if (have[k]) return; have[k] = 1;
+      const ts = Number(m.ts) || Date.now();
+      add.push([k, nick, th, id, String(ts), m.me ? '1' : '0', str_(m.fromName, 120), str_(m.type, 20) || 'text', str_(m.text, 5000), str_(typeof m.styles === 'string' ? m.styles : JSON.stringify(m.styles || ''), 2000), str_(m.url, 1000), str_(m.file, 200), now_()]);
+      const tk = nick + '|' + th, o = T[tk] || (T[tk] = {key: tk, nick: nick, thread: th, ten: str_(m.threadName, 120), nhom: '0'});
+      if (ts >= (Number(o.lastTs) || 0)) { o.lastTs = String(ts); o.lastText = (m.me ? 'Bạn: ' : '') + (str_(m.text, 150) || '[' + ({photo: 'Hình ảnh', file: 'Tệp', sticker: 'Sticker', voice: 'Tin nhắn thoại', video: 'Video', link: 'Liên kết'}[str_(m.type, 20)] || 'Tệp') + ']'); o._dirty = 1; o.updatedAt = now_(); }
+    });
+    if (add.length) s.getRange(s.getLastRow() + 1, 1, add.length, COLS.zmsg.length).setNumberFormat('@').setValues(add);
+    if (Object.keys(T).some(k => T[k]._dirty)) { const sh = sheet_('zthr'), cols = COLS.zthr, all = Object.keys(T).map(k => cols.map(c => T[k][c] === undefined ? '' : String(T[k][c])));
+      if (sh.getLastRow() > 1) sh.getRange(2, 1, sh.getLastRow() - 1, cols.length).clearContent();
+      if (all.length) sh.getRange(2, 1, all.length, cols.length).setNumberFormat('@').setValues(all); }
+    return out_({ok: true, them: add.length, nick: nick});
+  } finally { lock.releaseLock(); }
 }

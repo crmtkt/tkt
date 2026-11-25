@@ -167,6 +167,7 @@ function slug_(s) {
 /* ---------- điểm vào ---------- */
 function doGet(e) {
   const a = (e.parameter || {}).a;
+  if ((e.parameter || {}).mcp) return mcpOut_({ok: true, server: 'CRM CMA SKT – MCP (chỉ đọc)', huongDan: 'Dán nguyên link này vào ChatGPT hoặc Claude (Add custom MCP server / connector).'});
   if (e.pathInfo || a === 'gpt') { try { return gpt_(e); } catch (err) { console.error(err); return fail_('Lỗi máy chủ, vui lòng thử lại.', 500); } }
   if (a === 'form') {
     seed_();
@@ -178,6 +179,7 @@ function doGet(e) {
 }
 
 function doPost(e) {
+  if ((e.parameter || {}).mcp) { try { return mcp_(e); } catch (err) { console.error(err); return mcpOut_({jsonrpc: '2.0', id: null, error: {code: -32603, message: 'Lỗi máy chủ CRM'}}); } }
   let b = {};
   try { b = JSON.parse(e.postData.contents); } catch (err) { return fail_('Dữ liệu không hợp lệ.'); }
   try { return route_(b); } catch (err) { console.error(err); return fail_('Lỗi máy chủ, vui lòng thử lại.', 500); }
@@ -685,4 +687,54 @@ function gpt_(e) {
       choXacNhan: t.filter(x => x.trangThai === 'cho').slice(0, 100).map(x => ({ngay: x.ngay, soTien: x.soTien, noiDung: x.noiDung, nguoiCK: x.nguoiCK})), hoaDon: hd}));
   }
   return fail_('Không có mục "' + op + '". Dùng: tongquan, hocvien, chitiet, nhatky, doisoat.', 404);
+}
+
+/* ---------- Máy chủ MCP (chỉ đọc) cho ChatGPT / Claude ----------
+   Link kết nối: {Web App}/exec?mcp=1&key=skt_...  (mã tạo ở mục "Kết nối AI", chỉ quản trị).
+   Dùng lại toàn bộ kiểm tra quyền của gpt_(): mã gắn với 1 tài khoản, đọc đúng phần tài khoản đó được thấy. */
+const MCP_TOOLS_ = [
+  {name: 'tong_quan', op: 'tongquan', title: 'Tổng quan CRM', description: 'Tổng quan CRM CMA | SKT: số học viên theo trạng thái / chương trình / khóa / nhân sự phụ trách, doanh thu (đã thu), công nợ, số lần chăm sóc của từng nhân sự, việc cần chú ý (cần chăm sóc gấp, chưa phân công, quá 14 ngày chưa chăm sóc, quá hạn / sắp đến hạn đóng tiền), kế toán chờ xác nhận. Gọi đầu tiên cho mọi câu hỏi chung hoặc báo cáo.',
+    props: {tuNgay: 'Lọc theo ngày đăng ký, từ ngày YYYY-MM-DD', denNgay: 'Đến ngày YYYY-MM-DD'}},
+  {name: 'danh_sach_hoc_vien', op: 'hocvien', title: 'Danh sách học viên', description: 'Danh sách học viên (mỗi lượt đăng ký 1 dòng) có lọc: tên/SĐT/email, chương trình, khóa, nhân sự phụ trách, trạng thái, chỉ người còn công nợ.',
+    props: {q: 'Tìm theo tên, SĐT hoặc email', chuongTrinh: 'Tên chương trình / chiến dịch', khoa: 'Khóa hoặc nhóm: Diamond, Trainer, viết sách…', phuTrach: 'Tên nhân sự phụ trách', trangThai: 'Trạng thái chăm sóc', conNo: '"true" để chỉ lấy học viên còn công nợ', limit: 'Số dòng tối đa (mặc định 50, tối đa 200)', tuNgay: 'Từ ngày đăng ký YYYY-MM-DD', denNgay: 'Đến ngày YYYY-MM-DD'}},
+  {name: 'chi_tiet_hoc_vien', op: 'chitiet', title: 'Hồ sơ học viên', description: 'Hồ sơ đầy đủ 1 học viên: mọi khóa đăng ký, lịch sử đóng tiền, nhật ký chăm sóc, hành trình, câu trả lời form. Cần id hoặc sdt.',
+    props: {id: 'Mã hồ sơ (lấy từ danh sách)', sdt: 'Số điện thoại'}},
+  {name: 'nhat_ky_cham_soc', op: 'nhatky', title: 'Nhật ký chăm sóc', description: 'Nhân sự đã làm gì với học viên nào trong khoảng ngày (mặc định 7 ngày gần nhất). Dùng để báo cáo tình hình công việc của nhân sự.',
+    props: {tuNgay: 'Từ ngày YYYY-MM-DD', denNgay: 'Đến ngày YYYY-MM-DD', nguoi: 'Lọc theo tên nhân sự'}},
+  {name: 'doi_soat_ke_toan', op: 'doisoat', title: 'Đối soát kế toán', description: 'Tiền về theo ngày, khoản chờ xác nhận, tình trạng hóa đơn. Chỉ tài khoản Toàn quyền / Kế toán xem được.',
+    props: {tuNgay: 'Từ ngày YYYY-MM-DD', denNgay: 'Đến ngày YYYY-MM-DD'}},
+  {name: 'search', op: 'hocvien', title: 'Tìm học viên', description: 'Tìm học viên theo tên, số điện thoại hoặc email. Trả về danh sách kết quả (id, tên).', props: {query: 'Từ khóa tìm kiếm'}, req: ['query']},
+  {name: 'fetch', op: 'chitiet', title: 'Mở hồ sơ', description: 'Lấy toàn bộ hồ sơ của 1 học viên theo id (lấy từ kết quả search).', props: {id: 'Mã hồ sơ'}, req: ['id']},
+];
+const MCP_INFO_ = 'CRM CMA | SKT (công ty đào tạo của thầy Trần Khánh Tư). Kết nối CHỈ ĐỌC. Luôn gọi công cụ để lấy số liệu mới nhất, không đoán. Trả lời tiếng Việt; tiền VND (65.000.000 đ hoặc 65 triệu); luôn viết "công nợ". Báo cáo: số chính trước, bảng 4 cột [Nhóm] · Số lượng · Doanh thu (đã thu) · Công nợ cần thu có dòng Tổng cộng, cuối cùng 3–5 việc cần làm ngay. "Tuần này" tính từ thứ Hai; ngày hôm nay xem trường homNay.';
+function mcpOut_(o) { return ContentService.createTextOutput(o == null ? '' : JSON.stringify(o)).setMimeType(ContentService.MimeType.JSON); }
+function mcp_(e) {
+  let body; try { body = JSON.parse(e.postData.contents); } catch (err) { return mcpOut_({jsonrpc: '2.0', id: null, error: {code: -32700, message: 'Parse error'}}); }
+  const key = String((e.parameter || {}).key || '');
+  const kk = /^skt_[0-9a-f]{40}$/.test(key) && gkLoad_().filter(x => x.h === sha_(key) && x.active)[0];
+  if (!kk || !who_(kk.uid)) { const ids = (Array.isArray(body) ? body : [body]).filter(x => x && x.id != null); return mcpOut_(ids.length ? ids.map(x => ({jsonrpc: '2.0', id: x.id, error: {code: -32001, message: 'Link kết nối CRM không hợp lệ hoặc đã bị thu hồi. Vào crmtkt.com → Kết nối AI để tạo link mới.'}})) [0] : null); }
+  const one = m => {
+    const id = m.id, ok = r => ({jsonrpc: '2.0', id: id, result: r}), er = (c, s) => ({jsonrpc: '2.0', id: id, error: {code: c, message: s}});
+    if (id === undefined || id === null) return null; // notification
+    if (m.method === 'initialize') return ok({protocolVersion: (m.params && m.params.protocolVersion) || '2025-06-18', capabilities: {tools: {listChanged: false}}, serverInfo: {name: 'crm-cma-skt', title: 'CRM CMA SKT', version: '1.0.0'}, instructions: MCP_INFO_});
+    if (m.method === 'ping') return ok({});
+    if (m.method === 'tools/list') return ok({tools: MCP_TOOLS_.map(t => ({name: t.name, title: t.title, description: t.description, annotations: {title: t.title, readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false},
+      inputSchema: {type: 'object', properties: Object.keys(t.props).reduce((a, k) => { a[k] = {type: 'string', description: t.props[k]}; return a; }, {}), required: t.req || []}}))});
+    if (m.method === 'resources/list') return ok({resources: []});
+    if (m.method === 'prompts/list') return ok({prompts: []});
+    if (m.method === 'tools/call') {
+      const p = m.params || {}, t = MCP_TOOLS_.filter(x => x.name === p.name)[0]; if (!t) return er(-32602, 'Không có công cụ ' + p.name);
+      const a = Object.assign({}, p.arguments || {}); Object.keys(a).forEach(k => a[k] = String(a[k]));
+      if (t.name === 'search') { a.q = a.query; a.limit = '20'; }
+      const txt = gpt_({parameter: Object.assign(a, {key: key}), pathInfo: t.op}).getContent();
+      let o = {}; try { o = JSON.parse(txt); } catch (err) {}
+      if (o.ok === false) return ok({content: [{type: 'text', text: o.error || 'Lỗi'}], isError: true});
+      if (t.name === 'search') { const r = {results: (o.hocVien || []).map(h => ({id: h.id, title: h.hoTen + ' · ' + (h.khoa || '') + (h.nhom ? ' ' + h.nhom : '') + ' · ' + (h.chuongTrinh || ''), url: 'https://crmtkt.com/#khach-hang'}))}; return ok({content: [{type: 'text', text: JSON.stringify(r)}], structuredContent: r}); }
+      if (t.name === 'fetch') { const d = (o.dangKy || [])[0] || {}; const r = {id: d.id || a.id, title: d.hoTen || '', text: JSON.stringify(o), url: 'https://crmtkt.com/#khach-hang', metadata: {soDangKy: String(o.soDangKy || 0)}}; return ok({content: [{type: 'text', text: JSON.stringify(r)}], structuredContent: r}); }
+      return ok({content: [{type: 'text', text: txt}], structuredContent: o});
+    }
+    return er(-32601, 'Method not found: ' + m.method);
+  };
+  if (Array.isArray(body)) { const r = body.map(one).filter(x => x); return mcpOut_(r.length ? r : null); }
+  return mcpOut_(one(body));
 }

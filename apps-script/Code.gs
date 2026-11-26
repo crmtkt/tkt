@@ -536,7 +536,7 @@ const PERM_ = {
   camp_save: ['quantri', 'marketing'], camp_approve: ['quantri', 'ketoan'], camp_delete: ['quantri', 'marketing'],
   txn_import: ['quantri', 'ketoan'], txn_confirm: ['quantri', 'ketoan'], txn_undo: ['quantri', 'ketoan'], txn_skip: ['quantri', 'ketoan'], txn_delete: ['quantri', 'ketoan'], txn_newrecs: ['quantri', 'ketoan'], txn_invoice: ['quantri', 'ketoan'],
   user_save: ['quantri'], user_delete: ['quantri'], gpt_list: ['quantri'], gpt_create: ['quantri'], gpt_revoke: ['quantri'],
-  zl_dev_list: ['quantri'], zl_dev_create: ['quantri'], zl_dev_revoke: ['quantri'], zl_perm_set: ['quantri'], zl_threads: ['quantri', 'cskh', 'marketing', 'ketoan'], zl_msgs: ['quantri', 'cskh', 'marketing', 'ketoan'],
+  zl_dev_list: ['quantri', 'cskh', 'marketing', 'ketoan'], zl_dev_create: ['quantri', 'cskh', 'marketing', 'ketoan'], zl_dev_revoke: ['quantri'], zl_perm_set: ['quantri'], zl_threads: ['quantri', 'cskh', 'marketing', 'ketoan'], zl_msgs: ['quantri', 'cskh', 'marketing', 'ketoan'],
 };
 function pwHash_(salt, pw) { let h = sha_(salt + ':' + pw); for (let i = 0; i < 1000; i++) h = sha_(h + salt); return h; }
 function loginKey_(s) { s = String(s || '').trim().toLowerCase(); if (s.indexOf('@') > 0) return s; const p = phone_(s); return p || s; }
@@ -755,10 +755,12 @@ function zCan_(ME, nick) { if (ME.role === 'quantri') return true; const p = zPe
 function zAny_(ME) { if (ME.role === 'quantri') return true; return (zPerm_()[ME.uid] || []).length > 0; }
 function zDevOut_(d) { return {id: d.id, ten: d.ten, chuNick: d.chuNick, nick: d.nick || '', nickTen: d.nickTen || '', active: !!d.active, createdAt: d.createdAt, lastUsed: d.lastUsed || '', duoi: d.duoi, by: d.by || ''}; }
 const ZL_ = {
-  zl_dev_list: () => out_({ok: true, devs: zdLoad_().map(zDevOut_), perm: zPerm_(), accs: rows_('zacc')}),
+  zl_dev_list: (b, ME) => ME.role === 'quantri' ? out_({ok: true, devs: zdLoad_().map(zDevOut_), perm: zPerm_(), accs: rows_('zacc')}) : out_({ok: true, devs: zdLoad_().filter(d => d.chuNick === ME.ten).map(zDevOut_)}),
   zl_dev_create: (b, ME) => {
+    if (ME.role !== 'quantri' && str_(b.chuNick, 80) !== ME.ten) return fail_('Anh/chị chỉ kết nối được Zalo của chính mình.', 403);
     const code = 'zl_' + (Utilities.getUuid() + Utilities.getUuid()).replace(/-/g, '').slice(0, 40);
-    const l = zdLoad_(), d = {id: uid_(), h: sha_(code), ten: str_(b.ten, 80) || 'Zalo', chuNick: str_(b.chuNick, 80), active: true, createdAt: now_(), by: ME.ten, duoi: code.slice(-4)};
+    const l = zdLoad_(); if (str_(b.chuNick, 80)) l.forEach(x => { if (x.chuNick === str_(b.chuNick, 80)) x.active = false; });
+    const d = {id: uid_(), h: sha_(code), ten: str_(b.ten, 80) || 'Zalo', chuNick: str_(b.chuNick, 80), active: true, createdAt: now_(), by: ME.ten, duoi: code.slice(-4)};
     l.push(d); zdSave_(l); return out_({ok: true, code: code, dev: zDevOut_(d)});
   },
   zl_dev_revoke: b => { const l = zdLoad_(), d = l.filter(x => x.id === str_(b.id, 32))[0]; if (!d) return fail_('Không thấy mã.'); d.active = false; zdSave_(l); return out_({ok: true}); },

@@ -237,6 +237,19 @@ form.paper{color-scheme:light;background:#fff;color:#241338;border-radius:22px;p
 .warnTxt{color:var(--warn);font-size:13px}
 .widewrap{overflow-x:auto;border:1px solid var(--line);border-radius:16px;background:var(--card)}
 table.wide{width:max-content;min-width:100%!important;font-size:14px}
+.ovp{margin:14px 0 16px}.ovp h3{margin:0 0 4px}.ovwrap{overflow-x:auto;margin-top:10px}
+table.ovt{width:100%;border-collapse:collapse;font-size:15px;min-width:560px}
+table.ovt th,table.ovt td{padding:10px 12px;border-bottom:1px solid rgba(255,255,255,.08);text-align:right;white-space:nowrap}
+table.ovt th{font-size:13px;text-transform:uppercase;letter-spacing:.03em;color:#9fb3e8;font-weight:700}
+table.ovt th:first-child,table.ovt td:first-child{text-align:left}
+table.ovt td:first-child b{display:inline-flex;align-items:center;gap:8px}table.ovt td:first-child i{width:10px;height:10px;border-radius:3px;display:inline-block}
+table.ovt td small{display:block;color:var(--mut,#94a3b8);font-weight:400;font-size:12.5px}
+table.ovt tr.ovf td{background:rgba(255,255,255,.04);font-weight:700;color:#cfe0ff;font-size:13.5px}
+table.ovt tr.tot td{font-weight:800;border-top:2px solid rgba(255,255,255,.2)}
+table.ovt button.ovn{background:none;border:0;color:inherit;font:inherit;font-weight:700;cursor:pointer;padding:2px 6px;border-radius:6px}
+table.ovt button.ovn:hover{background:rgba(255,255,255,.1);text-decoration:underline}
+table.ovt .z{color:#64748b}
+table.ovt td.big{font-weight:800;color:#fff}
 table.wide td{min-width:110px!important}
 table.wide td:nth-child(4){min-width:170px!important;max-width:220px}
 table.wide td:nth-child(6){min-width:170px!important}
@@ -951,6 +964,7 @@ function vProducts(){
  const rows=filtered();
  return `<div class="band">
  <h2>Sản phẩm</h2><p class="mut" style="margin:0">Hệ sinh thái CMA F1 → F5. Chọn nhóm sản phẩm → khóa → năm → nhóm lớp để ra danh sách học viên.</p>
+ ${courseOverview()}
  <div class="fams" role="group" aria-label="Nhóm sản phẩm">${ECO.map(([a,b,cc,col],i)=>{const k='F'+(i+1),cs=coursesOf(k),n=S.list.filter(x=>famOf(x.khoa)===k).length;return `<button class="fam ${f.fam===k?'on':''}" data-fam="${k}" style="--c:${col}"><b>${a}</b><span>${b}</span><small>${cs.length?cs.length+' khóa · '+n+' học viên':'Chưa có khóa'}</small></button>`}).join('')}</div>
  ${!coursesOf(f.fam).length?(()=>{const e=ECO[+f.fam.slice(1)-1];return `<div class="panel empty" style="margin-top:16px;text-align:left"><h3 style="color:${e[3]}">${e[0]} · ${e[1]}${e[2]?' <small class="mut">('+e[2]+')</small>':''}</h3><p style="margin:0">Nhóm sản phẩm này chưa có khóa học nào trong CRM. Khi mở khóa mới thuộc ${e[0]}, anh/chị bổ sung để em thêm vào đây cùng form thu thập riêng.</p></div></div>`})():`
  <h3 style="margin:18px 0 0">${ECO[+f.fam.slice(1)-1][0]} · ${ECO[+f.fam.slice(1)-1][1]}</h3>
@@ -1018,6 +1032,7 @@ function vCustomers(){
  const classChips=rs=>`<div class="hvrow">${rs.map(r=>`<button class="chip chipbtn ${isDia(r)?'dia':''}" data-open="${esc(r.id)}" title="Mở hồ sơ lớp này"><i style="background:${stColor(r.trangThai)}"></i>${esc(courseTxt(r))} · ${esc(r.nam||'')}${hasPay(r)?' · '+esc(payName(payKey(r)).toLowerCase())+(congNo(r)?' · công nợ '+TR(congNo(r)):''):''}</button>`).join('')}</div>`;
  return `<div class="band"><h2>Khách hàng</h2><p class="mut" style="margin:0 0 12px">Toàn bộ khách hàng trong CRM. Mỗi người một thẻ, hiện đủ các lớp đã và đang học. Bấm vào lớp để mở hồ sơ của lớp đó.</p>
  ${demoBar()}
+ ${courseOverview()}
  <div class="kpis"><div><b>${list.length}</b><span>Khách hàng</span></div><div><b>${recs.length}</b><span>Lượt đăng ký lớp</span></div><div><b>${multi}</b><span>Học từ 2 lớp trở lên</span></div><div><b>${list.filter(x=>x.rs.some(r=>r.trangThai==='Cần chăm sóc gấp')).length}</b><span>Cần chăm sóc gấp</span></div>${recs.some(hasPay)?`<div><b>${TR(recs.reduce((a,r)=>a+n0(r.daDong),0))}</b><span>Đã thu</span></div><div><b style="color:var(--warn)">${TR(recs.reduce((a,r)=>a+congNo(r),0))}</b><span>Công nợ cần thu</span></div>`:''}</div>
  <div class="fbar"><div class="bar">
   <input class="inp" id="cq" placeholder="Tìm tên, số điện thoại, công việc" value="${esc(c.q)}" style="flex:1 1 240px">
@@ -1031,6 +1046,22 @@ function vCustomers(){
   :`<div class="panel empty">${S.list.length?'Không có khách hàng khớp bộ lọc.':'Chưa có khách hàng nào. Gửi link form cho học viên, hoặc bấm "Xem dữ liệu mẫu" để xem thử.'}</div>`}
  ${personaPanel()}
  <details class="morebox"><summary>Các nhánh khác của ô Khách hàng (đang xây dần)</summary>${subsHTML(MODS[0])}</details></div>`;
+}
+function courseOverview(){
+ const L=S.list,keyP=r=>phoneN(r.sdt)||'n:'+String(r.hoTen||'').trim().toLowerCase();
+ const years=[...new Set(L.map(r=>String(r.nam||'2026')))].sort().reverse();
+ const ks=Object.keys(COURSES).concat([...new Set(L.map(r=>r.khoa).filter(k=>k&&!COURSES[k]))]);
+ const cell=(k,y,n)=>n?`<button class="ovn" data-ovk="${esc(k)}|${esc(y)}" title="Xem danh sách học viên">${n}</button>`:'<span class="z">–</span>';
+ let rows='';
+ ECO.forEach(([a,b],i)=>{const f='F'+(i+1),cs=ks.filter(k=>famOf(k)===f);if(!cs.length)return;
+  rows+=`<tr class="ovf"><td colspan="${years.length+3}">${a} · ${b}</td></tr>`;
+  cs.forEach(k=>{const R=L.filter(r=>r.khoa===k),c=COURSES[k]||{};
+   rows+=`<tr><td><b><i style="background:${c.c2||'#64748b'}"></i>${esc(cName(k))}</b>${k==='Diamond'&&R.length?`<small>${GROUPS.map(g=>`${g}: ${R.filter(r=>r.nhom===g).length}`).join(' · ')} · chưa xếp nhóm: ${R.filter(r=>!r.nhom).length}</small>`:''}</td>${years.map(y=>`<td>${cell(k,y,R.filter(r=>String(r.nam||'2026')===y).length)}</td>`).join('')}<td>${cell(k,'all',R.length)}</td><td class="big">${new Set(R.map(keyP)).size||'<span class="z">–</span>'}</td></tr>`})});
+ const other=L.filter(r=>!famOf(r.khoa));
+ if(other.length)rows+=`<tr class="ovf"><td colspan="${years.length+3}">Khóa khác</td></tr>`+[...new Set(other.map(r=>r.khoa||''))].map(k=>{const R=other.filter(r=>(r.khoa||'')===k);return `<tr><td><b>${esc(k||'Chưa rõ khóa')}</b></td>${years.map(y=>`<td>${R.filter(r=>String(r.nam||'2026')===y).length||'<span class="z">–</span>'}</td>`).join('')}<td>${R.length}</td><td class="big">${new Set(R.map(keyP)).size}</td></tr>`}).join('');
+ rows+=`<tr class="tot"><td>Tổng cộng</td>${years.map(y=>`<td>${L.filter(r=>String(r.nam||'2026')===y).length}</td>`).join('')}<td>${L.length}</td><td class="big">${new Set(L.map(keyP)).size}</td></tr>`;
+ return `<div class="panel ovp"><h3>Tổng quan khóa lớp</h3><p class="mut" style="margin:0;font-size:14px">Số lượt đăng ký theo từng khóa và năm. Cột cuối là số học viên (đếm 1 người 1 lần theo số điện thoại; một người học nhiều khóa được tính ở mỗi khóa). Bấm vào con số để xem danh sách.</p>
+ <div class="ovwrap"><table class="ovt"><thead><tr><th>Khóa học</th>${years.map(y=>`<th>Năm ${esc(y)}</th>`).join('')}<th>Tổng lượt</th><th>Học viên</th></tr></thead><tbody>${rows}</tbody></table></div></div>`;
 }
 function subsHTML(m){return `<div class="subs">${(m.subs||[]).map(([a,b])=>`<div class="sub" style="--c:${m.cc}"><b>${a}</b><span class="mut" style="font-size:14.5px">${b}</span><br><span class="soon">Đang xây dần</span></div>`).join('')}</div>`}
 
@@ -2547,6 +2578,7 @@ document.addEventListener('click',async e=>{
  if(t.dataset.nam){S.f.nam=t.dataset.nam;render();return}
  if(t.dataset.nhom){S.f.nhom=t.dataset.nhom;render();return}
  if(t.matches('a.f')&&t.dataset.eco){S.f.fam='F'+(+t.dataset.eco+1);const cs=coursesOf(S.f.fam);if(cs.length&&famOf(S.f.khoa)!==S.f.fam){S.f.khoa=cs[0][0];S.f.nhom='all'}}
+ if(t.dataset.ovk){const [k,y]=t.dataset.ovk.split('|');S.f={...S.f,fam:famOf(k)||S.f.fam,khoa:k,nam:y,nhom:'all',form:'all'};if(location.hash==='#san-pham'){render();setTimeout(()=>{const v=document.querySelector('.viewbar');if(v)v.scrollIntoView({behavior:'smooth',block:'start'})},60)}else{location.hash='san-pham';setTimeout(()=>{const v=document.querySelector('.viewbar');if(v)v.scrollIntoView({block:'start'})},400)}return}
  if(t.dataset.fam){S.f.fam=t.dataset.fam;const cs=coursesOf(S.f.fam);if(cs.length&&famOf(S.f.khoa)!==S.f.fam){S.f.khoa=cs[0][0];S.f.nhom='all'}render();return}
  if(t.id==='closeD'){closeDrawer();return}
  if(t.id==='pwBtn'){pwModal();return}

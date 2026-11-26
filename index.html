@@ -807,11 +807,13 @@ function vHome(){
  <p style="margin-top:18px;display:flex;gap:10px;flex-wrap:wrap"><a class="btn" href="#san-pham" style="text-decoration:none;display:inline-flex;align-items:center">Mở ô Sản phẩm</a><a class="btn ghost" href="#form" style="text-decoration:none;display:inline-flex;align-items:center">Lấy link form</a></p></div>${domeSVG}</section>
  <div class="eco">${ECO.map(([a,b,cc,col],i)=>`<a class="f" href="#san-pham" data-eco="${i}" style="--c:${col}"><b>${a}</b><span>${b}${cc?'<br><small>'+cc+'</small>':''}</span></a>`).join('')}</div>
  <div class="stats">
-  <div class="stat"><b>${L.length}</b><span>Học viên trong CRM</span></div>
-  <div class="stat"><b>${c('Diamond')}</b><span>CMA Diamond</span></div>
-  <div class="stat"><b>${c('Trainer')}</b><span>CMA Trainer</span></div>
+  <div class="stat"><b>${new Set(L.map(r=>phoneN(r.sdt)||'n:'+String(r.hoTen||'').trim().toLowerCase())).size}</b><span>Học viên trong CRM</span></div>
+  <div class="stat"><b>${L.length}</b><span>Lượt đăng ký khóa</span></div>
+  <div class="stat"><b>${new Set(L.map(r=>r.khoa+'|'+(r.nam||'2026'))).size}</b><span>Khóa lớp · ${[...new Set(L.map(r=>r.khoa))].map(cName).join(', ')}</span></div>
   <div class="stat"><b style="color:${urgent?'var(--warn)':'inherit'}">${urgent}</b><span>Cần chăm sóc gấp · ${noOwner} chưa có người phụ trách</span></div>
- </div>${hasReal()?(()=>{const B=realBuyers(),pd=B.reduce((a,b)=>a+b.daThu,0),db=B.reduce((a,b)=>a+b.no,0);return `<a class="panel" href="#doanh-thu" style="display:flex;gap:18px;flex-wrap:wrap;align-items:center;margin-top:14px;text-decoration:none;color:inherit"><b>Doanh thu thật</b><span>Đã thu <b style="color:#34d399">${TR(pd)}</b></span><span>Công nợ cần thu <b style="color:var(--warn)">${TR(db)}</b></span><span class="mut">${B.length} lượt đăng ký · xem chi tiết →</span></a>`})():''}</div>`;
+ </div>${hasReal()?(()=>{const B=realBuyers(),pd=B.reduce((a,b)=>a+b.daThu,0),db=B.reduce((a,b)=>a+b.no,0);return `<a class="panel" href="#doanh-thu" style="display:flex;gap:18px;flex-wrap:wrap;align-items:center;margin-top:14px;text-decoration:none;color:inherit"><b>Doanh thu thật</b><span>Đã thu <b style="color:#34d399">${TR(pd)}</b></span><span>Công nợ cần thu <b style="color:var(--warn)">${TR(db)}</b></span><span class="mut">${B.length} lượt đăng ký · xem chi tiết →</span></a>`})():''}
+ <h3 style="margin:22px 0 0">Báo cáo tổng</h3>
+ ${courseOverview()}${staffOverview()}</div>`;
 }
 
 function filtered(){
@@ -1064,6 +1066,18 @@ function courseOverview(){
  const uniq=new Set(L.map(keyP)).size;
  return `<div class="ovp">${rpTable({id:'ov-khoa',title:'Tổng quan khóa lớp',cols:[['Khóa học đăng ký','l'],['Số lượng','c'],['Doanh thu','n'],['Công nợ cần thu','n']],rows,total:['Tổng cộng',L.length,...money(L)],
   note:`Số lượng = số lượt học viên đăng ký từng khóa theo năm. Tổng ${L.length} lượt / ${uniq} học viên (một người học nhiều khóa được tính ở mỗi khóa). Doanh thu = số tiền đã thu; công nợ chỉ tính các lượt đã nhập học phí (ghi nhỏ dưới mỗi ô là số lượt và chương trình được tính). Bấm vào số lượng để xem danh sách. Cập nhật lúc ${new Date().toLocaleString('vi-VN',{hour:'2-digit',minute:'2-digit',day:'2-digit',month:'2-digit',year:'numeric'})}.`})}</div>`;
+}
+function staffOverview(){
+ const L=S.list,yr=r=>String(r.nam||'2026'),P=r=>hasPay(r)||n0(r.hocPhi)>0||n0(r.daDong)>0;
+ const names=[...new Set([...S.staff,...L.flatMap(r=>arr(r.phuTrach))])];
+ const sm=t=>`<br><small style="color:#555;font-weight:400;white-space:normal">${t}</small>`;
+ const row=(lbl,R)=>{const by={};R.forEach(r=>{const k=cName(r.khoa)+' '+yr(r);by[k]=(by[k]||0)+1});const Q=R.filter(P);
+  return [`<b>${lbl}</b>${R.length?sm(Object.entries(by).map(([k,n])=>`${esc(k)}: ${n}`).join(' · ')):''}`,R.length,VND(Q.reduce((a,r)=>a+n0(r.daDong),0))+(Q.length?'':sm('Chưa nhập học phí')),VND(Q.reduce((a,r)=>a+congNo(r),0))]};
+ const rows=names.map(n=>[n,L.filter(r=>arr(r.phuTrach).includes(n))]).filter(([,R])=>R.length).sort((a,b)=>b[1].length-a[1].length).map(([n,R])=>row(esc(n),R));
+ const none=L.filter(r=>!arr(r.phuTrach).length);if(none.length)rows.push(row('Chưa phân công',none));
+ const Q=L.filter(P);
+ return `<div class="ovp">${rpTable({id:'ov-ns',title:'Học viên theo nhân sự phụ trách',cols:[['Nhân sự phụ trách','l'],['Số lượng','c'],['Doanh thu','n'],['Công nợ cần thu','n']],rows,total:['Tổng cộng',L.length,VND(Q.reduce((a,r)=>a+n0(r.daDong),0)),VND(Q.reduce((a,r)=>a+congNo(r),0))],
+  note:`Số lượng = số lượt đăng ký khóa mà nhân sự phụ trách (ghi nhỏ: theo từng khóa và năm). Một lượt có nhiều người cùng phụ trách được tính cho mỗi người, nên cộng các dòng có thể lớn hơn tổng. Doanh thu = số tiền đã thu; chỉ tính các lượt đã nhập học phí.`})}</div>`;
 }
 function subsHTML(m){return `<div class="subs">${(m.subs||[]).map(([a,b])=>`<div class="sub" style="--c:${m.cc}"><b>${a}</b><span class="mut" style="font-size:14.5px">${b}</span><br><span class="soon">Đang xây dần</span></div>`).join('')}</div>`}
 

@@ -1051,15 +1051,19 @@ function courseOverview(){
  const L=S.list,keyP=r=>phoneN(r.sdt)||'n:'+String(r.hoTen||'').trim().toLowerCase(),yr=r=>String(r.nam||'2026');
  const ks=Object.keys(COURSES).concat([...new Set(L.map(r=>r.khoa||'').filter(k=>!COURSES[k]))]);
  const order=k=>{const f=famOf(k);return f?+f.slice(1):9};
- const money=R=>[VND(R.reduce((a,r)=>a+n0(r.daDong),0)),VND(R.reduce((a,r)=>a+congNo(r),0))];
+ const money=(R,lbl)=>{const P=R.filter(r=>hasPay(r)||n0(r.hocPhi)>0||n0(r.daDong)>0);if(!lbl)return [VND(P.reduce((a,r)=>a+n0(r.daDong),0)),VND(P.reduce((a,r)=>a+congNo(r),0))];
+  const cts=[...new Set(P.map(r=>r.chuongTrinh||'chưa gắn chương trình'))];
+  const sm=t=>`<br><small style="color:#555;font-weight:400;white-space:normal">${t}</small>`;
+  const n=P.length?sm(`Tính từ ${P.length}/${R.length} lượt có học phí · ${cts.map(esc).join('; ')}`):sm('Chưa nhập học phí');
+  return [VND(P.reduce((a,r)=>a+n0(r.daDong),0))+n,VND(P.reduce((a,r)=>a+congNo(r),0))+(P.length?sm(`${P.filter(r=>congNo(r)>0).length} lượt còn công nợ`):'')]};
  const rows=[];
  ks.slice().sort((x,y)=>order(x)-order(y)).forEach(k=>{const R=L.filter(r=>(r.khoa||'')===k);if(!R.length)return;
   [...new Set(R.map(yr))].sort().reverse().forEach(y=>{const Y=R.filter(r=>yr(r)===y);
    const sub=k==='Diamond'?`<br><small style="color:#555">${GROUPS.map(g=>`${g}: ${Y.filter(r=>r.nhom===g).length}`).join(' · ')} · chưa xếp nhóm: ${Y.filter(r=>!r.nhom).length}</small>`:'';
-   rows.push([`<b>${esc(cName(k)||'Chưa rõ khóa')} ${esc(y)}</b>${famOf(k)?` <span style="color:#666">(${esc(ECO[+famOf(k).slice(1)-1][0])})</span>`:''}${sub}`,`<button class="ovn" data-ovk="${esc(k)}|${esc(y)}" title="Xem danh sách học viên">${Y.length}</button>`,...money(Y)])})});
+   rows.push([`<b>${esc(cName(k)||'Chưa rõ khóa')} ${esc(y)}</b>${famOf(k)?` <span style="color:#666">(${esc(ECO[+famOf(k).slice(1)-1][0])})</span>`:''}${sub}`,`<button class="ovn" data-ovk="${esc(k)}|${esc(y)}" title="Xem danh sách học viên">${Y.length}</button>`,...money(Y,1)])})});
  const uniq=new Set(L.map(keyP)).size;
  return `<div class="ovp">${rpTable({id:'ov-khoa',title:'Tổng quan khóa lớp',cols:[['Khóa học đăng ký','l'],['Số lượng','c'],['Doanh thu','n'],['Công nợ cần thu','n']],rows,total:['Tổng cộng',L.length,...money(L)],
-  note:`Số lượng = số lượt học viên đăng ký từng khóa theo năm. Tổng ${L.length} lượt / ${uniq} học viên (một người học nhiều khóa được tính ở mỗi khóa). Doanh thu = số tiền đã thu. Bấm vào số lượng để xem danh sách. Cập nhật lúc ${new Date().toLocaleString('vi-VN',{hour:'2-digit',minute:'2-digit',day:'2-digit',month:'2-digit',year:'numeric'})}.`})}</div>`;
+  note:`Số lượng = số lượt học viên đăng ký từng khóa theo năm. Tổng ${L.length} lượt / ${uniq} học viên (một người học nhiều khóa được tính ở mỗi khóa). Doanh thu = số tiền đã thu; công nợ chỉ tính các lượt đã nhập học phí (ghi nhỏ dưới mỗi ô là số lượt và chương trình được tính). Bấm vào số lượng để xem danh sách. Cập nhật lúc ${new Date().toLocaleString('vi-VN',{hour:'2-digit',minute:'2-digit',day:'2-digit',month:'2-digit',year:'numeric'})}.`})}</div>`;
 }
 function subsHTML(m){return `<div class="subs">${(m.subs||[]).map(([a,b])=>`<div class="sub" style="--c:${m.cc}"><b>${a}</b><span class="mut" style="font-size:14.5px">${b}</span><br><span class="soon">Đang xây dần</span></div>`).join('')}</div>`}
 

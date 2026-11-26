@@ -32,7 +32,8 @@ function setPhoto_(r, a) { PHOTO_COLS.forEach((k, i) => r[k] = a.slice(i * PHOTO
 const LITE = 10; // số cột đầu (id → data) đọc nhanh, không kéo theo ảnh
 function getPhoto_(r) { return PHOTO_COLS.map(k => r[k] || '').join(''); }
 function money_(v) { const n = Math.round(Number(v) || 0); return n > 0 && n < 1e11 ? n : 0; }
-const COURSE = {Diamond: 'CMA Diamond', Trainer: 'CMA Trainer'};
+const COURSE = {Diamond: 'CMA Diamond', Trainer: 'CMA Trainer', Mentor: 'CMA Mentor', F1: 'CMA F1'};
+const EXTRA_KEYS = ['khuVuc','maHV','goiDK','suKien','doanhThu','hocPhiFile','sanSang','thanhTuu','kyNangAI','kenh','ttFile','lichSuHT','tienDoFile','emailKhac','nhomZaloFile','congViecDay'];
 
 /* ---------- tiện ích bảng tính ---------- */
 function book_() { return SpreadsheetApp.getActiveSpreadsheet(); }
@@ -134,7 +135,7 @@ function answers_(a) {
     if (k === 'aiTools') o[k] = list_(a[k]);
     else if (k === 'aiLevel') o[k] = Math.max(0, Math.min(5, parseInt(a[k], 10) || 0));
     else if (k === 'dongY') o[k] = a[k] === true;
-    else o[k] = str_(a[k], ['hoTen','sdt','email','namSinh','thanhPho','congViec','vaiTro','thoiGian'].indexOf(k) >= 0 ? 200 : 2000);
+    else o[k] = str_(a[k], ['hoTen','sdt','email','namSinh','thanhPho','congViec','vaiTro','thoiGian'].indexOf(k) >= 0 ? 200 : 5000);
   });
   return o;
 }
@@ -152,6 +153,7 @@ function crm_(p) {
   if ('nhatKy' in p) o.nhatKy = entries_(p.nhatKy, ['ngay', 'nguoi', 'noiDung']);
   ['chuongTrinh', 'dongHanh', 'lichHen', 'canhBao', 'cccd', 'diaChi', 'ghiChuTT'].forEach(k => { if (k in p) o[k] = str_(p[k], 2000); });
   if ('phieuOffline' in p) o.phieuOffline = str_(p.phieuOffline, 12000);
+  EXTRA_KEYS.forEach(k => { if (k in p) o[k] = str_(p[k], 5000); });
   if ('ttTT' in p) o.ttTT = PAY_ST.indexOf(p.ttTT) >= 0 ? p.ttTT : '';
   if ('hanTT' in p) o.hanTT = /^\d{4}-\d{2}-\d{2}$/.test(String(p.hanTT)) ? String(p.hanTT) : '';
   ['hocPhi', 'khauTru', 'daDong'].forEach(k => { if (k in p) o[k] = money_(p[k]); });
@@ -179,6 +181,7 @@ function doGet(e) {
 }
 
 function doPost(e) {
+  if ((e.parameter || {}).zsrv) { try { return zsrv_(e); } catch (err) { console.error(err); return fail_('Lỗi máy chủ CRM: ' + err.message, 500); } }
   if ((e.parameter || {}).zalo) { let zb = {}; try { zb = JSON.parse(e.postData.contents); } catch (err) { return fail_('Dữ liệu không hợp lệ.'); } try { return zlPush_(zb); } catch (err) { console.error(err); return fail_('Lỗi máy chủ, thử lại sau.', 500); } }
   if ((e.parameter || {}).mcp) { try { return mcp_(e); } catch (err) { console.error(err); return mcpOut_({jsonrpc: '2.0', id: null, error: {code: -32603, message: 'Lỗi máy chủ CRM'}}); } }
   let b = {};
@@ -259,6 +262,7 @@ function route_(b) {
         Object.assign(r, {hoTen: d.hoTen, sdt: phone_(d.sdt), email: d.email || '', trangThai: d.trangThai || '', phuTrach: (d.phuTrach || []).join(', '), updatedAt: now_()});
         put_('records', r); return out_({ok: true, record: recOut_(r)});
       }
+      case 'hv_import': return hvImport_(b);
       case 'photo_save': {
         const r = rows_('records').filter(x => x.id === str_(b.id, 32))[0]; if (!r) return fail_('Không tìm thấy hồ sơ.', 404);
         if (!photoOk_(b.anh)) return fail_('Ảnh chưa hợp lệ hoặc quá lớn.');
@@ -279,6 +283,7 @@ function route_(b) {
     if (US_[a]) return US_[a](b, ME);
     if (GP_[a]) return GP_[a](b, ME);
     if (ZL_[a]) return ZL_[a](b, ME);
+    if (ZS_[a]) return ZS_[a](b, ME);
     return fail_('Không rõ yêu cầu.', 404);
   } finally { lock.releaseLock(); }
 }
@@ -531,12 +536,13 @@ const KT_ = {
 const ROLES_ = {quantri: 'Toàn quyền', cskh: 'Chăm sóc khách hàng', marketing: 'Marketing', ketoan: 'Kế toán'};
 const MONEY_KEYS_ = ['hocPhi', 'khauTru', 'daDong', 'lichSuTT', 'ttTT', 'hanTT', 'canhBao', 'ghiChuTT', 'dongHanh'];
 const PERM_ = {
+  hv_import: ['quantri'],
   record_save: ['quantri', 'cskh', 'ketoan', 'marketing'], record_create: ['quantri', 'cskh', 'ketoan', 'marketing'], photo_save: ['quantri', 'cskh', 'marketing'],
   record_delete: ['quantri'], form_save: ['quantri', 'marketing'], form_delete: ['quantri'], staff_save: ['quantri'],
   camp_save: ['quantri', 'marketing'], camp_approve: ['quantri', 'ketoan'], camp_delete: ['quantri', 'marketing'],
   txn_import: ['quantri', 'ketoan'], txn_confirm: ['quantri', 'ketoan'], txn_undo: ['quantri', 'ketoan'], txn_skip: ['quantri', 'ketoan'], txn_delete: ['quantri', 'ketoan'], txn_newrecs: ['quantri', 'ketoan'], txn_invoice: ['quantri', 'ketoan'],
   user_save: ['quantri'], user_delete: ['quantri'], gpt_list: ['quantri'], gpt_create: ['quantri'], gpt_revoke: ['quantri'],
-  zl_dev_list: ['quantri', 'cskh', 'marketing', 'ketoan'], zl_dev_create: ['quantri', 'cskh', 'marketing', 'ketoan'], zl_dev_revoke: ['quantri'], zl_perm_set: ['quantri'], zl_reset: ['quantri'], zl_threads: ['quantri', 'cskh', 'marketing', 'ketoan'], zl_msgs: ['quantri', 'cskh', 'marketing', 'ketoan'],
+  zl_dev_list: ['quantri', 'cskh', 'marketing', 'ketoan'], zl_dev_create: ['quantri', 'cskh', 'marketing', 'ketoan'], zl_dev_revoke: ['quantri'], zl_perm_set: ['quantri'], zl_reset: ['quantri'], zs_ticket: ['quantri', 'cskh', 'marketing', 'ketoan'], zl_threads: ['quantri', 'cskh', 'marketing', 'ketoan'], zl_msgs: ['quantri', 'cskh', 'marketing', 'ketoan'],
 };
 function pwHash_(salt, pw) { let h = sha_(salt + ':' + pw); for (let i = 0; i < 1000; i++) h = sha_(h + salt); return h; }
 function loginKey_(s) { s = String(s || '').trim().toLowerCase(); if (s.indexOf('@') > 0) return s; const p = phone_(s); return p || s; }
@@ -793,15 +799,15 @@ const ZL_ = {
     return out_({ok: true, msgs: out.map(m => ({id: m.msgId, ts: Number(m.ts) || 0, me: m.me === '1', nguoiGui: m.nguoiGui, loai: m.loai, noiDung: m.noiDung, kieu: m.kieu, url: m.url, tep: m.tep}))});
   },
 };
-function zlPush_(b) {
-  const code = String(b.code || ''); if (!/^zl_[0-9a-f]{40}$/.test(code)) return fail_('Sai mã kết nối Zalo.', 401);
-  const l = zdLoad_(), d = l.filter(x => x.h === sha_(code))[0]; if (!d || !d.active) return fail_('Mã kết nối Zalo không hợp lệ hoặc đã bị thu hồi.', 401);
+function zlPush_(b, srv) {
+  const code = String(b.code || ''); if (!srv && !/^zl_[0-9a-f]{40}$/.test(code)) return fail_('Sai mã kết nối Zalo.', 401);
+  const l = srv ? [] : zdLoad_(), d = srv ? {id: 'server', chuNick: str_((b.acc || {}).chuNick, 80), active: true} : l.filter(x => x.h === sha_(code))[0]; if (!d || !d.active) return fail_('Mã kết nối Zalo không hợp lệ hoặc đã bị thu hồi.', 401);
   const acc = b.acc || {}, nick = str_(acc.uid, 40); if (!nick) return fail_('Thiếu thông tin nick Zalo.');
-  if (d.nick && d.nick !== nick) return fail_('Mã này đã gắn với nick Zalo khác (' + (d.nickTen || d.nick) + '). Tạo mã mới cho nick này.', 409);
+  if (!srv && d.nick && d.nick !== nick) return fail_('Mã này đã gắn với nick Zalo khác (' + (d.nickTen || d.nick) + '). Tạo mã mới cho nick này.', 409);
   const lock = LockService.getScriptLock(); lock.waitLock(25000);
   try {
     if (!d.nick) { d.nick = nick; d.nickTen = str_(acc.name, 80); }
-    d.lastUsed = now_(); zdSave_(l);
+    d.lastUsed = now_(); if (!srv) zdSave_(l);
     const A = rows_('zacc').filter(a => a.id === nick)[0] || {id: nick, createdAt: now_()};
     A.ten = str_(acc.name, 80) || A.ten; A.anh = str_(acc.avatar, 500) || A.anh; A.devId = d.id; A.chuNick = d.chuNick; A.lastSync = now_(); put_('zacc', A);
     // hội thoại
@@ -830,4 +836,79 @@ function zlPush_(b) {
       if (all.length) sh.getRange(2, 1, all.length, cols.length).setNumberFormat('@').setValues(all); }
     return out_({ok: true, them: add.length, nick: nick});
   } finally { lock.releaseLock(); }
+}
+
+/* ---------- Máy chủ Zalo (Render): đăng nhập nick bằng QR ngay trong CRM ----------
+   Máy chủ gọi về đây với ?zsrv=1 + mật khẩu chung ZSRV_SECRET (Script Properties). Trình duyệt gọi thẳng máy chủ bằng "vé" CRM ký (zs_ticket). */
+COLS.zsess = ['uid', 'ten', 'anh', 'chuNick', 'cred', 'updatedAt'];
+function zsProp_(k) { return PropertiesService.getScriptProperties().getProperty(k) || ''; }
+function zsrv_(e) {
+  let b = {}; try { b = JSON.parse(e.postData.contents); } catch (err) { return fail_('Dữ liệu không hợp lệ.'); }
+  const sec = zsProp_('ZSRV_SECRET'); if (!sec || String(b.secret || '') !== sec) return fail_('Sai mật khẩu máy chủ.', 401);
+  if (b.action === 'sessions') return out_({ok: true, sessions: rows_('zsess').filter(r => r.uid && r.cred).map(r => ({uid: r.uid, ten: r.ten, anh: r.anh, chuNick: r.chuNick, cred: r.cred}))});
+  if (b.action === 'save_session') {
+    const uid = str_(b.uid, 40); if (!uid) return fail_('Thiếu uid.');
+    const lock = LockService.getScriptLock(); lock.waitLock(20000);
+    try { const all = rows_('zsess'), cn = str_(b.chuNick, 80);
+      all.filter(r => r.uid && r.uid !== uid && cn && r.chuNick === cn).forEach(r => { r.cred = ''; r.updatedAt = now_(); put_('zsess', r); });
+      const r = all.filter(x => x.uid === uid)[0] || {uid: uid};
+      Object.assign(r, {ten: str_(b.ten, 80), anh: str_(b.anh, 500), chuNick: cn, cred: String(b.cred || '').slice(0, 45000), updatedAt: now_()}); put_('zsess', r);
+      const A = rows_('zacc').filter(a => a.id === uid)[0] || {id: uid, createdAt: now_()}; Object.assign(A, {ten: r.ten, anh: r.anh, chuNick: cn, lastSync: now_()}); put_('zacc', A);
+      return out_({ok: true}); } finally { lock.releaseLock(); }
+  }
+  if (b.action === 'remove_session') { const r = rows_('zsess').filter(x => x.uid === str_(b.uid, 40))[0]; if (r) { r.cred = ''; r.updatedAt = now_(); put_('zsess', r); } return out_({ok: true}); }
+  if (b.action === 'push') return zlPush_(b, true);
+  return fail_('Không rõ yêu cầu.');
+}
+const ZS_ = {
+  zs_ticket: (b, ME) => {
+    const url = zsProp_('ZSRV_URL'), sec = zsProp_('ZSRV_SECRET'); if (!url || !sec) return out_({ok: true, url: '', ticket: ''});
+    const p = Utilities.base64Encode(JSON.stringify({uid: ME.uid, ten: ME.ten, role: ME.role, see: ME.role === 'quantri' ? ['*'] : (zPerm_()[ME.uid] || []), exp: Date.now() + 12 * 3600e3}), Utilities.Charset.UTF_8);
+    const sig = Utilities.base64Encode(Utilities.computeHmacSha256Signature(p, sec, Utilities.Charset.UTF_8));
+    return out_({ok: true, url: url, ticket: p + '.' + sig});
+  },
+};
+
+/* ---------- nhập hồ sơ học viên hàng loạt (quản trị) ----------
+   Mỗi mục: {patch, anh, formId}. Trùng SĐT (hoặc họ tên khi không có SĐT) + khóa + năm → chỉ bổ sung ô còn trống, không ghi đè.
+   Không có → tạo hồ sơ mới. Chạy lại nhiều lần vẫn an toàn (không tạo trùng). */
+function hvImport_(b) {
+  const items = Array.isArray(b.items) ? b.items.slice(0, 40) : [];
+  const all = rows_('records'), cols = COLS.records, add = [], res = [];
+  const nm = s => String(s || '').trim().toLowerCase().replace(/\s+/g, ' ');
+  const pk = d => phone_(d.sdt) || 'n:' + nm(d.hoTen), key = d => [pk(d), d.khoa || '', String(d.nam || '2026')].join('|');
+  const idx = {};
+  all.forEach(r => { let d = {}; try { d = JSON.parse(r.data || '{}'); } catch (e) {} r._d = d; (idx[key(d)] = idx[key(d)] || []).push(r); });
+  const isEmpty = v => v === undefined || v === null || v === '' || (Array.isArray(v) && !v.length) || (typeof v === 'object' && !Array.isArray(v) && !Object.keys(v).length);
+  items.forEach(it => {
+    const P = (it && it.patch) || {}, A = answers_(P), C = crm_(P);
+    const anh = typeof it.anh === 'string' && photoOk_(it.anh) ? it.anh : '';
+    const nd = Object.assign({khoa: 'Diamond', nam: '2026', nhom: '', trangThai: 'Mới đăng ký', phuTrach: [], hanhTrinh: [], nhatKy: [], tienDo: {}}, A, C);
+    nd.sdt = phone_(nd.sdt); if (nd.sdt.length < 9 || nd.sdt.length > 12) nd.sdt = '';
+    if (!nd.hoTen) { res.push({err: 'Thiếu họ tên'}); return; }
+    const hit = idx[key(nd)];
+    if (hit && hit.length) {
+      hit.forEach(r => {
+        const d = r._d, fresh = Object.assign({}, A, C);
+        Object.keys(fresh).forEach(k => {
+          if (k === 'hanhTrinh') { const old = d.hanhTrinh || [], add2 = (fresh.hanhTrinh || []).filter(e => !old.some(o => o.noiDung === e.noiDung)); d.hanhTrinh = old.concat(add2); }
+          else if (k === 'sdt') { if (!d.sdt && nd.sdt) d.sdt = nd.sdt; }
+          else if (isEmpty(d[k])) d[k] = fresh[k];
+        });
+        r.data = JSON.stringify(d); r.email = d.email || ''; r.sdt = phone_(d.sdt); r.updatedAt = now_();
+        delete r._d;
+        if (anh && !(r.coAnh && r.coAnh !== '-')) setPhoto_(r, anh);
+        put_('records', r); r._d = d;
+        res.push({id: r.id, capNhat: true});
+      });
+    } else {
+      const nr = {id: uid_(), formId: str_(it.formId, 32), createdAt: now_(), updatedAt: now_(), data: JSON.stringify(nd), hoTen: nd.hoTen, sdt: nd.sdt, email: nd.email || '', trangThai: nd.trangThai || '', phuTrach: (nd.phuTrach || []).join(', ')};
+      setPhoto_(nr, anh);
+      add.push(cols.map(c => nr[c] === undefined || nr[c] === null ? '' : String(nr[c])));
+      nr._d = nd; idx[key(nd)] = [Object.assign(nr, {_row: 0})];
+      res.push({id: nr.id, moi: true});
+    }
+  });
+  if (add.length) { const s = sheet_('records'); s.getRange(s.getLastRow() + 1, 1, add.length, cols.length).setNumberFormat('@').setValues(add); }
+  return out_({ok: true, res: res});
 }

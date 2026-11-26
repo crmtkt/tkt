@@ -536,7 +536,7 @@ const PERM_ = {
   camp_save: ['quantri', 'marketing'], camp_approve: ['quantri', 'ketoan'], camp_delete: ['quantri', 'marketing'],
   txn_import: ['quantri', 'ketoan'], txn_confirm: ['quantri', 'ketoan'], txn_undo: ['quantri', 'ketoan'], txn_skip: ['quantri', 'ketoan'], txn_delete: ['quantri', 'ketoan'], txn_newrecs: ['quantri', 'ketoan'], txn_invoice: ['quantri', 'ketoan'],
   user_save: ['quantri'], user_delete: ['quantri'], gpt_list: ['quantri'], gpt_create: ['quantri'], gpt_revoke: ['quantri'],
-  zl_dev_list: ['quantri', 'cskh', 'marketing', 'ketoan'], zl_dev_create: ['quantri', 'cskh', 'marketing', 'ketoan'], zl_dev_revoke: ['quantri'], zl_perm_set: ['quantri'], zl_threads: ['quantri', 'cskh', 'marketing', 'ketoan'], zl_msgs: ['quantri', 'cskh', 'marketing', 'ketoan'],
+  zl_dev_list: ['quantri', 'cskh', 'marketing', 'ketoan'], zl_dev_create: ['quantri', 'cskh', 'marketing', 'ketoan'], zl_dev_revoke: ['quantri'], zl_perm_set: ['quantri'], zl_reset: ['quantri'], zl_threads: ['quantri', 'cskh', 'marketing', 'ketoan'], zl_msgs: ['quantri', 'cskh', 'marketing', 'ketoan'],
 };
 function pwHash_(salt, pw) { let h = sha_(salt + ':' + pw); for (let i = 0; i < 1000; i++) h = sha_(h + salt); return h; }
 function loginKey_(s) { s = String(s || '').trim().toLowerCase(); if (s.indexOf('@') > 0) return s; const p = phone_(s); return p || s; }
@@ -763,6 +763,13 @@ const ZL_ = {
     const d = {id: uid_(), h: sha_(code), ten: str_(b.ten, 80) || 'Zalo', chuNick: str_(b.chuNick, 80), active: true, createdAt: now_(), by: ME.ten, duoi: code.slice(-4)};
     l.push(d); zdSave_(l); return out_({ok: true, code: code, dev: zDevOut_(d)});
   },
+  zl_reset: b => {
+    const nick = str_(b.nick, 40); if (!nick) return fail_('Thiếu nick.');
+    const lock = LockService.getScriptLock(); lock.waitLock(25000);
+    try { let bo = 0; ['zmsg', 'zthr'].forEach(nm => { const sh = sheet_(nm), n = sh.getLastRow(); if (n < 2) return; const cols = COLS[nm], v = sh.getRange(2, 1, n - 1, cols.length).getValues(), keep = v.filter(r => String(r[1]) !== nick); bo += v.length - keep.length;
+        sh.getRange(2, 1, n - 1, cols.length).clearContent(); if (keep.length) sh.getRange(2, 1, keep.length, cols.length).setNumberFormat('@').setValues(keep.map(r => r.map(String))); });
+      return out_({ok: true, xoa: bo}); } finally { lock.releaseLock(); }
+  },
   zl_dev_revoke: b => { const l = zdLoad_(), d = l.filter(x => x.id === str_(b.id, 32))[0]; if (!d) return fail_('Không thấy mã.'); d.active = false; zdSave_(l); return out_({ok: true}); },
   zl_perm_set: b => {
     const P = {}; Object.keys(b.perm || {}).slice(0, 60).forEach(u => { P[str_(u, 40)] = list_(b.perm[u], 20, 40); });
@@ -800,7 +807,7 @@ function zlPush_(b) {
     // hội thoại
     const T = {}, tAll = rows_('zthr'); tAll.forEach(t => T[t.key] = t);
     (Array.isArray(b.threads) ? b.threads : []).slice(0, 300).forEach(t => {
-      const th = str_(t.id, 60); if (!th) return; const k = nick + '|' + th, o = T[k] || {key: k, nick: nick, thread: th};
+      const th = str_(t.id, 60); if (!th) return; const k = nick + '|' + th; if (!T[k] && !t.lastTs) return; const o = T[k] || {key: k, nick: nick, thread: th};
       o.ten = str_(t.name, 120) || o.ten; o.anh = str_(t.avatar, 500) || o.anh; o.nhom = t.group ? '1' : (o.nhom || '0');
       if (t.lastTs && Number(t.lastTs) >= (Number(o.lastTs) || 0)) { o.lastTs = String(Number(t.lastTs)); o.lastText = str_(t.lastText, 200); }
       o.updatedAt = now_(); o._dirty = 1; T[k] = o;

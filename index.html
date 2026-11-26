@@ -246,8 +246,8 @@ table.ovt td:first-child b{display:inline-flex;align-items:center;gap:8px}table.
 table.ovt td small{display:block;color:var(--mut,#94a3b8);font-weight:400;font-size:12.5px}
 table.ovt tr.ovf td{background:rgba(255,255,255,.04);font-weight:700;color:#cfe0ff;font-size:13.5px}
 table.ovt tr.tot td{font-weight:800;border-top:2px solid rgba(255,255,255,.2)}
-table.ovt button.ovn{background:none;border:0;color:inherit;font:inherit;font-weight:700;cursor:pointer;padding:2px 6px;border-radius:6px}
-table.ovt button.ovn:hover{background:rgba(255,255,255,.1);text-decoration:underline}
+.ovp button.ovn{background:none;border:0;color:#0b4fd6;font:inherit;font-weight:700;cursor:pointer;padding:2px 8px;border-radius:6px;text-decoration:underline}
+.ovp button.ovn:hover{background:#fff2cc}
 table.ovt .z{color:#64748b}
 table.ovt td.big{font-weight:800;color:#fff}
 table.wide td{min-width:110px!important}
@@ -1048,20 +1048,18 @@ function vCustomers(){
  <details class="morebox"><summary>Các nhánh khác của ô Khách hàng (đang xây dần)</summary>${subsHTML(MODS[0])}</details></div>`;
 }
 function courseOverview(){
- const L=S.list,keyP=r=>phoneN(r.sdt)||'n:'+String(r.hoTen||'').trim().toLowerCase();
- const years=[...new Set(L.map(r=>String(r.nam||'2026')))].sort().reverse();
- const ks=Object.keys(COURSES).concat([...new Set(L.map(r=>r.khoa).filter(k=>k&&!COURSES[k]))]);
- const cell=(k,y,n)=>n?`<button class="ovn" data-ovk="${esc(k)}|${esc(y)}" title="Xem danh sách học viên">${n}</button>`:'<span class="z">–</span>';
- let rows='';
- ECO.forEach(([a,b],i)=>{const f='F'+(i+1),cs=ks.filter(k=>famOf(k)===f);if(!cs.length)return;
-  rows+=`<tr class="ovf"><td colspan="${years.length+3}">${a} · ${b}</td></tr>`;
-  cs.forEach(k=>{const R=L.filter(r=>r.khoa===k),c=COURSES[k]||{};
-   rows+=`<tr><td><b><i style="background:${c.c2||'#64748b'}"></i>${esc(cName(k))}</b>${k==='Diamond'&&R.length?`<small>${GROUPS.map(g=>`${g}: ${R.filter(r=>r.nhom===g).length}`).join(' · ')} · chưa xếp nhóm: ${R.filter(r=>!r.nhom).length}</small>`:''}</td>${years.map(y=>`<td>${cell(k,y,R.filter(r=>String(r.nam||'2026')===y).length)}</td>`).join('')}<td>${cell(k,'all',R.length)}</td><td class="big">${new Set(R.map(keyP)).size||'<span class="z">–</span>'}</td></tr>`})});
- const other=L.filter(r=>!famOf(r.khoa));
- if(other.length)rows+=`<tr class="ovf"><td colspan="${years.length+3}">Khóa khác</td></tr>`+[...new Set(other.map(r=>r.khoa||''))].map(k=>{const R=other.filter(r=>(r.khoa||'')===k);return `<tr><td><b>${esc(k||'Chưa rõ khóa')}</b></td>${years.map(y=>`<td>${R.filter(r=>String(r.nam||'2026')===y).length||'<span class="z">–</span>'}</td>`).join('')}<td>${R.length}</td><td class="big">${new Set(R.map(keyP)).size}</td></tr>`}).join('');
- rows+=`<tr class="tot"><td>Tổng cộng</td>${years.map(y=>`<td>${L.filter(r=>String(r.nam||'2026')===y).length}</td>`).join('')}<td>${L.length}</td><td class="big">${new Set(L.map(keyP)).size}</td></tr>`;
- return `<div class="panel ovp"><h3>Tổng quan khóa lớp</h3><p class="mut" style="margin:0;font-size:14px">Số lượt đăng ký theo từng khóa và năm. Cột cuối là số học viên (đếm 1 người 1 lần theo số điện thoại; một người học nhiều khóa được tính ở mỗi khóa). Bấm vào con số để xem danh sách.</p>
- <div class="ovwrap"><table class="ovt"><thead><tr><th>Khóa học</th>${years.map(y=>`<th>Năm ${esc(y)}</th>`).join('')}<th>Tổng lượt</th><th>Học viên</th></tr></thead><tbody>${rows}</tbody></table></div></div>`;
+ const L=S.list,keyP=r=>phoneN(r.sdt)||'n:'+String(r.hoTen||'').trim().toLowerCase(),yr=r=>String(r.nam||'2026');
+ const ks=Object.keys(COURSES).concat([...new Set(L.map(r=>r.khoa||'').filter(k=>!COURSES[k]))]);
+ const order=k=>{const f=famOf(k);return f?+f.slice(1):9};
+ const money=R=>[VND(R.reduce((a,r)=>a+n0(r.daDong),0)),VND(R.reduce((a,r)=>a+congNo(r),0))];
+ const rows=[];
+ ks.slice().sort((x,y)=>order(x)-order(y)).forEach(k=>{const R=L.filter(r=>(r.khoa||'')===k);if(!R.length)return;
+  [...new Set(R.map(yr))].sort().reverse().forEach(y=>{const Y=R.filter(r=>yr(r)===y);
+   const sub=k==='Diamond'?`<br><small style="color:#555">${GROUPS.map(g=>`${g}: ${Y.filter(r=>r.nhom===g).length}`).join(' · ')} · chưa xếp nhóm: ${Y.filter(r=>!r.nhom).length}</small>`:'';
+   rows.push([`<b>${esc(cName(k)||'Chưa rõ khóa')} ${esc(y)}</b>${famOf(k)?` <span style="color:#666">(${esc(ECO[+famOf(k).slice(1)-1][0])})</span>`:''}${sub}`,`<button class="ovn" data-ovk="${esc(k)}|${esc(y)}" title="Xem danh sách học viên">${Y.length}</button>`,...money(Y)])})});
+ const uniq=new Set(L.map(keyP)).size;
+ return `<div class="ovp">${rpTable({id:'ov-khoa',title:'Tổng quan khóa lớp',cols:[['Khóa học đăng ký','l'],['Số lượng','c'],['Doanh thu','n'],['Công nợ cần thu','n']],rows,total:['Tổng cộng',L.length,...money(L)],
+  note:`Số lượng = số lượt học viên đăng ký từng khóa theo năm. Tổng ${L.length} lượt / ${uniq} học viên (một người học nhiều khóa được tính ở mỗi khóa). Doanh thu = số tiền đã thu. Bấm vào số lượng để xem danh sách. Cập nhật lúc ${new Date().toLocaleString('vi-VN',{hour:'2-digit',minute:'2-digit',day:'2-digit',month:'2-digit',year:'numeric'})}.`})}</div>`;
 }
 function subsHTML(m){return `<div class="subs">${(m.subs||[]).map(([a,b])=>`<div class="sub" style="--c:${m.cc}"><b>${a}</b><span class="mut" style="font-size:14.5px">${b}</span><br><span class="soon">Đang xây dần</span></div>`).join('')}</div>`}
 

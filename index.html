@@ -587,6 +587,9 @@ tr.dayrow td{background:#1b2c6b!important;color:var(--gold2);font-weight:700;fon
 .zbub img{display:block;max-width:320px;max-height:360px;border-radius:8px;margin-bottom:4px}.ztime{display:block;color:#7589a3;font-size:11px;margin-top:3px}.zfile a{color:#0068ff}
 .zempty{margin:auto;color:#5a6981}.zadm h3{margin:16px 0 6px}.zperm td,.zperm th{text-align:center}.zperm td:first-child,.zperm th:first-child{text-align:left}.zperm input{width:18px;height:18px}
 @media(max-width:800px){.zbox{grid-template-columns:1fr;height:auto}.zleft{max-height:42vh}.zchat{min-height:60vh}}
+.zchip{font-size:12px;border-radius:999px;padding:2px 9px;border:1px solid}.zchip.off{color:#94a3b8;border-color:#475569}.zchip.wait{color:#fbbf24;border-color:#f59e0b88}.zchip.ok{color:#4ade80;border-color:#22c55e88}.zchip.warn{color:#fdba74;border-color:#fb923c88}
+.zcard{background:#0f1c4a;border:1.5px solid #0068ff88;border-radius:14px;padding:14px}.zcard h3{margin:0 0 8px}.zst{display:flex;gap:8px;align-items:center;font-size:16px}.zst i{width:12px;height:12px;border-radius:50%;display:inline-block}
+.lnkb{background:none;border:0;color:#6ee7b7;text-decoration:underline;cursor:pointer;padding:0;font:inherit}
 </style>
 <script>new MutationObserver(()=>{for(const c of document.querySelectorAll('.stack td:not([data-l])')){let i=0,p=c;while(p=p.previousElementSibling)i+=p.colSpan;c.dataset.l=c.closest('table').rows[0].cells[i]?.textContent||''}}).observe(document,{childList:true,subtree:true})</script>
 </head>
@@ -1570,9 +1573,38 @@ function gptHTML(){
  <p class="mut sm">Mất máy / nghỉ việc / lộ mã → bấm "Thu hồi", ChatGPT mất quyền ngay. Dữ liệu ChatGPT đọc sẽ đi qua máy chủ OpenAI; nên dùng gói ChatGPT Business/Team (mặc định không dùng dữ liệu để huấn luyện) hoặc tắt "Improve the model for everyone" trong Settings → Data controls.</p></details></details>`;
 }
 const isQT=()=>!!(S.me&&S.me.role==='quantri');
+/* ---------- Zalo cá nhân theo từng nhân sự (mục Nhân sự) ---------- */
+const extVer=()=>document.documentElement.getAttribute('data-skt-zalo')||'';
+function zDevs(force){const Z=S.zd||(S.zd={});if((!Z.l||force)&&!Z.busy){Z.busy=1;api('zl_dev_list').then(j=>{Z.l=j.devs||[];Z.busy=0;if(S.route==='nhan-su'||S.zOpen)render2()}).catch(()=>{Z.busy=0})}return Z.l}
+function render2(){render();if(S.zOpen)staffZalo(S.zOpen)}
+function zOf(n){return (zDevs()||[]).filter(d=>d.chuNick===n&&d.active).pop()}
+function zChip(n){const d=zOf(n);if(!S.zd||!S.zd.l)return '';if(!d)return '<span class="zchip off">Zalo: chưa kết nối</span>';if(!d.nick)return '<span class="zchip wait">Zalo: chờ quét QR</span>';const old=!d.lastUsed||Date.now()-new Date(d.lastUsed)>36e5*24;return `<span class="zchip ${old?'warn':'ok'}">Zalo: ${esc(d.nickTen||'đã kết nối')}</span>`}
+function staffZalo(n){S.zOpen=n;const d=zOf(n),v=extVer(),self=S.me&&S.me.ten===n,can=isQT()||self,P=S.zp||{};
+ const uu=(S.users||[]).find(u=>u.hoTen===n);
+ const st=!d?['Chưa kết nối','#94a3b8','Bấm "Kết nối Zalo" để bắt đầu.']:!d.nick?['Chờ quét QR','#f59e0b','Đã tạo mã nhưng Zalo Web trên máy của '+n+' chưa gửi tin về. Mở chat.zalo.me trên máy đó và quét QR.']:[`Đã kết nối · ${d.nickTen||''}`,'#22c55e',`Đồng bộ gần nhất: ${d.lastUsed?gpT(d.lastUsed):'—'} (tin chỉ về khi Zalo Web trên máy ${n} đang mở).`];
+ $('#drawer').innerHTML=`<div class="dh"><div style="flex:1"><h3>${esc(n)}</h3><div class="mut">${uu?esc((ROLE_N[uu.phong]||'')+(uu.sdt?' · '+uu.sdt:'')+(uu.email?' · '+uu.email:'')):'Nhân sự'}</div></div><button class="btn ghost sm" id="closeD">Đóng</button></div>
+ <div class="dbody"><section class="zcard"><h3>💬 Zalo cá nhân</h3>
+  <div class="zst"><i style="background:${st[1]}"></i><b>${esc(st[0])}</b></div><p class="mut sm">${esc(st[2])}</p>
+  ${!can?'<p class="mut sm">Chỉ quản trị viên hoặc chính '+esc(n)+' mới kết nối được.</p>':
+  P.done===n?`<div class="ailink"><b>✅ Đã gửi mã cho tiện ích và mở tab Zalo Web.</b><ol class="aiol"><li>Chuyển sang tab <b>Zalo</b> vừa mở.</li><li>${esc(n)} mở app Zalo trên điện thoại → biểu tượng <b>quét QR</b> → quét mã trên màn hình.</li><li>Đăng nhập xong, để tab Zalo mở. Vài phút sau tin nhắn sẽ hiện trong mục <a href="#zalo">Zalo</a>.</li></ol></div>`:
+  P.code&&P.name===n?`<div class="ailink"><b>Máy này chưa cài tiện ích "CRM SKT – Zalo".</b><p class="mut sm" style="margin:4px 0">Việc kết nối phải làm trên <b>máy tính của ${esc(n)}</b> (máy dùng Zalo hằng ngày). Cài tiện ích trên máy đó (2 phút) rồi bấm lại "Kết nối Zalo"; hoặc dán mã này vào tiện ích:</p><div class="bar"><input class="inp" readonly value="${esc(P.code)}" onfocus="this.select()" style="flex:1;font-family:monospace"><button class="btn" data-zpcopy="1">📋 Sao chép mã</button></div></div>${zInstall()}`:
+  `<div class="bar" style="margin-top:8px"><button class="btn big" data-zpair="${esc(n)}">🔗 ${d?'Kết nối lại Zalo':'Kết nối Zalo'}</button>${d&&isQT()?`<button class="btn ghost" data-zunpair="${esc(d.id)}" style="color:var(--bad)">Ngắt kết nối</button>`:''}</div>
+   <p class="mut sm">${v?`✓ Máy này đã cài tiện ích (bản ${esc(v)}).`:'Máy này chưa cài tiện ích – bấm nút vẫn được, CRM sẽ hướng dẫn cài.'} Làm trên <b>máy tính của ${esc(n)}</b>.</p>`}
+ </section>
+ ${isQT()?`<p class="mut sm">Ai được xem tin nhắn Zalo của ${esc(n)}: chỉnh ở mục <button class="lnkb" data-zgoadm="1">Zalo → ⚙ Kết nối &amp; phân quyền</button>.</p>`:''}</div>`;
+ $('#drawer').classList.add('on');$('#scrim').classList.add('on');
+}
+function zInstall(){return `<details class="morebox" open><summary>Cài tiện ích trên máy này (1 lần, 2 phút)</summary><ol class="aiol"><li>Tải <a href="/zalo-ext.zip" download>tiện ích CRM SKT – Zalo (.zip)</a>, giải nén ra 1 thư mục (VD: Tài liệu → crm-zalo). <span class="mut">(Đang hoàn thiện – sẽ có link tải sớm.)</span></li><li>Mở Chrome, gõ vào thanh địa chỉ: <b>chrome://extensions</b> → bật <b>Chế độ dành cho nhà phát triển</b> (góc phải trên).</li><li>Bấm <b>Tải tiện ích đã giải nén</b> → chọn thư mục crm-zalo.</li><li>Quay lại trang này, bấm <b>F5</b> rồi bấm lại <b>Kết nối Zalo</b>.</li></ol></details>`}
+async function zPair(n){
+ const j=await api('zl_dev_create',{ten:'Zalo '+n,chuNick:n});S.zp={code:j.code,name:n};S.zd.l=null;zDevs(true);
+ if(extVer()){const ok=await new Promise(res=>{const h=e=>{if(e.source===window&&e.data&&e.data.src==='skt-ext'&&e.data.type==='paired'){window.removeEventListener('message',h);res(e.data.ok)}};window.addEventListener('message',h);window.postMessage({src:'skt-crm',type:'pair',code:j.code,name:n,api:String(API)},'*');setTimeout(()=>{window.removeEventListener('message',h);res(false)},4000)});
+  if(ok){S.zp={done:n};toast('Đã kết nối tiện ích – quét QR trên tab Zalo vừa mở')}}
+ staffZalo(n);
+}
 function vStaff(){
+ if(isQT()||S.me)zDevs();
  return `<div class="band"><h2>Nhân sự</h2>${accountsHTML()}${isQT()?`<a class="aicard" href="#ket-noi-ai">🤖 <b>Kết nối ChatGPT / Claude</b> – tạo link cho AI đọc CRM và báo cáo (chỉ quản trị viên) →</a>`:''}<p class="mut" style="margin:0 0 14px">Danh sách người phụ trách chăm sóc học viên. Ai có trong danh sách này sẽ hiện để tích chọn trong hồ sơ.</p>
- <div class="panel" style="max-width:560px">${S.staff.map((s,i)=>{const n=S.list.filter(x=>arr(x.phuTrach).includes(s)).length;return `<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid #1c2a5c"><b style="flex:1">${esc(s)}</b><span class="mut" style="font-size:14px">${n} học viên</span>${isQT()?`<button class="btn ghost sm" data-delstaff="${i}">Bỏ</button>`:''}</div>`}).join('')}
+ <div class="panel" style="max-width:560px">${S.staff.map((s,i)=>{const n=S.list.filter(x=>arr(x.phuTrach).includes(s)).length;const zc=isQT()||(S.me&&S.me.ten===s);return `<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid #1c2a5c;flex-wrap:wrap"><b style="flex:1">${esc(s)}</b>${zc?zChip(s):''}<span class="mut" style="font-size:14px">${n} học viên</span>${zc?`<button class="btn sm" data-zstaff="${esc(s)}" style="background:#0068ff;color:#fff;border-color:#0068ff">💬 Zalo</button>`:''}${isQT()?`<button class="btn ghost sm" data-delstaff="${i}">Bỏ</button>`:''}</div>`}).join('')}
  ${isQT()?`<form id="staffForm" class="bar" style="margin-top:12px"><input class="inp" id="newStaff" placeholder="Tên nhân sự mới" style="flex:1"><button class="btn">Thêm</button></form>`:''}</div>
  <h3 style="margin-top:22px">Báo cáo theo nhân sự <span class="mut sm" style="font-weight:400">· bấm vào người để xem báo cáo</span></h3>${hasReal()?'':sampleNote}
  <div class="camps">${S.staff.map(n=>{const B=staffBuyers().filter(b=>b.phuTrach.includes(n)),r=B.reduce((a,b)=>a+b.gia,0),d=B.reduce((a,b)=>a+b.no,0),uu=(S.users||[]).find(u=>u.hoTen===n),role=uu?ROLE_N[uu.phong]:({'Kim Anh':'Chăm sóc khách hàng','Mỹ Linh':'Chăm sóc khách hàng','Oanh':'Marketing'}[n]||'Nhân sự');return `<button class="camp staffc ${S.staffSel===n?'on':''}" data-staff="${esc(n)}" style="--c:${pColor(n)}" aria-pressed="${S.staffSel===n}">${S.staffSel===n?'<span class="seltag">✓ Đang xem</span>':''}<span class="sm" style="color:var(--c);font-weight:700">${role}</span><b>${esc(n)}</b><div class="campn"><span><b>${B.length}</b> ${hasReal()?'lượt đăng ký':'học viên'}</span><span><b>${TR(r-d)}</b> đã thu</span><span class="warnTxt">Công nợ ${TR(d)}</span></div><i style="width:${r?((r-d)/r*100).toFixed(0):0}%"></i></button>`}).join('')}</div>
@@ -1651,7 +1683,7 @@ function openDrawer(id){
  </div>`;
  $('#drawer').classList.add('on');$('#scrim').classList.add('on');$('#closeD').focus();setTimeout(loadPhotos,50);applyPerms(document);if($('#mvTo'))mvPreview(x);
 }
-function closeDrawer(){S.open=null;$('#drawer').classList.remove('on','wide');$('#scrim').classList.remove('on')}
+function closeDrawer(){S.open=null;S.zOpen=null;$('#drawer').classList.remove('on','wide');$('#scrim').classList.remove('on')}
 
 let busy=false;
 async function patch(id,p,msg){
@@ -2393,6 +2425,11 @@ async function ktClick(t){
  if(d.sprm){const rows=document.querySelectorAll('.sprow');if(rows.length>1)t.closest('tr').remove();else toast('Cần ít nhất một khóa',true);return true}
  if(t.id==='spAdd'){$('#spBody').insertAdjacentHTML('beforeend',spRow({khoa:'Diamond'}));return true}
  if(d.gpcopy){const v=d.gpcopy==='key'?S.gk.newKey:d.gpcopy==='instr'?gptInstr(S.gk.newKey):d.gpcopy==='instr0'?gptInstr(''):gptSchema();try{await navigator.clipboard.writeText(v);toast('Đã sao chép')}catch(_){toast('Trình duyệt chặn sao chép, thử lại giúp em',true)}return true}
+ if(d.zstaff){S.zp={};staffZalo(d.zstaff);return true}
+ if(d.zpair){const b=t;b.disabled=true;b.textContent='Đang kết nối…';try{await zPair(d.zpair)}catch(err){toast(err.message,true);staffZalo(d.zpair)}return true}
+ if(d.zunpair){if(!confirm('Ngắt kết nối Zalo này? Tiện ích sẽ ngừng gửi tin về CRM (tin cũ vẫn giữ).'))return true;try{await api('zl_dev_revoke',{id:d.zunpair});S.zd.l=null;zDevs(true);toast('Đã ngắt kết nối')}catch(err){toast(err.message,true)}return true}
+ if(d.zpcopy){try{await navigator.clipboard.writeText(S.zp.code);toast('Đã sao chép mã')}catch(_){toast('Bấm vào ô mã rồi Ctrl+C',true)}return true}
+ if(d.zgoadm){S.z=S.z||{};S.z.adm=true;if(S.za)S.za.loaded=0;closeDrawer();location.hash='#zalo';return true}
  if(d.znick!==undefined){S.z.nick=d.znick;render();return true}
  if(d.zth){const t=(S.z.threads||[]).find(x=>x.key===d.zth);S.z.open=t?{key:t.key,nick:t.nick,thread:t.thread}:null;S.z.msgs=[];render();zLoad('bottom');return true}
  if(d.zreload){zLoad();return true}

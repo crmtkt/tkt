@@ -747,7 +747,7 @@ const lastNote=b=>{const lc=b.nhatKy[b.nhatKy.length-1];return lc?`${fmtD(lc.nga
 const payLine=x=>hasPay(x)?`<div class="hvpay">${payPill(x)}<span>Đã thu <b>${TR(n0(x.daDong))}</b></span>${congNo(x)?`<span class="warnTxt">Công nợ <b>${TR(congNo(x))}</b></span>`:''}</div>`:'';
 
 const S={camps:[],txns:[],kt:{tab:null,flt:'all',parsed:null,tk:'',pick:null,ov:{}},rf:{camp:'all',sp:'all',tt:'all',pt:'all',q:'',sort:'no'},calM:'2026-12',camp:null,bf:{q:'',sp:'all',tt:'all',pt:'all',sort:'sp'},real:[],demo:(()=>{try{return localStorage.getItem('crm_demo')==='1'}catch(_){return false}})(),cf:{q:'',khoa:'all',st:'all',pt:'all',ct:'all'},view:(()=>{try{return localStorage.getItem('crm_view')||'card'}catch(_){return 'card'}})(),list:[],forms:[],staff:DEFAULT_STAFF.slice(),loaded:false,canWrite:true,tok:'',site:'',user:'',
- f:{fam:'F5',khoa:'Diamond',nam:'2026',nhom:'all',q:'',st:'all',pt:'all',form:'all',tt:'all',ct:'all'},open:null,phone:''};
+ f:{fam:'F5',khoa:'Diamond',nam:'all',nhom:'all',q:'',st:'all',pt:'all',form:'all',tt:'all',ct:'all'},open:null,phone:''};
 
 /* ---------- UI helpers ---------- */
 let tt;
@@ -971,7 +971,7 @@ function vProducts(){
  <div class="courses">${coursesOf(f.fam).map(([k,c])=>`<button class="course ${k==='Diamond'?'dia':''} ${f.khoa===k?'on':''}" data-course="${k}" style="--c1:${c.c1};--c2:${c.c2}">${k==='Diamond'?`<img src="${DIA_LOGO}" alt="CMA Diamond">`:''}<span><small>${c.sub}</small><b>${c.name}</b><span class="n">${cnt(k)} học viên</span></span></button>`).join('')}</div>
  ${f.khoa==='Diamond'?`<div class="diaband"><img src="${DIA_LOGO}" alt="CMA Diamond"><div><b>CMA DIAMOND</b><span>Khóa thuộc CMA F5 · Đóng gói di sản · ${cnt('Diamond')} lượt học viên · Diamond thông thường · Nhóm viết sách · Diamond Coaching</span></div></div>`:''}
  <div class="${f.khoa==='Diamond'?'thDia':''}">
- <div class="tabs" role="group" aria-label="Năm">${['2026','2025','2024','all'].map(y=>`<button class="tab ${f.nam===y?'on':''}" data-nam="${y}">${y==='all'?'Tất cả các năm':'Năm '+y}</button>`).join('')}</div>
+ <div class="tabs" role="group" aria-label="Năm">${['all',...new Set([...S.list.filter(x=>x.khoa===f.khoa).map(x=>String(x.nam||'2026')),'2026'])].sort((a,b)=>a==='all'?-1:b==='all'?1:b.localeCompare(a)).map(y=>`<button class="tab ${f.nam===y?'on':''}" data-nam="${y}">${y==='all'?'Tất cả các năm':'Năm '+y}<span class="c">${S.list.filter(x=>x.khoa===f.khoa&&(y==='all'||String(x.nam||'2026')===y)).length}</span></button>`).join('')}</div>
  ${f.khoa==='Diamond'?`<div class="tabs" role="group" aria-label="Nhóm">${['all',...GROUPS].map(g=>`<button class="tab ${f.nhom===g?'on':''}" data-nhom="${esc(g)}">${g==='all'?'Tất cả nhóm':esc(g)}<span class="c">${g==='all'?base.length:base.filter(x=>x.nhom===g).length}</span></button>`).join('')}</div>`:''}
  </div>
  <div class="fbar"><div class="bar">
@@ -2576,12 +2576,12 @@ document.addEventListener('click',async e=>{
  if(await ktClick(t))return;
  if(t.dataset.useredit!==undefined){userModal((S.users||[]).find(u=>u.id===t.dataset.useredit));return}
  if(t.dataset.userdel){if(!t.dataset.sure){t.dataset.sure=1;t.textContent='Bấm lần nữa để xóa';return}try{const j=await api('user_delete',{id:t.dataset.userdel});S.users=j.users;S.staff=j.staff;closeDrawer();render();toast('Đã xóa tài khoản')}catch(e){toast(e.message,true)}return}
- if(t.dataset.course){S.f.khoa=t.dataset.course;S.f.nhom='all';render();return}
+ if(t.dataset.course){S.f.khoa=t.dataset.course;S.f.nhom='all';S.f.nam='all';render();return}
  if(t.dataset.nam){S.f.nam=t.dataset.nam;render();return}
  if(t.dataset.nhom){S.f.nhom=t.dataset.nhom;render();return}
  if(t.matches('a.f')&&t.dataset.eco){S.f.fam='F'+(+t.dataset.eco+1);const cs=coursesOf(S.f.fam);if(cs.length&&famOf(S.f.khoa)!==S.f.fam){S.f.khoa=cs[0][0];S.f.nhom='all'}}
  if(t.dataset.ovk){const [k,y]=t.dataset.ovk.split('|');S.f={...S.f,fam:famOf(k)||S.f.fam,khoa:k,nam:y,nhom:'all',form:'all'};if(location.hash==='#san-pham'){render();setTimeout(()=>{const v=document.querySelector('.viewbar');if(v)v.scrollIntoView({behavior:'smooth',block:'start'})},60)}else{location.hash='san-pham';setTimeout(()=>{const v=document.querySelector('.viewbar');if(v)v.scrollIntoView({block:'start'})},400)}return}
- if(t.dataset.fam){S.f.fam=t.dataset.fam;const cs=coursesOf(S.f.fam);if(cs.length&&famOf(S.f.khoa)!==S.f.fam){S.f.khoa=cs[0][0];S.f.nhom='all'}render();return}
+ if(t.dataset.fam){S.f.fam=t.dataset.fam;const cs=coursesOf(S.f.fam);if(cs.length&&famOf(S.f.khoa)!==S.f.fam){S.f.khoa=cs[0][0];S.f.nhom='all'}S.f.nam='all';render();return}
  if(t.id==='closeD'){closeDrawer();return}
  if(t.id==='pwBtn'){pwModal();return}
  if(t.id==='logout'){setTok('');try{localStorage.removeItem(CK);localStorage.removeItem('crm_me')}catch(_){}S.me=null;S.users=[];idbClear();PH.clear();S.loaded=false;clearInterval(poll);showLogin();return}

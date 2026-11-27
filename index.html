@@ -1772,7 +1772,7 @@ function zAdmin(){const A=S.za||{};if(!A.loaded){A.loaded=1;S.za=A;api('zl_dev_l
  </section>`}
 function vZalo(){
  if(!isQT()&&!S.zaloOk)return '<div class="band"><h2>Zalo</h2><p class="mut">Anh/chị chưa được quản trị viên cấp quyền xem Zalo.</p></div>';
- const Z=S.z||(S.z={});if(!Z.at&&!Z.busy)setTimeout(()=>zLoad('bottom'),0);if(isQT()&&(!S.zsv||(!S.zsv.at&&!S.zsv.busy)))zsLoad();zRT();if((Z.accs||[]).length&&(!Z.nReqAt||Date.now()-Z.nReqAt>5*60e3)){Z.nReqAt=Date.now();const nk0=Z.nick||Z.accs[0].id;zsF('/friend/requests?nick='+encodeURIComponent(nk0)).then(j=>{const n=(j.received||[]).length;if(n!==(Z.nReq||0)){Z.nReq=n;if(S.route==='zalo'&&!Z.mod)render()}}).catch(()=>{})}
+ const Z=S.z||(S.z={});if(!Z.at&&!Z.busy)setTimeout(()=>zLoad('bottom'),0);if(isQT()&&(!S.zsv||(!S.zsv.at&&!S.zsv.busy)))zsLoad();zRT();if((Z.accs||[]).length&&S.zsv&&S.zsv.at&&(!Z.nReqAt||Date.now()-Z.nReqAt>5*60e3)){Z.nReqAt=Date.now();const nk0=zNick0();zsF('/friend/requests?nick='+encodeURIComponent(nk0)).then(j=>{const n=(j.received||[]).length;if(n!==(Z.nReq||0)){Z.nReq=n;if(S.route==='zalo'&&!Z.mod)render()}}).catch(()=>{})}
  if(Z.adm&&isQT())return `<div class="band"><div class="zhead"><h2>Zalo · Kết nối & phân quyền</h2><span style="flex:1"></span><button class="btn" data-zadm="1">← Về hộp thư Zalo</button></div>${zAdmin()}</div>`;
  const accs=Z.accs||[],nk=Z.nick||'',q=(Z.q||'').toLowerCase(),seen=zSeen();
  const unread=t=>+t.lastTs>(seen[t.key]||0)&&!/^Bạn:/.test(t.lastText||'');
@@ -1898,6 +1898,7 @@ const isQT=()=>!!(S.me&&S.me.role==='quantri');
 /* ---------- Zalo qua máy chủ: quét QR ngay trong CRM ---------- */
 async function zsTk(){const T=S.zst||(S.zst={});if(T.t&&T.exp>Date.now())return T;const j=await api('zs_ticket');Object.assign(T,{url:j.url,t:j.ticket,exp:Date.now()+11*36e5});return T}
 async function zsF(path,o={}){const T=await zsTk();if(!T.url)throw new Error('Máy chủ Zalo chưa được cài.');const r=await fetch(T.url+path,{method:o.body?'POST':'GET',headers:Object.assign({'x-ticket':T.t},o.body?{'Content-Type':'application/json'}:{}),body:o.body?JSON.stringify(o.body):undefined});let j={};try{j=await r.json()}catch(_){}if(r.status===401){S.zst=null}if(!j.ok)throw new Error(j.error||'Máy chủ Zalo chưa phản hồi (đang khởi động, thử lại sau 1 phút).');return j}
+const zNick0=()=>{const Z=S.z||{},on=((S.zsv&&S.zsv.nicks)||[]).filter(n=>n.state==='online').map(n=>String(n.uid||n.id||''));return Z.nick||(Z.open&&Z.open.nick)||((Z.accs||[]).find(a=>on.includes(String(a.id)))||(Z.accs||[])[0]||{}).id};
 function zsLoad(){const Z=S.zsv||(S.zsv={});if(Z.busy)return;Z.busy=1;zsF('/status').then(j=>{Z.nicks=j.nicks;Z.err='';Z.at=Date.now()}).catch(e=>{Z.err=e.message;Z.at=Date.now()}).finally(()=>{Z.busy=0;if(S.route==='zalo'||S.route==='nhan-su')render2()})}
 const ZSN={online:['Đang kết nối','#22c55e'],connecting:['Đang kết nối lại…','#f59e0b'],offline:['Mất kết nối – tự thử lại','#f59e0b'],error:['Cần quét lại QR','#ef4444']};
 function zsNick(n){return ((S.zsv&&S.zsv.nicks)||[]).find(x=>x.chuNick===n)}
@@ -2799,10 +2800,10 @@ async function ktClick(t){
  if(d.zfm){zFmtApply(d.zfm);return true}
  if(d.zfwd){const Z=S.z,m=(Z.msgs||[]).find(x=>x.id===d.zfwd);if(m)Z.fwd={m,nick:Z.open.nick,sel:[],q:'',note:''};render();setTimeout(()=>{const i=$('#zfq');if(i)i.focus()},30);return true}
  if(d.zfx){S.z.fwd=null;render();return true}
- if(d.zmod){const Z=S.z;if(d.zmod!=='group'&&!Z.open)return true;const nick=d.zmod==='group'?(Z.nick||(Z.open&&Z.open.nick)||((Z.accs||[])[0]||{}).id):Z.open.nick;if(!nick){toast('Chưa có nick Zalo nào',1);return true}Z.mod={k:d.zmod,nick,sel:[],opts:['',''],friends:null};render();if(d.zmod==='group')zsF('/friends?nick='+encodeURIComponent(nick)).then(j=>{if(Z.mod&&Z.mod.k==='group'){Z.mod.friends=j.friends||[];render()}}).catch(e=>{if(Z.mod){Z.mod.friends=[];Z.mod.err=e.message;render()}});return true}
+ if(d.zmod){const Z=S.z;if(d.zmod!=='group'&&!Z.open)return true;const nick=d.zmod==='group'?zNick0():Z.open.nick;if(!nick){toast('Chưa có nick Zalo nào',1);return true}Z.mod={k:d.zmod,nick,sel:[],opts:['',''],friends:null};render();if(d.zmod==='group')zsF('/friends?nick='+encodeURIComponent(nick)).then(j=>{if(Z.mod&&Z.mod.k==='group'){Z.mod.friends=j.friends||[];render()}}).catch(e=>{if(Z.mod){Z.mod.friends=[];Z.mod.err=e.message;render()}});return true}
  if(d.zprof){const Z=S.z,nick=(Z.mod&&Z.mod.nick)||(Z.open&&Z.open.nick)||Z.nick||((Z.accs||[])[0]||{}).id;if(!nick)return true;const back=Z.mod&&Z.mod.k!=='prof'?Z.mod:null;if(back)back.err='';zProf(nick,d.zprof,{name:d.zpn||'',avatar:d.zpa||''},back);return true}
  if(d.zmback){const Z=S.z;Z.mod=Z.mod&&Z.mod.back;if(Z.mod&&Z.mod.k==='fr')zFrLoad(1);render();return true}
- if(d.zfr){const Z=S.z,nick=Z.nick||(Z.open&&Z.open.nick)||((Z.accs||[])[0]||{}).id;if(!nick){toast('Chưa có nick Zalo nào',1);return true}Z.mod={k:'fr',nick,tab:d.zfr,ph:'',found:null,rq:null};render();zFrLoad();setTimeout(()=>{const i=$('#zfr_ph');if(i)i.focus()},30);return true}
+ if(d.zfr){const Z=S.z,nick=zNick0();if(!nick){toast('Chưa có nick Zalo nào',1);return true}Z.mod={k:'fr',nick,tab:d.zfr,ph:'',found:null,rq:null};render();zFrLoad();setTimeout(()=>{const i=$('#zfr_ph');if(i)i.focus()},30);return true}
  if(d.zfrtab){const M=S.z.mod;M.tab=d.zfrtab;M.err='';render();return true}
  if(d.zfind){const Z=S.z,M=Z.mod,ph=(($('#zfr_ph')||{}).value||'').trim();M.ph=ph;if(!ph)return true;M.busy='find';M.err='';M.found=null;render();zsF('/find',{body:{nick:M.nick,phone:ph}}).then(j=>{M.busy=0;M.found=j.profile;render()}).catch(e=>{M.busy=0;M.err=e.message;render()});return true}
  if(d.zfadd){S.z.mod.addMsg=1;render();const i=$('#zfr_msg');if(i){i.focus();i.setSelectionRange(i.value.length,i.value.length)}return true}
